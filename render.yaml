@@ -1,0 +1,18 @@
+# Render.com icin tek servis: Express + Socket.IO ayni port'ta.
+# Kullanim: render.com -> New -> Blueprint -> bu repo. Ardindan ortam
+# degiskenlerini (MONGODB_URI) panelden gir.
+services:
+  - type: web
+    name: guessfootball
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: MONGODB_URI
+        sync: false # gizli - Render panelinden elle girilir
+      - key: DB_NAME
+        value: football_db
+      - key: TM_LOCALE
+        value: tr

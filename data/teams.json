@@ -1,0 +1,4562 @@
+[
+  {
+    "_id": "2464",
+    "name": "FC Barcelona Atlètic",
+    "shortName": "Barcelona Atlé.",
+    "abbreviation": "BarçaB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2464.png?lm=1789459297",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "11940",
+    "name": "Arjantin U20",
+    "shortName": "Arjantin U20",
+    "abbreviation": "ARG 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/9.png",
+    "countryId": 9,
+    "countryName": "Arjantin",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#6CACE4",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#6CACE4"
+    }
+  },
+  {
+    "_id": "131",
+    "name": "FC Barcelona",
+    "shortName": "Barcelona",
+    "abbreviation": "Barça",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/131.png?lm=1789459175",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#004C99",
+      "secondColor": "#A60042",
+      "thirdColor": "#FFEE00"
+    }
+  },
+  {
+    "_id": "3437",
+    "name": "Arjantin",
+    "shortName": "Arjantin",
+    "abbreviation": "ARG",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/9.png",
+    "countryId": 9,
+    "countryName": "Arjantin",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#6CACE4",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#6CACE4"
+    }
+  },
+  {
+    "_id": "53819",
+    "name": "Arjantin Olimpiyatlar",
+    "shortName": "Arjantin",
+    "abbreviation": "ARG",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/9.png",
+    "countryId": 9,
+    "countryName": "Arjantin",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "583",
+    "name": "Paris Saint-Germain",
+    "shortName": "PSG",
+    "abbreviation": "PSG",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/583.png?lm=1789459199",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#1f3157",
+      "secondColor": "#FCFCFC",
+      "thirdColor": "#6d2944"
+    }
+  },
+  {
+    "_id": "69261",
+    "name": "Inter Miami CF",
+    "shortName": "Inter Miami",
+    "abbreviation": "MIA",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/69261.png?lm=1789463707",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#F5B6CD",
+      "secondColor": "#231F20",
+      "thirdColor": "#FCFCFC"
+    }
+  },
+  {
+    "_id": "30503",
+    "name": "Portekiz U15",
+    "shortName": "Portekiz U15",
+    "abbreviation": "POR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#850B23",
+      "secondColor": "#006600",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "23137",
+    "name": "Portekiz U17",
+    "shortName": "Portekiz U17",
+    "abbreviation": "PORT17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#850B23",
+      "secondColor": "#006600",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "336",
+    "name": "Sporting CP",
+    "shortName": "Sporting",
+    "abbreviation": "SCP",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/336.png?lm=1789459184",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#008056",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#F3C242"
+    }
+  },
+  {
+    "_id": "16374",
+    "name": "Portekiz U21",
+    "shortName": "Portekiz U21",
+    "abbreviation": "POR21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#850B23",
+      "secondColor": "#006600",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "16373",
+    "name": "Portekiz U20",
+    "shortName": "Portekiz U20",
+    "abbreviation": "POR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#850B23",
+      "secondColor": "#006600",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "985",
+    "name": "Manchester United",
+    "shortName": "Man United",
+    "abbreviation": "MUN",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/985.png?lm=1789459227",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#D9020D",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "3300",
+    "name": "Portekiz",
+    "shortName": "Portekiz",
+    "abbreviation": "POR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#DA291C",
+      "secondColor": "#046A38",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53807",
+    "name": "Portekiz Olimpiyatlar",
+    "shortName": "Portekiz",
+    "abbreviation": "POR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "418",
+    "name": "Real Madrid",
+    "shortName": "Real Madrid",
+    "abbreviation": "RMCF",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/418.png?lm=1789459190",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#004996",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "506",
+    "name": "Juventus",
+    "shortName": "Juventus",
+    "abbreviation": "Juve",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/506.png?lm=1789459197",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#0A0909",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "18544",
+    "name": "Al-Nassr FC",
+    "shortName": "Al-Nassr",
+    "abbreviation": "Nassr",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/18544.png?lm=1789460048",
+    "countryId": 146,
+    "countryName": "Suudi Arabistan",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFB00",
+      "secondColor": "#003CF0",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "221",
+    "name": "Santos FC",
+    "shortName": "Santos",
+    "abbreviation": "SFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/221.png?lm=1789459177",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "23130",
+    "name": "Brezilya U17",
+    "shortName": "Brezilya U17",
+    "abbreviation": "BRA 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/26.png",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3439",
+    "name": "Brezilya",
+    "shortName": "Brezilya",
+    "abbreviation": "BRA",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/26.png",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FEDD00",
+      "secondColor": "#002776",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "7658",
+    "name": "Brezilya U20",
+    "shortName": "Brezilya U20",
+    "abbreviation": "BRA 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/26.png",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53818",
+    "name": "Brezilya Olimpiyatlar",
+    "shortName": "Brezilya Ol.",
+    "abbreviation": "BRA",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/26.png",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1114",
+    "name": "Al-Hilal SFC",
+    "shortName": "Al-Hilal",
+    "abbreviation": "Hilal",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1114.png?lm=1789459235",
+    "countryId": 146,
+    "countryName": "Suudi Arabistan",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#4169E1",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#B81E25"
+    }
+  },
+  {
+    "_id": "10831",
+    "name": "Fransa U17",
+    "shortName": "Fransa U17",
+    "abbreviation": "FRA 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "45508",
+    "name": "AS Monaco UEFA U19",
+    "shortName": "AS Monaco",
+    "abbreviation": "Monaco",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/45508.png?lm=1789461955",
+    "countryId": 113,
+    "countryName": "Monako",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9668",
+    "name": "AS Monaco U21",
+    "shortName": "Monaco U21",
+    "abbreviation": "ASM 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9668.png?lm=1789459670",
+    "countryId": 113,
+    "countryName": "Monako",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "162",
+    "name": "AS Monaco",
+    "shortName": "Monaco",
+    "abbreviation": "ASM",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/162.png?lm=1789459175",
+    "countryId": 113,
+    "countryName": "Monako",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "23101",
+    "name": "Fransa U19",
+    "shortName": "Fransa U19",
+    "abbreviation": "FRA 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#123163"
+    }
+  },
+  {
+    "_id": "9669",
+    "name": "AS Monaco U19",
+    "shortName": "Monaco U19",
+    "abbreviation": "ASM",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9669.png?lm=1789459670",
+    "countryId": 113,
+    "countryName": "Monako",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3377",
+    "name": "Fransa",
+    "shortName": "Fransa",
+    "abbreviation": "FRA",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#123163"
+    }
+  },
+  {
+    "_id": "38018",
+    "name": "Norveç U15",
+    "shortName": "Norveç U15",
+    "abbreviation": "NOR 15",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "36495",
+    "name": "Norveç U16",
+    "shortName": "Norveç U16",
+    "abbreviation": "NOR 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F02729",
+      "secondColor": "#002468",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "1057",
+    "name": "Bryne FK",
+    "shortName": "Bryne",
+    "abbreviation": "BFK",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1057.png?lm=1789459228",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ff0000",
+      "secondColor": "#ffffff",
+      "thirdColor": "#16a800"
+    }
+  },
+  {
+    "_id": "26471",
+    "name": "Norveç U17",
+    "shortName": "Norveç U17",
+    "abbreviation": "NOR 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F02729",
+      "secondColor": "#002468",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "35022",
+    "name": "Molde FK II",
+    "shortName": "Molde II",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/35022.png?lm=1789461198",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#3366FF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "687",
+    "name": "Molde FK",
+    "shortName": "Molde ",
+    "abbreviation": "MFK",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/687.png?lm=1789459206",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#3366FF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "31919",
+    "name": "Norveç U18",
+    "shortName": "Norveç U18",
+    "abbreviation": "NOR 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F02729",
+      "secondColor": "#002468",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "22515",
+    "name": "Norveç U19",
+    "shortName": "Norveç U19",
+    "abbreviation": "NOR 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F02729",
+      "secondColor": "#002468",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "62110",
+    "name": "Molde FK UEFA U19",
+    "shortName": "Molde FK YL",
+    "abbreviation": "Molde",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/62110.png?lm=1789463178",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "16854",
+    "name": "Norveç U21",
+    "shortName": "Norveç U21",
+    "abbreviation": "NOR 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F02729",
+      "secondColor": "#002468",
+      "thirdColor": "#ffffff"
+    }
+  },
+  {
+    "_id": "409",
+    "name": "Red Bull Salzburg",
+    "shortName": "Salzburg",
+    "abbreviation": "RBS",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/409.png?lm=1789459190",
+    "countryId": 127,
+    "countryName": "Avusturya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#E41349",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "38740",
+    "name": "Norveç U20",
+    "shortName": "Norveç U20",
+    "abbreviation": "NOR 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F02729",
+      "secondColor": "#002468",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "3440",
+    "name": "Norveç",
+    "shortName": "Norveç",
+    "abbreviation": "NOR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/125.png",
+    "countryId": 125,
+    "countryName": "Norveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F02729",
+      "secondColor": "#002468",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "16",
+    "name": "Borussia Dortmund",
+    "shortName": "Dortmund",
+    "abbreviation": "BVB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/16.png?lm=1789459167",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FDF105",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "281",
+    "name": "Manchester City",
+    "shortName": "Man City",
+    "abbreviation": "MCI",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/281.png?lm=1789459183",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#84BBFF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#84BBFF"
+    }
+  },
+  {
+    "_id": "16337",
+    "name": "Belçika U18",
+    "shortName": "Belçika U18",
+    "abbreviation": "BEL 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/19.png",
+    "countryId": 19,
+    "countryName": "Belçika",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1184",
+    "name": "KRC Genk",
+    "shortName": "Genk",
+    "abbreviation": "Genk",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1184.png?lm=1789459236",
+    "countryId": 19,
+    "countryName": "Belçika",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#0000FF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "16338",
+    "name": "Belçika U19",
+    "shortName": "Belçika U19",
+    "abbreviation": "BEL 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/19.png",
+    "countryId": 19,
+    "countryName": "Belçika",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#EF3340",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#FDDA24"
+    }
+  },
+  {
+    "_id": "3382",
+    "name": "Belçika",
+    "shortName": "Belçika",
+    "abbreviation": "BEL",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/19.png",
+    "countryId": 19,
+    "countryName": "Belçika",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#EF3340",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#FDDA24"
+    }
+  },
+  {
+    "_id": "9315",
+    "name": "Belçika U21",
+    "shortName": "Belçika U21",
+    "abbreviation": "BEL 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/19.png",
+    "countryId": 19,
+    "countryName": "Belçika",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFF00",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "86",
+    "name": "SV Werder Bremen",
+    "shortName": "Bremen",
+    "abbreviation": "Werder",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/86.png?lm=1789459169",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#00924A",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#0C4011"
+    }
+  },
+  {
+    "_id": "631",
+    "name": "Chelsea FC",
+    "shortName": "Chelsea",
+    "abbreviation": "CHE",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/631.png?lm=1789459205",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#004793",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "82",
+    "name": "VfL Wolfsburg",
+    "shortName": "Wolfsburg",
+    "abbreviation": "VfL",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/82.png?lm=1789459169",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#00CC00",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#77BBFF"
+    }
+  },
+  {
+    "_id": "6195",
+    "name": "SSC Napoli",
+    "shortName": "Napoli",
+    "abbreviation": "Napoli",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6195.png?lm=1789459481",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0080FF",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "28206",
+    "name": "Mısır U19",
+    "shortName": "Mısır U19",
+    "abbreviation": "EGY 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/2.png",
+    "countryId": 2,
+    "countryName": "Mısır",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#CE1126",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "3369",
+    "name": "El Mokawloon SC",
+    "shortName": "Mokawloon",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/3369.png?lm=1789459344",
+    "countryId": 2,
+    "countryName": "Mısır",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFF00",
+      "secondColor": "#000000",
+      "thirdColor": "#FFFF00"
+    }
+  },
+  {
+    "_id": "16121",
+    "name": "Mısır U20",
+    "shortName": "Mısır U20",
+    "abbreviation": "EGY 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/2.png",
+    "countryId": 2,
+    "countryName": "Mısır",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3672",
+    "name": "Mısır",
+    "shortName": "Mısır",
+    "abbreviation": "EGY",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/2.png",
+    "countryId": 2,
+    "countryName": "Mısır",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#CE1126",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "30951",
+    "name": "Mısır U23",
+    "shortName": "Mısır U23",
+    "abbreviation": "EGY 23",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/2.png",
+    "countryId": 2,
+    "countryName": "Mısır",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53825",
+    "name": "Mısır Olimpiyatlar",
+    "shortName": "Mısır",
+    "abbreviation": "EGY",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/2.png",
+    "countryId": 2,
+    "countryName": "Mısır",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "26",
+    "name": "FC Basel 1893",
+    "shortName": "Basel",
+    "abbreviation": "FCB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/26.png?lm=1789459167",
+    "countryId": 148,
+    "countryName": "İsviçre",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF1433",
+      "secondColor": "#004093",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "430",
+    "name": "ACF Fiorentina",
+    "shortName": "Fiorentina",
+    "abbreviation": "ACF",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/430.png?lm=1789459191",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#5C2180",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#5C2180"
+    }
+  },
+  {
+    "_id": "12",
+    "name": "AS Roma",
+    "shortName": "Roma",
+    "abbreviation": "Roma",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/12.png?lm=1789459167",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFB22E",
+      "secondColor": "#9E142B",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "31",
+    "name": "Liverpool FC",
+    "shortName": "Liverpool",
+    "abbreviation": "LIV",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/31.png?lm=1789459168",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#E6001E",
+      "secondColor": "#39403B",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "449",
+    "name": "Trabzonspor",
+    "shortName": "Trabzonspor",
+    "abbreviation": "TS",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/449.png?lm=1787748980",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#590e27",
+      "secondColor": "#75b7e6",
+      "thirdColor": "#d49d3f"
+    }
+  },
+  {
+    "_id": "23260",
+    "name": "İngiltere U17",
+    "shortName": "İngiltere U17",
+    "abbreviation": "ENG 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#CD1024",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "21340",
+    "name": "İngiltere U19",
+    "shortName": "İngiltere U19",
+    "abbreviation": "ENG 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FCFCFC",
+      "secondColor": "#C8102E",
+      "thirdColor": "#204da3"
+    }
+  },
+  {
+    "_id": "1150",
+    "name": "Leyton Orient",
+    "shortName": "Leyton Orient",
+    "abbreviation": "LEY",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1150.png?lm=1789459235",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ff2121",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "148",
+    "name": "Tottenham Hotspur",
+    "shortName": "Tottenham",
+    "abbreviation": "TOT",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/148.png?lm=1789459175",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#001C58",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "1028",
+    "name": "FC Millwall",
+    "shortName": "Millwall",
+    "abbreviation": "MIL",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1028.png?lm=1789459228",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#2F3D99",
+      "secondColor": "#FAFAFA",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9254",
+    "name": "Tottenham Hotspur U21",
+    "shortName": "Tottenham U21",
+    "abbreviation": "TOT",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9254.png?lm=1789459652",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#001C58",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "1123",
+    "name": "Norwich City",
+    "shortName": "Norwich",
+    "abbreviation": "NOR",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1123.png?lm=1789459235",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#009900",
+      "secondColor": "#FFFF00",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "33614",
+    "name": "Norwich City U21",
+    "shortName": "Norwich U21",
+    "abbreviation": "NOR",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/33614.png?lm=1789461097",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1003",
+    "name": "Leicester City",
+    "shortName": "Leicester",
+    "abbreviation": "LEI",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1003.png?lm=1789459227",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0053A0",
+      "secondColor": "#FDBE11",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "22907",
+    "name": "İngiltere U20",
+    "shortName": "İngiltere U20",
+    "abbreviation": "ENG 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#CD1024",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9565",
+    "name": "İngiltere U21",
+    "shortName": "İngiltere U21",
+    "abbreviation": "ENG 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#CD1024",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3299",
+    "name": "İngiltere",
+    "shortName": "İngiltere",
+    "abbreviation": "ENG",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FCFCFC",
+      "secondColor": "#C8102E",
+      "thirdColor": "#204da3"
+    }
+  },
+  {
+    "_id": "27",
+    "name": "FC Bayern Münih ",
+    "shortName": "Bayern Münih",
+    "abbreviation": "FCB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/27.png?lm=1789459168",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#DB072D",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "38310",
+    "name": "Güney Kore U15",
+    "shortName": "Güney Kore U15",
+    "abbreviation": "KOR 15",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/87.png",
+    "countryId": 87,
+    "countryName": "Güney Kore",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F9041D",
+      "secondColor": "#122DA7",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "25511",
+    "name": "Güney Kore U17",
+    "shortName": "Güney Kore U17",
+    "abbreviation": "KOR 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/87.png",
+    "countryId": 87,
+    "countryName": "Güney Kore",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "21063",
+    "name": "Hamburger SV U17",
+    "shortName": "Hamburg U17",
+    "abbreviation": "HSV",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/21063.png?lm=1789460205",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#014495",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "66879",
+    "name": "Güney Kore U16",
+    "shortName": "Güney Kore U16",
+    "abbreviation": "KOR 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/87.png",
+    "countryId": 87,
+    "countryName": "Güney Kore",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "2509",
+    "name": "Hamburger SV U19",
+    "shortName": "HSV U19",
+    "abbreviation": "HSV",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2509.png?lm=1789459298",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#014495",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "389",
+    "name": "Hamburger SV II",
+    "shortName": "Hamburg II",
+    "abbreviation": "HSV 2",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/389.png?lm=1789459190",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#014495",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "41",
+    "name": "Hamburger SV",
+    "shortName": "Hamburg",
+    "abbreviation": "HSV",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/41.png?lm=1789459168",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#014495",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "3589",
+    "name": "Güney Kore",
+    "shortName": "Güney Kore",
+    "abbreviation": "KOR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/87.png",
+    "countryId": 87,
+    "countryName": "Güney Kore",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F9041D",
+      "secondColor": "#122DA7",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "15",
+    "name": "Bayer 04 Leverkusen",
+    "shortName": "Leverkusen",
+    "abbreviation": "B04",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/15.png?lm=1788504510",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53812",
+    "name": "Güney Kore Olimpiyatlar",
+    "shortName": "Güney Kore",
+    "abbreviation": "KOR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/87.png",
+    "countryId": 87,
+    "countryName": "Güney Kore",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "51828",
+    "name": "Los Angeles FC",
+    "shortName": "LAFC",
+    "abbreviation": "LAFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/51828.png?lm=1789462424",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#C4A465",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "9109",
+    "name": "Znicz Pruszkow",
+    "shortName": "Znicz",
+    "abbreviation": "Znicz",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9109.png?lm=1789459645",
+    "countryId": 135,
+    "countryName": "Polonya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ffea00",
+      "secondColor": "#ff0000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9324",
+    "name": "Polonya U21",
+    "shortName": "Polonya U21",
+    "abbreviation": "POL 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/135.png",
+    "countryId": 135,
+    "countryName": "Polonya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "238",
+    "name": "Lech Poznan",
+    "shortName": "Lech Poznan",
+    "abbreviation": "Lech",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/238.png?lm=1789459182",
+    "countryId": 135,
+    "countryName": "Polonya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#004B92",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3442",
+    "name": "Polonya",
+    "shortName": "Polonya",
+    "abbreviation": "POL",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/135.png",
+    "countryId": 135,
+    "countryName": "Polonya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#D22630",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#D22630"
+    }
+  },
+  {
+    "_id": "432",
+    "name": "Chicago Fire FC",
+    "shortName": "Chicago",
+    "abbreviation": "CHI",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/432.png?lm=1789459191",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#AF2626",
+      "secondColor": "#0A174A",
+      "thirdColor": "#8A8D8F"
+    }
+  },
+  {
+    "_id": "681",
+    "name": "Real Sociedad",
+    "shortName": "Sociedad",
+    "abbreviation": "RSO",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/681.png?lm=1789459206",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0000ff",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9323",
+    "name": "Fransa U21",
+    "shortName": "Fransa U21",
+    "abbreviation": "FRA 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "23658",
+    "name": "Fransa U20",
+    "shortName": "Fransa U20",
+    "abbreviation": "FRA 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "13",
+    "name": "Atlético Madrid",
+    "shortName": "Atletico Madrid",
+    "abbreviation": "Atleti",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/13.png?lm=1789030932",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#CF321F",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#212B61"
+    }
+  },
+  {
+    "_id": "45604",
+    "name": "Orlando City",
+    "shortName": "Orlando City",
+    "abbreviation": "ORL",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/45604.png?lm=1789461962",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#633492",
+      "secondColor": "#FDE192",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "7042",
+    "name": "US Boulogne",
+    "shortName": "US Boulogne",
+    "abbreviation": "USBCO",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/7042.png?lm=1789459526",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#FF0000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1162",
+    "name": "SM Caen",
+    "shortName": "SM Caen",
+    "abbreviation": "SMC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1162.png?lm=1789459236",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "8023",
+    "name": "Al-Ittihad Club",
+    "shortName": "Al-Ittihad",
+    "abbreviation": "Itihad",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/8023.png?lm=1789459584",
+    "countryId": 146,
+    "countryName": "Suudi Arabistan",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ede100",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "36",
+    "name": "Fenerbahçe SK",
+    "shortName": "Fenerbahçe",
+    "abbreviation": "FB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/36.png?lm=1789459168",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFED00",
+      "secondColor": "#002D72",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "10844",
+    "name": "Fransa U16",
+    "shortName": "Fransa U16",
+    "abbreviation": "FRA 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9251",
+    "name": "Manchester United U21",
+    "shortName": "Man United U21",
+    "abbreviation": "MUN 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9251.png?lm=1789459652",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#D9020D",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "25250",
+    "name": "Fransa U18",
+    "shortName": "Fransa U18",
+    "abbreviation": "FRA 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "5242",
+    "name": "Manchester United U18",
+    "shortName": "Man United U18",
+    "abbreviation": "MUN 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/5242.png?lm=1789459435",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#D9020D",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "515",
+    "name": "Kulüpsüz",
+    "shortName": "Kulüpsüz",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/515.png?lm=1789459197",
+    "countryId": 0,
+    "countryName": null,
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "48143",
+    "name": "Brezilya U15",
+    "shortName": "Brezilya U15",
+    "abbreviation": "BRA 15",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/26.png",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "614",
+    "name": "CR Flamengo",
+    "shortName": "Flamengo",
+    "abbreviation": "CRF",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/614.png?lm=1789459204",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#C22A1E",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "6767",
+    "name": "Real Madrid Castilla",
+    "shortName": "Real Castilla",
+    "abbreviation": "RMCAST",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6767.png?lm=1789459511",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#004996",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53638",
+    "name": "İngiltere U15",
+    "shortName": "İngiltere U15",
+    "abbreviation": "ENG 15",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "30322",
+    "name": "İngiltere U16",
+    "shortName": "İngiltere U16",
+    "abbreviation": "ENG 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#CD1024",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "6938",
+    "name": "Birmingham City U18",
+    "shortName": "Birmingham U18",
+    "abbreviation": "BC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6938.png?lm=1789459524",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0700D1",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "337",
+    "name": "Birmingham City",
+    "shortName": "Birmingham",
+    "abbreviation": "BIR",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/337.png?lm=1789459184",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0700D1",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "472",
+    "name": "UD Las Palmas",
+    "shortName": "Las Palmas",
+    "abbreviation": "Palmas",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/472.png?lm=1789459191",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFF00",
+      "secondColor": "#0000FF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "20947",
+    "name": "İspanya U18",
+    "shortName": "İspanya U18",
+    "abbreviation": "ESP 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C60B1E",
+      "secondColor": "#FFC400",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "12395",
+    "name": "İspanya U17",
+    "shortName": "İspanya U17",
+    "abbreviation": "ESP 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C60B1E",
+      "secondColor": "#FFC400",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "12609",
+    "name": "İspanya U19",
+    "shortName": "İspanya U19",
+    "abbreviation": "ESP 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C60B1E",
+      "secondColor": "#FFC400",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9567",
+    "name": "İspanya U21",
+    "shortName": "İspanya U21",
+    "abbreviation": "ESP 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C60B1E",
+      "secondColor": "#FFC400",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3375",
+    "name": "İspanya",
+    "shortName": "İspanya",
+    "abbreviation": "ESP",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#EF3340",
+      "secondColor": "#FFD100",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "35742",
+    "name": "İspanya U23",
+    "shortName": "İspanya U23",
+    "abbreviation": "ESP 23",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C60B1E",
+      "secondColor": "#FFC400",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53824",
+    "name": "İspanya Olimpiyatlar",
+    "shortName": "İspanya",
+    "abbreviation": "ESP",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "70910",
+    "name": "İspanya U15",
+    "shortName": "İspanya U15",
+    "abbreviation": "ESP 15",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "33775",
+    "name": "İspanya U16",
+    "shortName": "İspanya U16",
+    "abbreviation": "ESP 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C60B1E",
+      "secondColor": "#FFC400",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "41584",
+    "name": "FC Barcelona UEFA U19",
+    "shortName": "Barcelona YL",
+    "abbreviation": "FCBU19",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/41584.png?lm=1789461663",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "6930",
+    "name": "Manchester City U18",
+    "shortName": "Man City U18",
+    "abbreviation": "MCI 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6930.png?lm=1789459524",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#84BBFF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#84BBFF"
+    }
+  },
+  {
+    "_id": "41593",
+    "name": "Manchester City UEFA U19",
+    "shortName": "Man City YL",
+    "abbreviation": "MCI 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/41593.png?lm=1789461668",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9265",
+    "name": "Manchester City U21",
+    "shortName": "Man City U21",
+    "abbreviation": "MCI",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9265.png?lm=1789459653",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#84BBFF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#84BBFF"
+    }
+  },
+  {
+    "_id": "31269",
+    "name": "İngiltere U18",
+    "shortName": "İngiltere U18",
+    "abbreviation": "ENG 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/189.png",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#CD1024",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "5679",
+    "name": "Arsenal U18",
+    "shortName": "Arsenal U18",
+    "abbreviation": "ARS",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/5679.png?lm=1789459463",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#EF0107",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#9C824A"
+    }
+  },
+  {
+    "_id": "9249",
+    "name": "Arsenal U21",
+    "shortName": "Arsenal U21",
+    "abbreviation": "ARS",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9249.png?lm=1789459647",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#EF0107",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#9C824A"
+    }
+  },
+  {
+    "_id": "11",
+    "name": "Arsenal",
+    "shortName": "Arsenal",
+    "abbreviation": "ARS",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/11.png?lm=1789459167",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#EF0107",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#9C824A"
+    }
+  },
+  {
+    "_id": "11972",
+    "name": "Villarreal CF B",
+    "shortName": "Villarreal B",
+    "abbreviation": "Villar",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/11972.png?lm=1789459786",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFF00",
+      "secondColor": "#0073ff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1050",
+    "name": "Villarreal CF",
+    "shortName": "Villarreal",
+    "abbreviation": "VCF",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1050.png?lm=1789459228",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFF00",
+      "secondColor": "#0073ff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "202",
+    "name": "FC Groningen",
+    "shortName": "Groningen",
+    "abbreviation": "GRO",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/202.png?lm=1789459176",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#009900",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "14725",
+    "name": "FC Groningen U21",
+    "shortName": "Groningen U21",
+    "abbreviation": "GRO-21",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/14725.png?lm=1789459900",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#009900",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "11944",
+    "name": "Hollanda U21",
+    "shortName": "Hollanda U21",
+    "abbreviation": "NED 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/122.png",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FC4C02",
+      "secondColor": "#000000",
+      "thirdColor": "#FC4C02"
+    }
+  },
+  {
+    "_id": "371",
+    "name": "Celtic Glasgow",
+    "shortName": "Celtic ",
+    "abbreviation": "Celtic",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/371.png?lm=1789459190",
+    "countryId": 190,
+    "countryName": "İskoçya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#009933",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#009933"
+    }
+  },
+  {
+    "_id": "180",
+    "name": "Southampton FC",
+    "shortName": "Southampton",
+    "abbreviation": "SOU",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/180.png?lm=1789459176",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0033",
+      "secondColor": "#fcfcfc",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3379",
+    "name": "Hollanda",
+    "shortName": "Hollanda",
+    "abbreviation": "NED",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/122.png",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FC4C02",
+      "secondColor": "#000000",
+      "thirdColor": "#FC4C02"
+    }
+  },
+  {
+    "_id": "36546",
+    "name": "Southampton FC U21",
+    "shortName": "Southampton U21",
+    "abbreviation": "SOU",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/36546.png?lm=1789461305",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "6600",
+    "name": "SC Internacional",
+    "shortName": "SC Inter",
+    "abbreviation": "SCI",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6600.png?lm=1789459503",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#F00000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1444",
+    "name": "Racing Club",
+    "shortName": "Racing",
+    "abbreviation": "Racing",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1444.png?lm=1789459251",
+    "countryId": 9,
+    "countryName": "Arjantin",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#00B3FF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "46",
+    "name": "Inter Milan",
+    "shortName": "Inter",
+    "abbreviation": "Inter",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/46.png?lm=1789459168",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#0055A0",
+      "thirdColor": "#cfb013"
+    }
+  },
+  {
+    "_id": "6808",
+    "name": "HSK Zrinjski Mostar",
+    "shortName": "Zrinjski Mostar",
+    "abbreviation": "Zrinjs",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6808.png?lm=1789459517",
+    "countryId": 24,
+    "countryName": "Bosna-Hersek",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "17379",
+    "name": "Hırvatistan U19",
+    "shortName": "Hırvatistan U19",
+    "abbreviation": "CRO 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/37.png",
+    "countryId": 37,
+    "countryName": "Hırvatistan",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C8102E",
+      "secondColor": "#012169",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "918",
+    "name": "NK Inker",
+    "shortName": "Inker",
+    "abbreviation": "Ink",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/918.png?lm=1789459220",
+    "countryId": 37,
+    "countryName": "Hırvatistan",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "11943",
+    "name": "Hırvatistan U21",
+    "shortName": "Hırvatistan U21",
+    "abbreviation": "CRO 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/37.png",
+    "countryId": 37,
+    "countryName": "Hırvatistan",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C8102E",
+      "secondColor": "#012169",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "419",
+    "name": "GNK Dinamo Zagreb",
+    "shortName": "Dinamo Zagreb",
+    "abbreviation": "Dinamo",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/419.png?lm=1789459190",
+    "countryId": 37,
+    "countryName": "Hırvatistan",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#1c388c",
+      "secondColor": "#E32118",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3556",
+    "name": "Hırvatistan",
+    "shortName": "Hırvatistan",
+    "abbreviation": "CRO",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/37.png",
+    "countryId": 37,
+    "countryName": "Hırvatistan",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C8102E",
+      "secondColor": "#012169",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "5",
+    "name": "AC Milan",
+    "shortName": "Milan",
+    "abbreviation": "Milan",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/5.png?lm=1789459167",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#B50909",
+      "secondColor": "#050505",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "21065",
+    "name": "FC Hansa Rostock U17",
+    "shortName": "H. Rostock U17",
+    "abbreviation": "HROU17",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/21065.png?lm=1789460205",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0033CC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#FF0000"
+    }
+  },
+  {
+    "_id": "17662",
+    "name": "Almanya U17",
+    "shortName": "Almanya U17",
+    "abbreviation": "GER 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/40.png",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1462",
+    "name": "FC Bayern Münih U19",
+    "shortName": "Bayern U19",
+    "abbreviation": "FCB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1462.png?lm=1789459252",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#DB072D",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "28",
+    "name": "FC Bayern Münih II",
+    "shortName": "Bayern II",
+    "abbreviation": "FCB 2",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/28.png?lm=1789459168",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#DB072D",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3817",
+    "name": "Almanya U21",
+    "shortName": "Almanya U21",
+    "abbreviation": "GER 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/40.png",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "5710",
+    "name": "Almanya U19",
+    "shortName": "Almanya U19",
+    "abbreviation": "GER 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/40.png",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3262",
+    "name": "Almanya",
+    "shortName": "Almanya",
+    "abbreviation": "GER",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/40.png",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "123",
+    "name": "Kariyer sonu",
+    "shortName": "Kariyer sonu",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/123.png?lm=1789459175",
+    "countryId": 0,
+    "countryName": null,
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FCFCFC",
+      "secondColor": "#1a3151",
+      "thirdColor": "#FCFCFC"
+    }
+  },
+  {
+    "_id": "5709",
+    "name": "Almanya U20",
+    "shortName": "Almanya U20",
+    "abbreviation": "GER 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/40.png",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "6321",
+    "name": "Vancouver Whitecaps FC",
+    "shortName": "Vancouver",
+    "abbreviation": "VAN",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6321.png?lm=1789459488",
+    "countryId": 80,
+    "countryName": "Kanada",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#12264C",
+      "secondColor": "#85B7EA",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1463",
+    "name": "FC Schalke 04 U19",
+    "shortName": "Schalke U19",
+    "abbreviation": "S04",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1463.png?lm=1789459252",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#025FAC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "34",
+    "name": "FC Schalke 04 II",
+    "shortName": "Schalke 04 II",
+    "abbreviation": "S04 2",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/34.png?lm=1789459168",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#025FAC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "33",
+    "name": "Schalke 04",
+    "shortName": "Schalke",
+    "abbreviation": "S04",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/33.png?lm=1789459168",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#025FAC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "142",
+    "name": "Real Zaragoza",
+    "shortName": "Real Zaragoza",
+    "abbreviation": "Zarag",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/142.png?lm=1789459175",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ffffff",
+      "secondColor": "#0000ff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "20911",
+    "name": "İspanya U20",
+    "shortName": "İspanya U20",
+    "abbreviation": "ESP 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/157.png",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#C60B1E",
+      "secondColor": "#FFC400",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "368",
+    "name": "Sevilla FC",
+    "shortName": "Sevilla",
+    "abbreviation": "SFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/368.png?lm=1789459189",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "2407",
+    "name": "CF Monterrey",
+    "shortName": "Monterrey",
+    "abbreviation": "CFM",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2407.png?lm=1789459296",
+    "countryId": 110,
+    "countryName": "Meksika",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#000066",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "30431",
+    "name": "Galler U17",
+    "shortName": "Galler U17",
+    "abbreviation": "WAL",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/191.png",
+    "countryId": 191,
+    "countryName": "Galler",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "26181",
+    "name": "Galler U19",
+    "shortName": "Galler U19",
+    "abbreviation": "WAL",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/191.png",
+    "countryId": 191,
+    "countryName": "Galler",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#D30731",
+      "secondColor": "#ffe135",
+      "thirdColor": "#FCFCFC"
+    }
+  },
+  {
+    "_id": "24966",
+    "name": "Galler U21",
+    "shortName": "Galler U21",
+    "abbreviation": "WAL",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/191.png",
+    "countryId": 191,
+    "countryName": "Galler",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3864",
+    "name": "Galler",
+    "shortName": "Galler",
+    "abbreviation": "WAL",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/191.png",
+    "countryId": 191,
+    "countryName": "Galler",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#D30731",
+      "secondColor": "#ffe135",
+      "thirdColor": "#FCFCFC"
+    }
+  },
+  {
+    "_id": "4269",
+    "name": "Rot-Weiss Essen U19",
+    "shortName": "RW Essen U19",
+    "abbreviation": "RWE",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/4269.png?lm=1789459388",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "101288",
+    "name": "Başakşehir FK Rezerv",
+    "shortName": "Başakşehir Rez",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/101288.png?lm=1789466021",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "6890",
+    "name": "İstanbul Başakşehir FK",
+    "shortName": "Başakşehir",
+    "abbreviation": "İBFK",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6890.png?lm=1789459518",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ff5100",
+      "secondColor": "#1e3b59",
+      "thirdColor": "#ffffff"
+    }
+  },
+  {
+    "_id": "866",
+    "name": "Club Nacional",
+    "shortName": "Nacional",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/866.png?lm=1789459219",
+    "countryId": 179,
+    "countryName": "Uruguay",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#172B8C",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#FF0000"
+    }
+  },
+  {
+    "_id": "3449",
+    "name": "Uruguay",
+    "shortName": "Uruguay",
+    "abbreviation": "URU",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/179.png",
+    "countryId": 179,
+    "countryName": "Uruguay",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#55B5E5",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#55B5E5"
+    }
+  },
+  {
+    "_id": "22989",
+    "name": "Uruguay U20",
+    "shortName": "Uruguay U20",
+    "abbreviation": "URU 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/179.png",
+    "countryId": 179,
+    "countryName": "Uruguay",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#3dc2e3",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "610",
+    "name": "Ajax Amsterdam",
+    "shortName": "Ajax",
+    "abbreviation": "AJA",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/610.png?lm=1789459204",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53830",
+    "name": "Uruguay Olimpiyatlar",
+    "shortName": "Uruguay",
+    "abbreviation": "URU",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/179.png",
+    "countryId": 179,
+    "countryName": "Uruguay",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "210",
+    "name": "Grêmio FBPA",
+    "shortName": "Grêmio",
+    "abbreviation": "Grêmio",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/210.png?lm=1789459176",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1234",
+    "name": "CA Independiente",
+    "shortName": "Indep'te",
+    "abbreviation": "CAI",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1234.png?lm=1789459242",
+    "countryId": 9,
+    "countryName": "Arjantin",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#F00303",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3557",
+    "name": "İsveç",
+    "shortName": "İsveç",
+    "abbreviation": "SWE",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/147.png",
+    "countryId": 147,
+    "countryName": "İsveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FFCD00",
+      "secondColor": "#004B87",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "8595",
+    "name": "İsveç U21",
+    "shortName": "İsveç U21",
+    "abbreviation": "SWE 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/147.png",
+    "countryId": 147,
+    "countryName": "İsveç",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FFCD00",
+      "secondColor": "#004B87",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "496",
+    "name": "Malmö FF",
+    "shortName": "Malmö",
+    "abbreviation": "MFF",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/496.png?lm=1789459197",
+    "countryId": 147,
+    "countryName": "İsveç",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#81C0FF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1061",
+    "name": "Los Angeles Galaxy",
+    "shortName": "LA Galaxy",
+    "abbreviation": "LA",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1061.png?lm=1789459229",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#00245D",
+      "secondColor": "#F1AA00",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "41854",
+    "name": "Fenerbahçe U19",
+    "shortName": "Fenerbahçe U19",
+    "abbreviation": "FB U19",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/41854.png?lm=1789461685",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFED00",
+      "secondColor": "#002D72",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "22462",
+    "name": "Türkiye U17",
+    "shortName": "Türkiye U17",
+    "abbreviation": "TUR 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/174.png",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "22584",
+    "name": "Türkiye U18",
+    "shortName": "Türkiye U18",
+    "abbreviation": "TUR 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/174.png",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3381",
+    "name": "Türkiye",
+    "shortName": "Türkiye",
+    "abbreviation": "TUR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/174.png",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#c7102e",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "21058",
+    "name": "FC Bayern Münih U17",
+    "shortName": "Bayern U17",
+    "abbreviation": "FCB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/21058.png?lm=1789460205",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#DB072D",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "41585",
+    "name": "FC Bayern Münih UEFA U19",
+    "shortName": "Bayern YL",
+    "abbreviation": "Bayern",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/41585.png?lm=1789461663",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#CC0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "11008",
+    "name": "Juventus U20",
+    "shortName": "Juventus U20",
+    "abbreviation": "JuvU20",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/11008.png?lm=1789459746",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#0A0909",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "41592",
+    "name": "Juventus UEFA U19",
+    "shortName": "Juventus YL",
+    "abbreviation": "Juve",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/41592.png?lm=1789461668",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9568",
+    "name": "Türkiye U21",
+    "shortName": "Türkiye U21",
+    "abbreviation": "TUR 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/174.png",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "41101",
+    "name": "Juventus B",
+    "shortName": "Juventus B",
+    "abbreviation": "JuveNG",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/41101.png?lm=1789461632",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "21068",
+    "name": "Karlsruher SC U17",
+    "shortName": "Karlsruhe U17",
+    "abbreviation": "KSC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/21068.png?lm=1789460205",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0033CC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "28161",
+    "name": "Türkiye U16",
+    "shortName": "Türkiye U16",
+    "abbreviation": "TUR 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/174.png",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "5370",
+    "name": "Karlsruher SC U19",
+    "shortName": "Karlsruhe U19",
+    "abbreviation": "KSC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/5370.png?lm=1789459443",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0033CC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "22585",
+    "name": "Türkiye U19",
+    "shortName": "Türkiye U19",
+    "abbreviation": "TUR 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/174.png",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#c7102e",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "48",
+    "name": "Karlsruhe",
+    "shortName": "Karlsruhe",
+    "abbreviation": "KSC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/48.png?lm=1789459168",
+    "countryId": 40,
+    "countryName": "Almanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0033CC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "22586",
+    "name": "Türkiye U20",
+    "shortName": "Türkiye U20",
+    "abbreviation": "TUR 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/174.png",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "2463",
+    "name": "Sakaryaspor",
+    "shortName": "Sakaryaspor",
+    "abbreviation": "SAK",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2463.png?lm=1789459297",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#006633",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "20",
+    "name": "Bursaspor",
+    "shortName": "Bursaspor",
+    "abbreviation": "Bursa",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/20.png?lm=1789459167",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#009933",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "141",
+    "name": "Galatasaray SK",
+    "shortName": "Galatasaray",
+    "abbreviation": "GS",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/141.png?lm=1789459175",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FCB614",
+      "secondColor": "#A32638",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "416",
+    "name": "Torino FC",
+    "shortName": "Torino",
+    "abbreviation": "Torino",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/416.png?lm=1789459190",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#A62D2D",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "130",
+    "name": "Parma Calcio",
+    "shortName": "Parma",
+    "abbreviation": "Parma",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/130.png?lm=1789459175",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFB00",
+      "secondColor": "#0000FF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "164",
+    "name": "Blackburn Rovers",
+    "shortName": "Blackburn",
+    "abbreviation": "BLA",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/164.png?lm=1789459175",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0045F5",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#00d5ff"
+    }
+  },
+  {
+    "_id": "895",
+    "name": "Cannes",
+    "shortName": "Cannes",
+    "abbreviation": "Cannes",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/895.png?lm=1789459220",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "40",
+    "name": "Girondins Bordeaux",
+    "shortName": "G. Bordeaux",
+    "abbreviation": "FCGB",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/40.png?lm=1789459168",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#000979",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "42237",
+    "name": "All-Star-Team",
+    "shortName": "All-Star-Team",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/42237.png",
+    "countryId": 0,
+    "countryName": null,
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "37018",
+    "name": "Brezilya U23",
+    "shortName": "Brezilya U23",
+    "abbreviation": "BRA 23",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/26.png",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "330",
+    "name": "Atlético Mineiro",
+    "shortName": "Atlético-MG",
+    "abbreviation": "CAM",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/330.png?lm=1789459184",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#050505",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "4961",
+    "name": "Querétaro FC",
+    "shortName": "Querétaro FC",
+    "abbreviation": "QUER",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/4961.png?lm=1789459426",
+    "countryId": 110,
+    "countryName": "Meksika",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0033CC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "2462",
+    "name": "Fluminense Football Club",
+    "shortName": "Fluminense",
+    "abbreviation": "FFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2462.png?lm=1789459297",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#910029",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#006941"
+    }
+  },
+  {
+    "_id": "1105",
+    "name": "Ravenna FC",
+    "shortName": "Ravenna",
+    "abbreviation": "Raven",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1105.png?lm=1789459235",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#F1AA1E",
+      "secondColor": "#8c191c",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "32850",
+    "name": "Fransa U15",
+    "shortName": "Fransa U15",
+    "abbreviation": "FRA 15",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/50.png",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#123163",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "623",
+    "name": "Red Bull New York",
+    "shortName": "RB New York",
+    "abbreviation": "RBNY",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/623.png?lm=1789459204",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#D50031",
+      "secondColor": "#012055",
+      "thirdColor": "#FFC800"
+    }
+  },
+  {
+    "_id": "609",
+    "name": "Cruzeiro EC",
+    "shortName": "Cruzeiro",
+    "abbreviation": "ECC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/609.png?lm=1789459204",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0055FA",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "383",
+    "name": "PSV Eindhoven",
+    "shortName": "PSV",
+    "abbreviation": "PSV",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/383.png?lm=1789459190",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ED1C23",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "199",
+    "name": "SC Corinthians",
+    "shortName": "Corinthians",
+    "abbreviation": "SCCP",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/199.png?lm=1789459176",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#050405",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "189",
+    "name": "CA Boca Juniors",
+    "shortName": "Boca Juniors",
+    "abbreviation": "CABJ",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/189.png?lm=1789459176",
+    "countryId": 9,
+    "countryName": "Arjantin",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0c41ab",
+      "secondColor": "#ffee00",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "4023",
+    "name": "---",
+    "shortName": "---",
+    "abbreviation": "---",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/4023.png?lm=1789459374",
+    "countryId": 0,
+    "countryName": null,
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3958",
+    "name": "Vissel Kobe",
+    "shortName": "Vissel Kobe",
+    "abbreviation": "Vissel",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/3958.png?lm=1789459373",
+    "countryId": 77,
+    "countryName": "Japonya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#990000",
+      "secondColor": "#ffffff",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "15542",
+    "name": "Emirates Club",
+    "shortName": "Emirates Club",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/15542.png?lm=1789459931",
+    "countryId": 183,
+    "countryName": "Birlesik Arap Emirlikleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "656",
+    "name": "Al-Sadd SC",
+    "shortName": "Al-Sadd",
+    "abbreviation": "Sadd",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/656.png?lm=1789459205",
+    "countryId": 137,
+    "countryName": "Katar",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFF8",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "585",
+    "name": "São Paulo FC",
+    "shortName": "São Paulo",
+    "abbreviation": "SPFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/585.png?lm=1789459199",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "19",
+    "name": "Brescia Calcio (- 2025)",
+    "shortName": "Brescia",
+    "abbreviation": "Bresci",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/19.png?lm=1789459167",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#007FFF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "21746",
+    "name": "İtalya U18",
+    "shortName": "İtalya U18",
+    "abbreviation": "ITA 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/75.png",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#0000FF",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "11947",
+    "name": "İtalya U21",
+    "shortName": "İtalya U21",
+    "abbreviation": "ITA 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/75.png",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#0047BB",
+      "secondColor": "#FCFCFC",
+      "thirdColor": "#202A44"
+    }
+  },
+  {
+    "_id": "1386",
+    "name": "Reggina 1914",
+    "shortName": "Reggina",
+    "abbreviation": "REG",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1386.png?lm=1789459250",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#6b1111",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53840",
+    "name": "İtalya Olimpiyatlar",
+    "shortName": "İtalya",
+    "abbreviation": "ITA",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/75.png",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#0000ff",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3376",
+    "name": "İtalya",
+    "shortName": "İtalya",
+    "abbreviation": "ITA",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/75.png",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#0047BB",
+      "secondColor": "#FCFCFC",
+      "thirdColor": "#202A44"
+    }
+  },
+  {
+    "_id": "40058",
+    "name": "New York City FC",
+    "shortName": "New York",
+    "abbreviation": "NYC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/40058.png?lm=1789461556",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#6aacdf",
+      "secondColor": "#00285E",
+      "thirdColor": "#ffffff"
+    }
+  },
+  {
+    "_id": "23243",
+    "name": "İtalya U16",
+    "shortName": "İtalya U16",
+    "abbreviation": "ITA 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/75.png",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#032aed",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "23133",
+    "name": "İtalya U17",
+    "shortName": "İtalya U17",
+    "abbreviation": "ITA 17",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/75.png",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#0000ff",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3037",
+    "name": "Calcio Padova",
+    "shortName": "Padova",
+    "abbreviation": "Padova",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/3037.png?lm=1789459329",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ff0000",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "8054",
+    "name": "Sydney FC",
+    "shortName": "Sydney FC",
+    "abbreviation": "SFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/8054.png?lm=1789459585",
+    "countryId": 12,
+    "countryName": "Avustralya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "45080",
+    "name": "Odisha FC",
+    "shortName": "Odisha FC",
+    "abbreviation": "OFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/45080.png?lm=1789461923",
+    "countryId": 67,
+    "countryName": "Hindistan",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "720",
+    "name": "FC Porto",
+    "shortName": "Porto",
+    "abbreviation": "FCP",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/720.png?lm=1789459211",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0037eb",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "398",
+    "name": "SS Lazio",
+    "shortName": "Lazio",
+    "abbreviation": "Lazio",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/398.png?lm=1789459190",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#dcecf2",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "10958",
+    "name": "AC Milan U20",
+    "shortName": "Milan U20",
+    "abbreviation": "Milan",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/10958.png?lm=1789459741",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#B50909",
+      "secondColor": "#050505",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "4078",
+    "name": "CF Montréal",
+    "shortName": "Montréal",
+    "abbreviation": "MTL",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/4078.png?lm=1789459380",
+    "countryId": 80,
+    "countryName": "Kanada",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#122089",
+      "secondColor": "#000000",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "45299",
+    "name": "Chennaiyin FC",
+    "shortName": "Chennaiyin FC",
+    "abbreviation": "CFC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/45299.png?lm=1789461939",
+    "countryId": 67,
+    "countryName": "Hindistan",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "15541",
+    "name": "Al-Ahli Dubai Club (- 2017)",
+    "shortName": "Al-Ahli (BAE)",
+    "abbreviation": "AC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/15541.png?lm=1789459931",
+    "countryId": 183,
+    "countryName": "Birlesik Arap Emirlikleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1023",
+    "name": "SE Palmeiras",
+    "shortName": "Palmeiras",
+    "abbreviation": "PAL",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1023.png?lm=1789459228",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#006600",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#FF0000"
+    }
+  },
+  {
+    "_id": "2700",
+    "name": "Anji Mahaçkale",
+    "shortName": "Anji Mahaçkale",
+    "abbreviation": "Anji",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2700.png?lm=1789459312",
+    "countryId": 141,
+    "countryName": "Rusya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#006600",
+      "secondColor": "#FFFFff",
+      "thirdColor": "#FFFF00"
+    }
+  },
+  {
+    "_id": "969",
+    "name": "Montpellier HSC",
+    "shortName": "Montpellier",
+    "abbreviation": "MHSC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/969.png?lm=1789459221",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#344575",
+      "secondColor": "#D87043",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1160",
+    "name": "Nîmes Olympique",
+    "shortName": "Nîmes",
+    "abbreviation": "Nîmes",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1160.png?lm=1789459236",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#e4141c",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "618",
+    "name": "AS Saint-Étienne",
+    "shortName": "St. Étienne",
+    "abbreviation": "ASSE",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/618.png?lm=1789459204",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#40b848",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "290",
+    "name": "AJ Auxerre",
+    "shortName": "AJ Auxerre",
+    "abbreviation": "AJA",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/290.png?lm=1789459183",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ffffff",
+      "secondColor": "#1862F5",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "244",
+    "name": "Olympique Marsilya",
+    "shortName": "Marsilya",
+    "abbreviation": "OM",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/244.png?lm=1789459182",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#099FFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "31372",
+    "name": "Portekiz U16",
+    "shortName": "Portekiz U16",
+    "abbreviation": "PORT16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#850B23",
+      "secondColor": "#006600",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "16371",
+    "name": "Portekiz U18",
+    "shortName": "Portekiz U18",
+    "abbreviation": "POR 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/136.png",
+    "countryId": 136,
+    "countryName": "Portekiz",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#850B23",
+      "secondColor": "#006600",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "4835",
+    "name": "New York Cosmos",
+    "shortName": "NY Cosmos",
+    "abbreviation": "NYC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/4835.png?lm=1789459419",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#547ff5",
+      "secondColor": "#f2d00c",
+      "thirdColor": "#0db829"
+    }
+  },
+  {
+    "_id": "6249",
+    "name": "Dinamo Kiev 2",
+    "shortName": "Dinamo Kiev 2",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6249.png?lm=1789459487",
+    "countryId": 177,
+    "countryName": "Ukrayna",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#1070c2",
+      "secondColor": "#ffffff",
+      "thirdColor": "#174493"
+    }
+  },
+  {
+    "_id": "16274",
+    "name": "Ukrayna U21",
+    "shortName": "Ukrayna U21",
+    "abbreviation": "UKR 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/177.png",
+    "countryId": 177,
+    "countryName": "Ukrayna",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#ffed00",
+      "secondColor": "#172983",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "338",
+    "name": "Dinamo Kiev",
+    "shortName": "Dinamo Kiev",
+    "abbreviation": "Dinamo",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/338.png?lm=1789459184",
+    "countryId": 177,
+    "countryName": "Ukrayna",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#1070c2",
+      "secondColor": "#ffffff",
+      "thirdColor": "#174493"
+    }
+  },
+  {
+    "_id": "3699",
+    "name": "Ukrayna",
+    "shortName": "Ukrayna",
+    "abbreviation": "UKR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/177.png",
+    "countryId": 177,
+    "countryName": "Ukrayna",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#ffed00",
+      "secondColor": "#172983",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "209",
+    "name": "CA River Plate",
+    "shortName": "River Plate",
+    "abbreviation": "CARP",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/209.png?lm=1789459176",
+    "countryId": 9,
+    "countryName": "Arjantin",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#FF0000",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "252",
+    "name": "Genoa CFC",
+    "shortName": "Genoa",
+    "abbreviation": "Genoa",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/252.png?lm=1789459182",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#07078A",
+      "secondColor": "#E60707",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3434",
+    "name": "Kamerun",
+    "shortName": "Kamerun",
+    "abbreviation": "CMR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/31.png",
+    "countryId": 31,
+    "countryName": "Kamerun",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#007A5E",
+      "secondColor": "#FCD116",
+      "thirdColor": "#CE1126"
+    }
+  },
+  {
+    "_id": "1244",
+    "name": "CD Leganés",
+    "shortName": "Leganés",
+    "abbreviation": "Lega",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1244.png?lm=1789459242",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0000FF",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "714",
+    "name": "Espanyol Barcelona",
+    "shortName": "Espanyol",
+    "abbreviation": "RCDE",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/714.png?lm=1789459206",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0000ff",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "237",
+    "name": "RCD Mallorca",
+    "shortName": "Mallorca",
+    "abbreviation": "RCDM",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/237.png?lm=1789459182",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "53843",
+    "name": "Kamerun Olimpiyatlar",
+    "shortName": "Kamerun",
+    "abbreviation": "CMR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/31.png",
+    "countryId": 31,
+    "countryName": "Kamerun",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "29",
+    "name": "Everton FC",
+    "shortName": "Everton",
+    "abbreviation": "EVE",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/29.png?lm=1789459168",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0052CC",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#FFD900"
+    }
+  },
+  {
+    "_id": "1038",
+    "name": "Sampdoria",
+    "shortName": "Sampdoria",
+    "abbreviation": "Samp",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1038.png?lm=1789459228",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#515EE8",
+      "secondColor": "#F5EBEB",
+      "thirdColor": "#E61C1C"
+    }
+  },
+  {
+    "_id": "589",
+    "name": "Antalyaspor",
+    "shortName": "Antalyaspor",
+    "abbreviation": "ANT",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/589.png?lm=1789459199",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#eb232d",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "2293",
+    "name": "Konyaspor",
+    "shortName": "Konyaspor",
+    "abbreviation": "KON",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2293.png?lm=1789459289",
+    "countryId": 174,
+    "countryName": "Türkiye",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#00804d",
+      "secondColor": "#ffffff",
+      "thirdColor": "#000000"
+    }
+  },
+  {
+    "_id": "965",
+    "name": "Qatar SC",
+    "shortName": "Qatar SC",
+    "abbreviation": "QSC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/965.png?lm=1789459221",
+    "countryId": 137,
+    "countryName": "Katar",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFCB08",
+      "secondColor": "#050708",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "1164",
+    "name": "Le Mans FC",
+    "shortName": "Le Mans FC",
+    "abbreviation": "LeMans",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1164.png?lm=1789459236",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#991319",
+      "secondColor": "#deaa1b",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "855",
+    "name": "Guingamp",
+    "shortName": "Guingamp",
+    "abbreviation": "EAG",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/855.png?lm=1789459219",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ff0000",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3591",
+    "name": "Fildişi Sahili",
+    "shortName": "Fildişi Sahili",
+    "abbreviation": "CIV",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/38.png",
+    "countryId": 38,
+    "countryName": "Fildişi Sahili",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#F77F00",
+      "secondColor": "#009E60",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "3183",
+    "name": "Shanghai Shenhua",
+    "shortName": "SH Shenhua",
+    "abbreviation": "",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/3183.png?lm=1789459336",
+    "countryId": 34,
+    "countryName": "Çin",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#0058AB",
+      "secondColor": "#FFFFFF",
+      "thirdColor": "#0058AB"
+    }
+  },
+  {
+    "_id": "33414",
+    "name": "Phoenix Rising FC",
+    "shortName": "Phoenix Rising",
+    "abbreviation": "PHX",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/33414.png?lm=1789461082",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#eb1921",
+      "secondColor": "#000000",
+      "thirdColor": "#ffffff"
+    }
+  },
+  {
+    "_id": "379",
+    "name": "West Ham United",
+    "shortName": "West Ham",
+    "abbreviation": "WHU",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/379.png?lm=1789459190",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#660033",
+      "secondColor": "#87d3ff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "9955",
+    "name": "West Ham United U18",
+    "shortName": "West Ham U18",
+    "abbreviation": "WHU 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/9955.png?lm=1789459685",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#660033",
+      "secondColor": "#87d3ff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "2440",
+    "name": "D.C. United",
+    "shortName": "DC United",
+    "abbreviation": "DC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2440.png?lm=1789459297",
+    "countryId": 184,
+    "countryName": "Amerika Birleşik Devletleri",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#000000",
+      "secondColor": "#DD0000",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "22",
+    "name": "Derby County",
+    "shortName": "Derby",
+    "abbreviation": "DER",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/22.png?lm=1789459167",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FFFFFF",
+      "secondColor": "#000000",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "34181",
+    "name": "Büyük Britanya Olimpiyatlar",
+    "shortName": "Büyük Britanya",
+    "abbreviation": "GBR",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/264.png",
+    "countryId": 264,
+    "countryName": "Birleşik Krallık",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "2824",
+    "name": "Ajax Amsterdam U19",
+    "shortName": "Ajax U19",
+    "abbreviation": "AJA-19",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2824.png?lm=1789459319",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "8817",
+    "name": "Ajax Amsterdam U21",
+    "shortName": "Ajax U21",
+    "abbreviation": "AJA II",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/8817.png?lm=1789459624",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#FF0000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "931",
+    "name": "Fulham FC",
+    "shortName": "Fulham",
+    "abbreviation": "FUL",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/931.png?lm=1789459221",
+    "countryId": 189,
+    "countryName": "İngiltere",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ffffff",
+      "secondColor": "#000000",
+      "thirdColor": "#CC0000"
+    }
+  },
+  {
+    "_id": "39118",
+    "name": "Hollanda U16",
+    "shortName": "Hollanda U16",
+    "abbreviation": "NED 16",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/122.png",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FF6000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "16341",
+    "name": "Hollanda U19",
+    "shortName": "Hollanda U19",
+    "abbreviation": "NED 19",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/122.png",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FC4C02",
+      "secondColor": "#000000",
+      "thirdColor": "#FC4C02"
+    }
+  },
+  {
+    "_id": "234",
+    "name": "Feyenoord",
+    "shortName": "Feyenoord",
+    "abbreviation": "FEY",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/234.png?lm=1789459182",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ff0808",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "24366",
+    "name": "Feyenoord U21",
+    "shortName": "Feyenoord U21",
+    "abbreviation": "FEY 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/24366.png?lm=1789460439",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "34684",
+    "name": "Hollanda U15",
+    "shortName": "Hollanda U15",
+    "abbreviation": "NED 15",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/122.png",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#FF6000",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "16342",
+    "name": "Hollanda U20",
+    "shortName": "Hollanda U20",
+    "abbreviation": "NED 20",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/122.png",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#ff6000",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "2618",
+    "name": "Olympique d'Alès en Cévennes",
+    "shortName": "Olympique Alès",
+    "abbreviation": "OAC",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/2618.png?lm=1789459305",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "3911",
+    "name": "Stade Brest 29",
+    "shortName": "Brest",
+    "abbreviation": "SB29",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/3911.png?lm=1789459367",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#ED1C24",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "347",
+    "name": "FC Metz",
+    "shortName": "Metz",
+    "abbreviation": "Metz",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/347.png?lm=1789459184",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#74070B",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "380",
+    "name": "US Salernitana 1919",
+    "shortName": "Salernitana",
+    "abbreviation": "Salern",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/380.png?lm=1789459190",
+    "countryId": 75,
+    "countryName": "İtalya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#831d1c",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "417",
+    "name": "OGC Nice",
+    "shortName": "Nice",
+    "abbreviation": "Nizza",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/417.png?lm=1789459190",
+    "countryId": 50,
+    "countryName": "Fransa",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "6297",
+    "name": "Al-Gharafa SC",
+    "shortName": "Al-Gharafa",
+    "abbreviation": "Gharaf",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/6297.png?lm=1787684085",
+    "countryId": 137,
+    "countryName": "Katar",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#fff000",
+      "secondColor": "#0076e0",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "16340",
+    "name": "Hollanda U18",
+    "shortName": "Hollanda U18",
+    "abbreviation": "NED 18",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/122.png",
+    "countryId": 122,
+    "countryName": "Hollanda",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#ff6000",
+      "secondColor": "#ffffff",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "537",
+    "name": "Botafogo FR",
+    "shortName": "Botafogo",
+    "abbreviation": "BOT",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/537.png?lm=1789459198",
+    "countryId": 26,
+    "countryName": "Brezilya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#080808",
+      "secondColor": "#FFFFFF",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "38754",
+    "name": "Çekoslovakya U21",
+    "shortName": "ČSSR U21",
+    "abbreviation": "TCH 21",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/220.png",
+    "countryId": 220,
+    "countryName": "CSSR",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "",
+      "secondColor": "",
+      "thirdColor": ""
+    }
+  },
+  {
+    "_id": "197",
+    "name": "AC Sparta Prag",
+    "shortName": "Sparta Prag",
+    "abbreviation": "Sparta",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/197.png?lm=1789459176",
+    "countryId": 172,
+    "countryName": "Çek Cumhuriyeti",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#005AA5",
+      "secondColor": "#FAA519",
+      "thirdColor": "#B41E1E"
+    }
+  },
+  {
+    "_id": "3445",
+    "name": "Çekya",
+    "shortName": "Çekya",
+    "abbreviation": "CZE",
+    "crestUrl": "https://img.a.transfermarkt.technology/flagge/original/172.png",
+    "countryId": 172,
+    "countryName": "Çek Cumhuriyeti",
+    "isNationalTeam": true,
+    "colors": {
+      "firstColor": "#DF0000",
+      "secondColor": "#006CB7",
+      "thirdColor": "#FFFFFF"
+    }
+  },
+  {
+    "_id": "1533",
+    "name": "Eibar",
+    "shortName": "Eibar",
+    "abbreviation": "Eibar",
+    "crestUrl": "https://img.a.transfermarkt.technology/wappen/big/1533.png?lm=1789459258",
+    "countryId": 157,
+    "countryName": "İspanya",
+    "isNationalTeam": false,
+    "colors": {
+      "firstColor": "#e01212",
+      "secondColor": "#0707e0",
+      "thirdColor": ""
+    }
+  }
+]

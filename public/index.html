@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GuessFootball</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ================= ANA MENU ================= -->
+    <section class="screen screen--menu is-active" id="screen-menu">
+      <div class="menu">
+        <h1 class="menu__logo">GUESS<span>FOOTBALL</span></h1>
+        <p class="menu__tagline">Futbolcu Bilgi Düellosu</p>
+        <nav class="menu__nav">
+          <button class="btn btn--primary" data-action="open-play">OYNA</button>
+          <button class="btn" data-action="open-settings">AYARLAR</button>
+          <button class="btn btn--ghost" data-action="quit">OYUNDAN ÇIK</button>
+        </nav>
+        <p class="menu__foot">İki oyuncu · Aynı ekran</p>
+      </div>
+    </section>
+
+    <!-- ================= OYUN SECIMI ================= -->
+    <section class="screen screen--select" id="screen-select">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="back-menu" aria-label="Geri">‹</button>
+          <h2>Oyun Seç</h2>
+        </header>
+        <div class="game-list">
+          <button class="game-card" data-action="open-closest-mode">
+            <span class="game-card__badge">1</span>
+            <span class="game-card__body">
+              <span class="game-card__title">En Yakın Tahmin</span>
+              <span class="game-card__desc">
+                Oyuncunun istatistiklerini tahmin et, en yakın satırı kazan.
+              </span>
+            </span>
+            <span class="game-card__go">OYNA ›</span>
+          </button>
+
+          <div class="game-card game-card--soon">
+            <span class="game-card__badge">2</span>
+            <span class="game-card__body">
+              <span class="game-card__title">Kariyerinden Bul</span>
+              <span class="game-card__desc">Kulüp geçmişine bakarak futbolcuyu bil.</span>
+            </span>
+            <span class="game-card__soon">YAKINDA</span>
+          </div>
+
+          <div class="game-card game-card--soon">
+            <span class="game-card__badge">3</span>
+            <span class="game-card__body">
+              <span class="game-card__title">Daha Fazlası</span>
+              <span class="game-card__desc">Yeni modlar yolda.</span>
+            </span>
+            <span class="game-card__soon">YAKINDA</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MOD SECIMI (Ayni ekran / Online) ================= -->
+    <section class="screen screen--select" id="screen-mode">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="open-play" aria-label="Geri">‹</button>
+          <h2>En Yakın Tahmin</h2>
+        </header>
+        <div class="game-list">
+          <button class="game-card" data-action="start-closest">
+            <span class="game-card__badge">👥</span>
+            <span class="game-card__body">
+              <span class="game-card__title">Aynı Ekranda</span>
+              <span class="game-card__desc">İki oyuncu tek cihazda sırayla girer.</span>
+            </span>
+            <span class="game-card__go">OYNA ›</span>
+          </button>
+          <button class="game-card" data-action="open-online">
+            <span class="game-card__badge">🌐</span>
+            <span class="game-card__body">
+              <span class="game-card__title">Online — Arkadaşınla</span>
+              <span class="game-card__desc">Oda kur ya da kodla katıl, herkes kendi cihazından.</span>
+            </span>
+            <span class="game-card__go">OYNA ›</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ONLINE LOBI ================= -->
+    <section class="screen screen--settings" id="screen-online">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="open-closest-mode" aria-label="Geri">‹</button>
+          <h2>Online Oyna</h2>
+        </header>
+
+        <!-- Giris: oda kur / katil -->
+        <div class="settings" id="online-entry">
+          <label class="field">
+            <span>Takma adın</span>
+            <input type="text" id="online-name" maxlength="12" placeholder="örn. FURKAN" />
+          </label>
+          <button class="btn btn--primary" data-action="online-create">ODA KUR</button>
+          <div class="online-or"><span>veya</span></div>
+          <label class="field">
+            <span>Oda kodu</span>
+            <input type="text" id="online-code" inputmode="numeric" maxlength="4" placeholder="4 haneli kod" />
+          </label>
+          <button class="btn" data-action="online-join">ODAYA KATIL</button>
+          <p class="settings__hint" id="online-hint"></p>
+        </div>
+
+        <!-- Bekleme odasi -->
+        <div class="settings" id="online-lobby" hidden>
+          <div class="room-code">
+            <span>Oda Kodu</span>
+            <b id="room-code-value">----</b>
+            <small>Arkadaşına bu kodu ver</small>
+          </div>
+          <ul class="room-players" id="room-players"></ul>
+          <button class="btn btn--primary" id="online-start" data-action="online-start" hidden>
+            BAŞLAT
+          </button>
+          <p class="settings__hint" id="lobby-hint">Rakip bekleniyor…</p>
+          <button class="btn btn--ghost" data-action="online-leave">ODADAN AYRIL</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= AYARLAR ================= -->
+    <section class="screen screen--settings" id="screen-settings">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="back-menu" aria-label="Geri">‹</button>
+          <h2>Ayarlar</h2>
+        </header>
+        <div class="settings">
+          <label class="field">
+            <span>1. Oyuncu Adı</span>
+            <input type="text" id="setting-name1" maxlength="12" />
+          </label>
+          <label class="field">
+            <span>2. Oyuncu Adı</span>
+            <input type="text" id="setting-name2" maxlength="12" />
+          </label>
+          <label class="field field--row">
+            <span>Puanları yeni oyunda sıfırla</span>
+            <input type="checkbox" id="setting-reset" checked />
+          </label>
+          <button class="btn btn--primary" data-action="save-settings">KAYDET</button>
+          <p class="settings__hint" id="settings-hint"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= OYUN TAHTASI ================= -->
+    <section class="screen screen--game" id="screen-game">
+      <div class="board">
+        <!-- Skor ve oyuncu basligi -->
+        <div class="board__top">
+          <div class="scorecard scorecard--left">
+            <span class="scorecard__name" id="score-name1">HİKMET</span>
+            <span class="scorecard__value" id="score-value1">0</span>
+          </div>
+
+          <div class="hero">
+            <div class="hero__name" id="hero-name">—</div>
+            <div class="hero__photo">
+              <img id="hero-photo" alt="Oyuncu" />
+            </div>
+          </div>
+
+          <div class="scorecard scorecard--right">
+            <span class="scorecard__name" id="score-name2">MERT</span>
+            <span class="scorecard__value" id="score-value2">0</span>
+          </div>
+        </div>
+
+        <!-- Tahmin satirlari (JS ile doldurulur) -->
+        <div class="rows" id="rows"></div>
+
+        <!-- Alt aksiyon cubugu -->
+        <div class="board__actions">
+          <button class="icon-btn icon-btn--dark" data-action="back-menu" aria-label="Menü">☰</button>
+          <button class="btn btn--primary" id="btn-primary" data-action="reveal">SONUCU GÖSTER</button>
+          <span class="round-tag" id="round-tag">Tur 1</span>
+        </div>
+
+        <!-- Tur sonucu bildirimi -->
+        <div class="toast" id="toast" hidden></div>
+      </div>
+    </section>
+
+    <!-- ================= CIKIS ================= -->
+    <section class="screen screen--quit" id="screen-quit">
+      <div class="menu">
+        <h1 class="menu__logo">GÖRÜŞÜRÜZ<span>👋</span></h1>
+        <p class="menu__tagline">Sekmeyi kapatabilirsin.</p>
+        <button class="btn btn--primary" data-action="back-menu">MENÜYE DÖN</button>
+      </div>
+    </section>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
