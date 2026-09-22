@@ -7,6 +7,7 @@
  */
 import { players, teams } from '../db.js';
 import { normalize } from './matcher.js';
+import { slotOf, orderOf } from './positions.js';
 
 let index = null; // [{ id, name, norm, words, games, position, cat, club, country, nt }]
 let flags = null; // Map(country -> flagUrl)
@@ -54,7 +55,8 @@ async function build() {
       id: d._id,
       name: d.name,
       position: d.position?.name ?? null,
-      cat: d.position?.category ?? null,
+      slot: slotOf(d.position?.name), // FOR/ORT/DEF/KL bolgesi
+      order: orderOf(d.position?.name), // hucumdan defansa siralama
       club: d.currentClub?.name ?? null,
       country: d.nationalities?.[0] ?? null,
       games: d.careerTotals?.games ?? 0,
@@ -101,7 +103,8 @@ export async function search(query, opts = {}) {
     if (country && p.nt?.country !== country) continue;
     // Milli kadro modu: sadece o ulkeyle en az 1 maça çıkmış oyuncular.
     if (country && (p.nt?.caps ?? 0) < 1) continue;
-    if (positions && !positions.includes(p.cat)) continue;
+    // positions = slot bolgeleri (FOR/ORT/DEF/KL); ozel esleme (slot) ile suz.
+    if (positions && !positions.includes(p.slot)) continue;
 
     let rank = 0;
     if (q) {
@@ -113,14 +116,10 @@ export async function search(query, opts = {}) {
   }
 
   if (country) {
-    // Milli kadro: mevkiye gore sirala (Forvet -> Kaleci), sonra alfabetik.
-    // Caps'e gore SIRALAMA YOK (yoksa en cok maci onde gosterip kopya olur).
-    const POS_ORDER = { Forvet: 0, 'Orta Saha': 1, Defans: 2, Kaleci: 3 };
+    // Milli kadro: detayli mevki sirasina gore (Santrafor -> ... -> Kaleci),
+    // sonra alfabetik. Caps'e gore SIRALAMA YOK (kopya olmasin).
     scored.sort(
-      (a, b) =>
-        a.rank - b.rank ||
-        (POS_ORDER[a.p.cat] ?? 9) - (POS_ORDER[b.p.cat] ?? 9) ||
-        a.p.norm.localeCompare(b.p.norm),
+      (a, b) => a.rank - b.rank || a.p.order - b.p.order || a.p.norm.localeCompare(b.p.norm),
     );
   } else {
     // Normal arama: bilinirlik (mac sayisi) azalan.
@@ -149,7 +148,8 @@ export function addDoc(doc) {
     id: doc._id,
     name: doc.name,
     position: doc.position?.name ?? null,
-    cat: doc.position?.category ?? null,
+    slot: slotOf(doc.position?.name),
+    order: orderOf(doc.position?.name),
     club: doc.currentClub?.name ?? null,
     country: doc.nationalities?.[0] ?? null,
     games: doc.careerTotals?.games ?? 0,

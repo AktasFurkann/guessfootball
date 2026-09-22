@@ -4,6 +4,7 @@ import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
 import { FORMATION, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
 import { ensurePlayer } from '../game/ensurePlayer.js';
+import { slotOf } from '../game/positions.js';
 
 export const gameRouter = Router();
 
@@ -88,7 +89,7 @@ gameRouter.get('/squad/player/:id', async (req, res, next) => {
       id: player._id,
       name: player.name,
       portraitUrl: player.portraitUrl,
-      category: player.position?.category ?? null,
+      slot: slotOf(player.position?.name), // FOR/ORT/DEF/KL bolgesi
       caps: await nationalCaps(player, country),
     });
   } catch (error) {

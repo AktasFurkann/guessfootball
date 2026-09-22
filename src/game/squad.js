@@ -39,11 +39,11 @@ async function buildEligible() {
   const byCountry = new Map(); // country -> {Kaleci:n, Defans:n, ...}
 
   for (const p of idx) {
-    if (!p.nt?.country || !p.cat) continue;
-    if (!(p.cat in NEED)) continue;
+    if (!p.nt?.country || !p.slot) continue;
+    if (!(p.slot in NEED)) continue;
     let c = byCountry.get(p.nt.country);
     if (!c) byCountry.set(p.nt.country, (c = { Kaleci: 0, Defans: 0, 'Orta Saha': 0, Forvet: 0 }));
-    c[p.cat] += 1;
+    c[p.slot] += 1;
   }
 
   const list = [];

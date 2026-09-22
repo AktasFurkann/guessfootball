@@ -268,8 +268,9 @@ async function run() {
 
   console.log('--- milli kadro ---');
   await test('ulke + mevki filtreli arama caps ile doner', async () => {
-    const { body } = await get('/api/players/search?country=Arjantin&positions=Forvet&q=messi');
-    assert.ok(body.results.some((r) => /messi/i.test(r.name)), 'Messi (Arjantin/Forvet)');
+    // Messi "Sağ Kanat" -> Orta Saha bolgesi (slot esleme).
+    const { body } = await get('/api/players/search?country=Arjantin&positions=Orta Saha&q=messi');
+    assert.ok(body.results.some((r) => /messi/i.test(r.name)), 'Messi (Arjantin/Orta Saha)');
     assert.ok(body.results.every((r) => typeof r.caps === 'number'), 'caps sayisal');
   });
 
@@ -282,7 +283,7 @@ async function run() {
     const { status, body } = await get(`/api/game/squad/player/${messi._id}?country=Arjantin`);
     assert.equal(status, 200);
     assert.ok(body.caps > 0, 'Messi Arjantin caps > 0');
-    assert.ok(body.category, 'kategori');
+    assert.ok(body.slot, 'slot (FOR/ORT/DEF/KL)');
   });
 
   await test('bilinmeyen API yolu 404 JSON doner', async () => {

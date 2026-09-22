@@ -1038,6 +1038,7 @@ const squad = {
   turn: 0, // su an sirasi gelen oyuncu
   placed: [false, false], // bu turda yerlestirdi mi
   pick: [null, null], // aktif secim {id, name}
+  target: 0, // sirasi gelenin doldurdugu slot (tiklanarak degisir)
 };
 
 /** Bayrak "cark"ini ~2 sn dondurur, sonra gercek ulkede durur. */
@@ -1174,7 +1175,13 @@ function renderPitch(side) {
     squad.slots[side].forEach((slot, idx) => {
       if (slot.pos !== rowPos) return;
       const el = document.createElement('div');
-      el.className = 'slot' + (slot.filled ? ' is-filled' : '');
+      let cls = 'slot';
+      if (slot.filled) cls += ' is-filled';
+      else if (!squad.over && side === squad.turn) {
+        cls += ' is-clickable';
+        if (idx === squad.target) cls += ' is-target';
+      }
+      el.className = cls;
       el.dataset.slot = idx;
       if (slot.filled && slot.player) {
         el.innerHTML = `
@@ -1249,10 +1256,46 @@ function setTurnUI(side) {
       input.disabled = true;
     }
   });
+  // Sahada ustten (forvet) ilk bos slotu hedef al (tiklayarak degistirilebilir).
+  let firstEmpty = -1;
+  for (const rowPos of PITCH_ROWS) {
+    firstEmpty = squad.slots[side].findIndex((s) => !s.filled && s.pos === rowPos);
+    if (firstEmpty >= 0) break;
+  }
+  setTarget(firstEmpty >= 0 ? firstEmpty : 0);
+
   $('#sq-turn').textContent = `Sıra: ${state.names[side]}`;
   setPrimarySquad('GÖNDER', 'squad-send');
   $(`#sq-input-${side}`).focus();
 }
+
+/** Sirasi gelen oyuncunun dolduracagi slotu (bolgeyi) belirler. */
+function setTarget(slotIdx) {
+  squad.target = slotIdx;
+  const side = squad.turn;
+  const cat = squad.slots[side][slotIdx]?.pos;
+  renderPitch(side); // is-target vurgusu
+  const input = $(`#sq-input-${side}`);
+  input.placeholder = `${squad.country.country} — ${POS_LABEL[cat] || cat}`;
+  // Bolgeye gore listeyi tazele.
+  if (input.value.trim()) input.dispatchEvent(new Event('input'));
+  else input.dispatchEvent(new Event('focus'));
+}
+
+// Slot'a tiklayinca (sirasi gelenin sahasinda, bos slot) o bolgeyi hedefle.
+document.addEventListener('click', (event) => {
+  if (squad.over) return;
+  if (!screens.squad.classList.contains('is-active')) return;
+  const slotEl = event.target.closest('.slot.is-clickable');
+  if (!slotEl) return;
+  const pitch = slotEl.closest('.pitch');
+  const side = Number(pitch.id.split('-').pop());
+  if (side !== squad.turn) return;
+  const idx = Number(slotEl.dataset.slot);
+  if (squad.slots[side][idx].filled) return;
+  setTarget(idx);
+  $(`#sq-input-${side}`).focus();
+});
 
 function setPrimarySquad(text, action, disabled = false) {
   const b = $('#sq-btn');
@@ -1292,8 +1335,9 @@ function attachSquadAutocomplete(input, side) {
   };
 
   const fetchList = async (q) => {
-    const positions = remainingPositions(side).join(',');
-    const params = new URLSearchParams({ country: squad.country.country, positions, limit: '60' });
+    // Hedef slotun bolgesine gore filtrele (tiklanan mevki).
+    const cat = squad.slots[side][squad.target]?.pos;
+    const params = new URLSearchParams({ country: squad.country.country, positions: cat || '', limit: '60' });
     if (q) params.set('q', q);
     try {
       const res = await fetch(`/api/players/search?${params}`);
@@ -1343,8 +1387,8 @@ async function resolveCurrentPick(side) {
   const input = $(`#sq-input-${side}`);
   const text = input.value.trim();
   if (!text) return null;
-  const positions = remainingPositions(side).join(',');
-  const params = new URLSearchParams({ country: squad.country.country, positions, q: text });
+  const cat = squad.slots[side][squad.target]?.pos;
+  const params = new URLSearchParams({ country: squad.country.country, positions: cat || '', q: text });
   try {
     const res = await fetch(`/api/players/search?${params}`);
     const first = (await res.json()).results?.find((r) => !squad.usedIds.has(r.id));
@@ -1387,14 +1431,21 @@ async function squadSend() {
     return;
   }
 
-  const slotIdx = squad.slots[side].findIndex((s) => !s.filled && s.pos === st.category);
-  if (slotIdx < 0) {
-    toast(`${POS_LABEL[st.category] || st.category} için boş yer yok, başka mevki seç.`, 2600);
-    setPrimarySquad('GÖNDER', 'squad-send');
-    return;
+  // Hedef slot bos ve secilen oyuncunun bolgesiyle uyumlu olmali.
+  const target = squad.slots[side][squad.target];
+  if (!target || target.filled || target.pos !== st.slot) {
+    // Uyumlu degilse: oyuncunun bolgesine ait bos slot var mi bul.
+    const alt = squad.slots[side].findIndex((s) => !s.filled && s.pos === st.slot);
+    if (alt < 0) {
+      toast(`${POS_LABEL[st.slot] || st.slot || 'Bu mevki'} için boş yer yok, başka oyuncu seç.`, 2600);
+      setPrimarySquad('GÖNDER', 'squad-send');
+      return;
+    }
+    squad.target = alt;
   }
 
   // Yerlestir + puanla.
+  const slotIdx = squad.target;
   const slot = squad.slots[side][slotIdx];
   slot.filled = true;
   slot.player = { id: st.id, name: st.name, caps: st.caps, portraitUrl: st.portraitUrl };

@@ -820,9 +820,20 @@ body {
   display: block;
   border-radius: 50%;
 }
+.slot.is-clickable {
+  cursor: pointer;
+}
+.slot.is-clickable .slot__circle {
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+}
+.slot.is-clickable:hover .slot__circle {
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
 .slot.is-target .slot__circle {
   border-color: var(--accent);
   box-shadow: 0 0 12px rgba(215, 255, 62, 0.5);
+  background: #eef7c8;
 }
 .slot.is-filled .slot__circle {
   border-color: var(--win);
