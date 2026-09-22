@@ -20,6 +20,7 @@ import { players } from './db.js';
 
 const MAX_PLAYERS = 2;
 const MODES = new Set(['closest', 'compare', 'squad']);
+const TURN_SECONDS = 15;
 const rooms = new Map();
 
 function generateCode() {
@@ -78,6 +79,8 @@ export function attachRealtime(httpServer) {
         country: null,
         usedCountries: new Set(),
         placed: new Map(),
+        turnTimer: null,
+        rowTimer: null,
       };
       room.players.set(socket.id, { name: sanitizeName(name, 'Oyuncu 1'), score: 0 });
       rooms.set(code, room);
@@ -187,6 +190,8 @@ export function attachRealtime(httpServer) {
 
 // ================= ORTAK =================
 function resetRoomState(room) {
+  clearTurnTimer(room);
+  clearRowTimer(room);
   room.usedIds = new Set();
   room.dice = new Map();
   room.turn = null;
@@ -203,6 +208,20 @@ function resetRoomState(room) {
 
 /** Sirasi gelen oyuncunun id'si (turn: 0/1 -> players sirasi). */
 const currentTurnId = (room) => ids(room)[room.turn];
+
+function clearTurnTimer(room) {
+  if (room.turnTimer) {
+    clearTimeout(room.turnTimer);
+    room.turnTimer = null;
+  }
+}
+
+function clearRowTimer(room) {
+  if (room.rowTimer) {
+    clearTimeout(room.rowTimer);
+    room.rowTimer = null;
+  }
+}
 
 // ================= ZAR =================
 function beginDice(io, room) {
@@ -229,7 +248,23 @@ function resolveDice(io, room) {
 }
 
 // ================= CLOSEST (mevcut) =================
+function startClosestRowTimer(io, room) {
+  clearRowTimer(room);
+  const rowIndex = room.activeRow;
+  room.rowTimer = setTimeout(() => {
+    room.rowTimer = null;
+    if (room.phase !== 'playing' || room.mode !== 'closest' || room.activeRow !== rowIndex) return;
+    if (room.guesses.size >= room.players.size) return;
+    // Süre dolanlar boş tahmin etmiş sayılır; satır açılır (ceza: satırı kaybeder).
+    const timedOut = ids(room).filter((id) => !room.guesses.has(id));
+    for (const id of timedOut) room.guesses.set(id, null);
+    io.to(room.code).emit('row:timeout', { by: timedOut, rowIndex });
+    revealClosestRow(io, room);
+  }, TURN_SECONDS * 1000);
+}
+
 async function startClosestRound(io, room) {
+  clearRowTimer(room);
   let picked;
   try {
     picked = await pickRandomGamePlayer();
@@ -245,12 +280,15 @@ async function startClosestRound(io, room) {
     player: { name: picked.name, portraitUrl: picked.portraitUrl },
     rows: rowsMeta,
     activeRow: 0,
+    seconds: TURN_SECONDS,
     room: publicRoom(room),
     scores: scoreMap(room),
   });
+  startClosestRowTimer(io, room);
 }
 
 function revealClosestRow(io, room) {
+  clearRowTimer(room);
   const row = GAME_ROWS[room.activeRow];
   const truth = row.value(room.current.answers);
   const guesses = Object.fromEntries(room.guesses);
@@ -278,15 +316,37 @@ function revealClosestRow(io, room) {
   });
   room.activeRow += 1;
   room.guesses.clear();
-  if (room.activeRow < GAME_ROWS.length) io.to(room.code).emit('row:active', { activeRow: room.activeRow });
-  else {
+  if (room.activeRow < GAME_ROWS.length) {
+    io.to(room.code).emit('row:active', { activeRow: room.activeRow, seconds: TURN_SECONDS });
+    startClosestRowTimer(io, room);
+  } else {
     room.phase = 'ended';
     io.to(room.code).emit('round:end', { scores: scoreMap(room) });
   }
 }
 
 // ================= COMPARE (Kariyer Kiyasi) =================
+function startCompareTurnTimer(io, room) {
+  clearTurnTimer(room);
+  const sid = currentTurnId(room);
+  room.turnTimer = setTimeout(() => {
+    room.turnTimer = null;
+    if (room.phase !== 'playing' || room.mode !== 'compare' || currentTurnId(room) !== sid) return;
+    // Süre doldu: bu oyuncu boş tahmin etmiş sayılır, sıra diğerine geçer.
+    room.rowGuesses.set(sid, null);
+    io.to(room.code).emit('compare:guessed', { by: sid, name: null, timeout: true });
+    if (room.rowGuesses.size >= room.players.size) {
+      revealCompareRow(io, room);
+    } else {
+      room.turn ^= 1;
+      io.to(room.code).emit('compare:turn', { turnId: currentTurnId(room), seconds: TURN_SECONDS });
+      startCompareTurnTimer(io, room);
+    }
+  }, TURN_SECONDS * 1000);
+}
+
 async function startCompareRound(io, room, firstRound = false) {
+  clearTurnTimer(room);
   const [player] = await players()
     .aggregate([{ $match: poolFilter('famous') }, { $sample: { size: 1 } }])
     .toArray();
@@ -305,9 +365,11 @@ async function startCompareRound(io, room, firstRound = false) {
     activeRow: 0,
     turnId: currentTurnId(room),
     starterId: currentTurnId(room),
+    seconds: TURN_SECONDS,
     room: publicRoom(room),
     scores: scoreMap(room),
   });
+  startCompareTurnTimer(io, room);
 }
 
 async function compareGuess(io, room, sid, playerId) {
@@ -324,6 +386,7 @@ async function compareGuess(io, room, sid, playerId) {
   }
   if (!doc) return io.to(sid).emit('game:error', { message: 'Oyuncu getirilemedi.' });
 
+  clearTurnTimer(room);
   room.usedIds.add(id);
   room.rowGuesses.set(sid, { id, name: doc.name, values: compareValues(doc) });
   io.to(room.code).emit('compare:guessed', { by: sid, name: doc.name });
@@ -332,7 +395,8 @@ async function compareGuess(io, room, sid, playerId) {
     revealCompareRow(io, room);
   } else {
     room.turn ^= 1; // sira digerine
-    io.to(room.code).emit('compare:turn', { turnId: currentTurnId(room) });
+    io.to(room.code).emit('compare:turn', { turnId: currentTurnId(room), seconds: TURN_SECONDS });
+    startCompareTurnTimer(io, room);
   }
 }
 
@@ -349,6 +413,7 @@ function compareRowFormat(key, v) {
 }
 
 function revealCompareRow(io, room) {
+  clearTurnTimer(room);
   const row = COMPARE_ROWS[room.activeRow];
   const target = compareRowValue(room.current.values, row.key);
   const list = ids(room);
@@ -385,7 +450,12 @@ function revealCompareRow(io, room) {
   room.rowGuesses = new Map();
   if (room.activeRow < COMPARE_ROWS.length) {
     room.turn = room.starter ^ (room.activeRow % 2); // her satirda baslayan degisir
-    io.to(room.code).emit('compare:active', { activeRow: room.activeRow, turnId: currentTurnId(room) });
+    io.to(room.code).emit('compare:active', {
+      activeRow: room.activeRow,
+      turnId: currentTurnId(room),
+      seconds: TURN_SECONDS,
+    });
+    startCompareTurnTimer(io, room);
   } else {
     room.phase = 'ended';
     io.to(room.code).emit('compare:over', { scores: scoreMap(room) });
@@ -393,7 +463,61 @@ function revealCompareRow(io, room) {
 }
 
 // ================= SQUAD (Milli Kadro) =================
+const SQUAD_REVEAL_MS = 2000; // istemcideki ülke çarkı animasyonuyla hizalama
+
+function startSquadTurnTimer(io, room, delay = 0) {
+  clearTurnTimer(room);
+  const sid = currentTurnId(room);
+  room.turnTimer = setTimeout(() => {
+    room.turnTimer = null;
+    if (room.phase !== 'playing' || room.mode !== 'squad' || currentTurnId(room) !== sid) return;
+    squadTimeout(io, room, sid);
+  }, delay + TURN_SECONDS * 1000);
+}
+
+/** Süre dolunca: boş bir slotu 0 maç ile doldurur (ceza), sıra ilerler. */
+function squadTimeout(io, room, sid) {
+  if (room.placed.get(sid)) return;
+  const myslots = room.slots.get(sid);
+  const idx = myslots.findIndex((s) => !s.filled);
+  const empty = { id: null, name: 'SÜRE DOLDU', caps: 0, portraitUrl: null, timeout: true };
+  if (idx >= 0) {
+    myslots[idx] = { pos: myslots[idx].pos, filled: true, player: empty };
+  }
+  room.placed.set(sid, true);
+  io.to(room.code).emit('squad:placed', {
+    by: sid,
+    slotIdx: idx,
+    player: empty,
+    slots: publicSlots(room),
+    scores: scoreMap(room),
+    timeout: true,
+  });
+  squadAdvanceAfterPlace(io, room, sid);
+}
+
+/** Bir oyuncu yerleştirdikten (veya süresi dolduktan) sonra sırayı ilerletir. */
+function squadAdvanceAfterPlace(io, room, sid) {
+  const other = otherId(room, sid);
+  if (!room.placed.get(other)) {
+    room.turn ^= 1;
+    io.to(room.code).emit('squad:turn', { turnId: currentTurnId(room), seconds: TURN_SECONDS });
+    startSquadTurnTimer(io, room);
+    return;
+  }
+
+  // Iki taraf da yerlestirdi (gerçek ya da süre doldu).
+  const full = [...room.slots.values()].every((arr) => arr.every((s) => s.filled));
+  if (full) {
+    room.phase = 'ended';
+    io.to(room.code).emit('squad:over', { scores: scoreMap(room) });
+  } else {
+    io.to(room.code).emit('squad:round-done', { scores: scoreMap(room) });
+  }
+}
+
 async function startSquadRound(io, room, firstRound = false) {
+  clearTurnTimer(room);
   if (firstRound) {
     // ilk tur: kadrolari sifirla
     room.slots = new Map(ids(room).map((id) => [id, FORMATION.map((f) => ({ pos: f.pos, filled: false, player: null }))]));
@@ -425,9 +549,11 @@ async function startSquadRound(io, room, firstRound = false) {
     round: room.round,
     turnId: currentTurnId(room),
     slots: publicSlots(room),
+    seconds: TURN_SECONDS,
     scores: scoreMap(room),
     room: publicRoom(room),
   });
+  startSquadTurnTimer(io, room, SQUAD_REVEAL_MS);
 }
 
 const publicSlots = (room) =>
@@ -465,6 +591,7 @@ async function squadPlace(io, room, sid, playerId, slotIdx) {
   if (idx < 0) return io.to(sid).emit('game:error', { message: 'Bu mevki için boş yer yok.' });
 
   myslots[idx] = { pos: myslots[idx].pos, filled: true, player: { id, name: doc.name, caps, portraitUrl: doc.portraitUrl } };
+  clearTurnTimer(room);
   room.usedIds.add(id);
   room.players.get(sid).score += caps;
   room.placed.set(sid, true);
@@ -477,18 +604,5 @@ async function squadPlace(io, room, sid, playerId, slotIdx) {
     scores: scoreMap(room),
   });
 
-  const other = otherId(room, sid);
-  if (!room.placed.get(other)) {
-    room.turn ^= 1;
-    return io.to(room.code).emit('squad:turn', { turnId: currentTurnId(room) });
-  }
-
-  // Iki taraf da yerlestirdi.
-  const full = [...room.slots.values()].every((arr) => arr.every((s) => s.filled));
-  if (full) {
-    room.phase = 'ended';
-    io.to(room.code).emit('squad:over', { scores: scoreMap(room) });
-  } else {
-    io.to(room.code).emit('squad:round-done', { scores: scoreMap(room) });
-  }
+  squadAdvanceAfterPlace(io, room, sid);
 }

@@ -674,6 +674,28 @@ body {
   min-width: 56px;
   text-align: right;
 }
+.turn-timer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--white);
+  background: #000;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  padding: 3px 12px;
+  min-width: 68px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.turn-timer.is-low {
+  border-color: var(--right);
+  color: var(--right);
+  animation: pop 0.5s ease;
+}
 
 /* ================= MİLLİ KADRO ================= */
 .screen--squad {

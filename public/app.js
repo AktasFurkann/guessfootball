@@ -121,6 +121,114 @@ function setPrimary(text, action, disabled = false) {
   primary.disabled = disabled;
 }
 
+// ================= SES + SIRA SAYACI =================
+const TURN_SECONDS = 15; // src/realtime.js içindeki süreyle aynı tutulur
+let _audioCtx = null;
+
+function ensureAudio() {
+  if (!_audioCtx) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    _audioCtx = new Ctor();
+  }
+  if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {});
+  return _audioCtx;
+}
+
+function tone(freq, offset, duration, opts = {}) {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const { type = 'sine', gain = 0.16 } = opts;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  const t0 = ctx.currentTime + offset;
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.03);
+}
+
+/** Sıra sana geçti: belirgin iki tonlu "ding-dong". */
+function playYourTurn() {
+  tone(659, 0, 0.12, { type: 'sine', gain: 0.22 });
+  tone(880, 0.11, 0.2, { type: 'sine', gain: 0.22 });
+}
+/** Sıra rakibe geçti: kısa, alçak bir tık. */
+function playSwitch() {
+  tone(330, 0, 0.08, { type: 'sine', gain: 0.12 });
+}
+function playTick() {
+  tone(880, 0, 0.045, { type: 'square', gain: 0.07 });
+}
+function playTock() {
+  tone(440, 0, 0.05, { type: 'square', gain: 0.07 });
+}
+function playTimesUp() {
+  tone(523, 0, 0.16, { type: 'sawtooth', gain: 0.13 });
+  tone(392, 0.17, 0.24, { type: 'sawtooth', gain: 0.13 });
+}
+
+const countdown = { id: null, remaining: 0, tick: 0, tickOn: false };
+
+function setTurnTimer(seconds) {
+  for (const id of ['turn-timer', 'sq-timer']) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (seconds == null) {
+      el.hidden = true;
+      el.classList.remove('is-low');
+    } else {
+      el.hidden = false;
+      el.textContent = `⏱ ${seconds}`;
+      el.classList.toggle('is-low', seconds <= 5);
+    }
+  }
+}
+
+function stopCountdown() {
+  if (countdown.id) {
+    clearInterval(countdown.id);
+    countdown.id = null;
+  }
+  countdown.remaining = 0;
+  setTurnTimer(null);
+}
+
+/**
+ * Geri sayımı başlatır. `tick` doğruysa tik-tak sesi çalar (genelde sıra
+ * sende olduğunda çalar; rakip sırasında görsel sayaç kalır ama sessizdir).
+ */
+function startCountdown(seconds = TURN_SECONDS, { tick = false } = {}) {
+  stopCountdown();
+  const n = Number(seconds) || TURN_SECONDS;
+  countdown.remaining = n;
+  countdown.tick = 0;
+  countdown.tickOn = !!tick;
+  setTurnTimer(n);
+  if (countdown.tickOn) playTick();
+  countdown.id = setInterval(() => {
+    countdown.remaining -= 1;
+    countdown.tick += 1;
+    if (countdown.remaining <= 0) {
+      stopCountdown();
+      if (countdown.tickOn) playTimesUp();
+      return;
+    }
+    setTurnTimer(countdown.remaining);
+    if (!countdown.tickOn) return;
+    if (countdown.remaining <= 5) {
+      (countdown.tick % 2 === 0 ? playTock : playTick)();
+    } else {
+      playTick();
+    }
+  }, 1000);
+}
+
 // ---- tahtayi kur ----
 function renderRows(rowsArr = ROWS) {
   const container = $('#rows');
@@ -520,6 +628,7 @@ function connectSocket() {
 
   socket.on('room:update', renderLobby);
   socket.on('opponent:left', (room) => {
+    stopCountdown();
     toast('Rakip odadan ayrıldı.');
     online.roomCode = room.code;
     if (online.active) {
@@ -536,6 +645,11 @@ function connectSocket() {
   socket.on('row:result', onOnlineResult);
   socket.on('row:active', ({ activeRow }) => setOnlineActiveRow(activeRow));
   socket.on('round:end', onOnlineRoundEnd);
+  socket.on('row:timeout', ({ by }) => {
+    const mine = by?.includes(online.youId);
+    toast(mine ? 'Süren doldu — boş tahmin.' : 'Rakip süreyi aştı — boş tahmin.');
+    playTimesUp();
+  });
 
   // ---- zar (compare + squad) ----
   socket.on('dice:begin', ({ room }) => {
@@ -574,14 +688,17 @@ function connectSocket() {
 
   // ---- compare (Kariyer Kıyası) ----
   socket.on('compare:round', onOnlineCompareRound);
-  socket.on('compare:guessed', ({ by }) => {
+  socket.on('compare:guessed', ({ by, timeout }) => {
     const side = by === online.youId ? 0 : 1;
     const cell = document.querySelector(
       `#rows .row[data-index="${online.compareActiveRow}"] .row__cell[data-side="${side}"]`,
     );
     const diff = cell?.querySelector('.row__diff');
     if (diff && !cell.classList.contains('is-win') && !cell.classList.contains('is-lose')) {
-      diff.textContent = 'yazdı ✓';
+      diff.textContent = timeout ? 'süre doldu ⏱' : 'yazdı ✓';
+    }
+    if (timeout) {
+      toast(by === online.youId ? 'Süren doldu — boş tahmin.' : 'Rakip süreyi aştı — boş tahmin.');
     }
   });
   socket.on('compare:turn', ({ turnId }) => setOnlineCompareTurn(turnId));
@@ -597,6 +714,7 @@ function connectSocket() {
   socket.on('squad:placed', onOnlineSquadPlaced);
   socket.on('squad:turn', ({ turnId }) => setOnlineSquadTurn(turnId));
   socket.on('squad:round-done', () => {
+    stopCountdown();
     squad.turn = -1;
     renderPitch(0);
     renderPitch(1);
@@ -607,6 +725,7 @@ function connectSocket() {
     else setPrimarySquad('HOST BEKLENİYOR…', 'online-next-round', true);
   });
   socket.on('squad:over', ({ scores }) => {
+    stopCountdown();
     squad.over = true;
     squad.turn = -1;
     renderPitch(0);
@@ -701,6 +820,7 @@ function renderLobby(room) {
 
 function leaveOnlineIfAny() {
   if (online.socket && online.roomCode) online.socket.emit('room:leave');
+  stopCountdown();
   online.roomCode = null;
   online.active = false;
   $('#online-dice').hidden = true;
@@ -764,6 +884,7 @@ function setOnlineActiveRow(index) {
   $('#round-tag').textContent = `Satır ${index + 1}/${online.rows.length}`;
   setPrimary('GÖNDER', 'online-guess');
   document.querySelector(`.row[data-index="${index}"] input`)?.focus();
+  startCountdown(TURN_SECONDS, { tick: true });
 }
 
 function onlineGuess() {
@@ -794,6 +915,7 @@ function onOnlineProgress({ submitted }) {
 }
 
 function onOnlineResult({ rowIndex, truthText, truthValue, guesses, winners, scores }) {
+  stopCountdown();
   const rowEl = document.querySelector(`.row[data-index="${rowIndex}"]`);
   const inputs = rowEl.querySelectorAll('input');
   const cells = rowEl.querySelectorAll('.row__cell');
@@ -834,6 +956,7 @@ function flashOnlineLeader(scores) {
 }
 
 function onOnlineRoundEnd({ scores }) {
+  stopCountdown();
   const you = scores[online.youId] ?? 0;
   const opp = scores[online.oppId] ?? 0;
   const verdict = you > opp ? 'Öndesin! 🎉' : you < opp ? 'Rakip önde.' : 'Berabere.';
@@ -1330,10 +1453,12 @@ function renderPitch(side) {
       el.className = cls;
       el.dataset.slot = idx;
       if (slot.filled && slot.player) {
-        el.innerHTML = `
-          <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${slot.player.portraitUrl}" alt="">` : POS_LABEL[slot.pos]}</div>
-          <div class="slot__caps">${slot.player.caps}</div>
-          <div class="slot__name">${shortName(slot.player.name)}</div>`;
+        el.innerHTML = slot.player.timeout
+          ? `<div class="slot__circle">⏱</div><div class="slot__caps">0</div><div class="slot__name">SÜRE DOLDU</div>`
+          : `
+            <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${slot.player.portraitUrl}" alt="">` : POS_LABEL[slot.pos]}</div>
+            <div class="slot__caps">${slot.player.caps}</div>
+            <div class="slot__name">${shortName(slot.player.name)}</div>`;
       } else {
         el.innerHTML = `<div class="slot__circle">${POS_LABEL[slot.pos]}</div><div class="slot__caps"></div><div class="slot__name"></div>`;
       }
@@ -1750,6 +1875,9 @@ function setOnlineCompareTurn(turnId) {
   } else {
     setPrimary('RAKİP YAZIYOR…', 'online-compare-guess', true);
   }
+  startCountdown(TURN_SECONDS, { tick: mine });
+  if (mine) playYourTurn();
+  else playSwitch();
 }
 
 /** Online kiyas icin isim otomatik tamamlama (secimi online.comparePick'e yazar). */
@@ -1852,6 +1980,7 @@ async function onlineCompareGuess() {
     return;
   }
   online.socket.emit('compare:guess', { playerId: pick.id });
+  stopCountdown();
   const input = document.querySelector(
     `#rows .row[data-index="${online.compareActiveRow}"] .row__cell[data-side="0"] input`,
   );
@@ -1863,6 +1992,7 @@ async function onlineCompareGuess() {
 }
 
 function onOnlineCompareResult({ rowIndex, key, truthText, truthValue, guesses, winners, scores }) {
+  stopCountdown();
   const rowEl = document.querySelector(`#rows .row[data-index="${rowIndex}"]`);
   if (!rowEl) return;
   rowEl.classList.remove('is-active');
@@ -1893,6 +2023,7 @@ function onOnlineCompareResult({ rowIndex, key, truthText, truthValue, guesses, 
 }
 
 function onOnlineCompareOver({ scores }) {
+  stopCountdown();
   const you = scores[online.youId] ?? 0;
   const opp = scores[online.oppId] ?? 0;
   const verdict = you > opp ? 'Kazandın! 🎉' : you < opp ? 'Rakip kazandı.' : 'Berabere.';
@@ -1919,7 +2050,8 @@ function applyOnlineSlots(slots) {
 
 function refreshUsedIdsFromSlots() {
   squad.usedIds = new Set();
-  for (const arr of squad.slots) for (const s of arr) if (s.filled && s.player) squad.usedIds.add(s.player.id);
+  for (const arr of squad.slots)
+    for (const s of arr) if (s.filled && s.player && s.player.id != null) squad.usedIds.add(s.player.id);
 }
 
 async function onOnlineSquadRound({ country, formation, round, turnId, slots, scores, room }) {
@@ -2003,6 +2135,9 @@ function setOnlineSquadTurn(turnId) {
   const owrap = $('#sq-input-1').closest('.sq-input-wrap');
   owrap.classList.add('is-off');
   $('#sq-input-1').disabled = true;
+  startCountdown(TURN_SECONDS, { tick: myTurn });
+  if (myTurn) playYourTurn();
+  else playSwitch();
 }
 
 async function onlineSquadSend() {
@@ -2021,11 +2156,13 @@ async function onlineSquadSend() {
   setPrimarySquad('…', 'online-squad-send', true);
   const slotIdx = squad.target != null ? squad.target : -1;
   online.socket.emit('squad:place', { playerId: pick.id, slotIdx });
+  stopCountdown();
 }
 
-function onOnlineSquadPlaced({ by, player, slots, scores }) {
+function onOnlineSquadPlaced({ by, player, slots, scores, timeout }) {
+  stopCountdown();
   applyOnlineSlots(slots);
-  if (player) squad.usedIds.add(player.id);
+  if (player && player.id != null) squad.usedIds.add(player.id);
   squad.totals = [scores[online.youId] ?? 0, scores[online.oppId] ?? 0];
   $('#sq-total1').textContent = squad.totals[0];
   $('#sq-total2').textContent = squad.totals[1];
@@ -2035,10 +2172,14 @@ function onOnlineSquadPlaced({ by, player, slots, scores }) {
 
   if (by === online.youId) {
     const i = $('#sq-input-0');
-    i.value = `${player.name} · ${player.caps} maç`;
+    i.value = timeout ? '⏱ süre doldu' : `${player.name} · ${player.caps} maç`;
     i.disabled = true;
     i.closest('.sq-input-wrap').classList.add('is-off');
     $('#sq-card-0').classList.remove('is-turn');
+  }
+  if (timeout) {
+    toast(by === online.youId ? 'Süren doldu — 0 maç.' : 'Rakip süreyi aştı — 0 maç.');
+    playTimesUp();
   }
   renderPitch(0);
   renderPitch(1);
@@ -2048,4 +2189,3 @@ function onOnlineSquadPlaced({ by, player, slots, scores }) {
 loadSettings();
 updateScoreboard();
 show('menu');
-
