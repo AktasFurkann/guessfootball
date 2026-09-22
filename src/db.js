@@ -18,9 +18,14 @@ export async function connect() {
 
   await client.connect();
   db = client.db(config.dbName);
-  await ensureIndexes(db);
-
   console.log(`[db] Baglandi -> ${config.dbName}`);
+
+  // Indeksleri ARKA PLANDA olustur (baslangici bloklamaz). Buyuk veri setinde
+  // (16k+ oyuncu) foreground indeks kurulumu M0'da dakikalar surup sunucunun
+  // dinlemeye baslamasini geciktiriyordu. Indeks kurulana kadar sorgular
+  // yavas calisir ama takilmaz.
+  ensureIndexes(db).catch((err) => console.error('[db] Indeks kurulum hatasi:', err.message));
+
   return db;
 }
 
@@ -36,6 +41,7 @@ async function ensureIndexes(database) {
       { key: { isNationalTeam: 1 } },
     ]),
   ]);
+  console.log('[db] Indeksler hazır.');
 }
 
 export function getDb() {
