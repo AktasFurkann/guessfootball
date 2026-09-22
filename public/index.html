@@ -194,7 +194,7 @@
 
         <!-- Alt aksiyon cubugu -->
         <div class="board__actions">
-          <button class="icon-btn icon-btn--dark" data-action="back-menu" aria-label="Menü">☰</button>
+          <button class="icon-btn icon-btn--dark" data-action="open-pause" aria-label="Menü">☰</button>
           <button class="btn btn--primary" id="btn-primary" data-action="reveal">SONUCU GÖSTER</button>
           <span class="round-tag" id="round-tag">Tur 1</span>
           <span class="turn-timer" id="turn-timer" hidden>⏱ 15</span>
@@ -243,7 +243,7 @@
         </div>
 
         <div class="squad-actions">
-          <button class="icon-btn icon-btn--dark" data-action="back-menu" aria-label="Menü">☰</button>
+          <button class="icon-btn icon-btn--dark" data-action="open-pause" aria-label="Menü">☰</button>
           <span class="round-tag" id="sq-turn"></span>
           <span class="round-tag" id="sq-round"></span>
           <span class="turn-timer" id="sq-timer" hidden>⏱ 15</span>
@@ -299,6 +299,26 @@
         <button class="btn btn--primary" data-action="back-menu">MENÜYE DÖN</button>
       </div>
     </section>
+
+    <!-- ================= OYUN ICI MENU ================= -->
+    <div class="pause-overlay" id="pause-menu" hidden>
+      <div class="pause-card">
+        <h3>Oyun Menüsü</h3>
+        <button class="btn btn--primary" data-action="pause-resume">DEVAM ET</button>
+        <button class="btn" data-action="pause-settings">AYARLAR</button>
+        <button class="btn btn--danger" data-action="pause-quit">OYUNDAN ÇIK</button>
+      </div>
+    </div>
+
+    <!-- ================= CIKIS ONAYI ================= -->
+    <div class="pause-overlay" id="quit-confirm" hidden>
+      <div class="pause-card">
+        <h3>Emin misin?</h3>
+        <p>Oyundan çıkarsan mevcut oyun kapanır.</p>
+        <button class="btn btn--danger" data-action="quit-confirm-yes">EVET, ÇIK</button>
+        <button class="btn" data-action="quit-confirm-no">VAZGEÇ</button>
+      </div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>

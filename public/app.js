@@ -90,9 +90,13 @@ const screens = {
   squad: document.getElementById('screen-squad'),
   quit: document.getElementById('screen-quit'),
 };
+let currentGameScreen = 'game';
+let settingsReturn = 'menu';
+
 function show(name) {
   for (const el of Object.values(screens)) el.classList.remove('is-active');
   screens[name].classList.add('is-active');
+  if (name === 'game' || name === 'squad') currentGameScreen = name;
 }
 
 // ---- yardimcilar ----
@@ -432,7 +436,8 @@ function startClosestGame() {
 }
 
 // ---- ayarlar ekrani ----
-function openSettings() {
+function openSettings(returnTo = 'menu') {
+  settingsReturn = returnTo;
   $('#setting-name1').value = state.names[0];
   $('#setting-name2').value = state.names[1];
   $('#setting-reset').checked = state.resetOnNewGame;
@@ -447,6 +452,30 @@ function saveSettingsFromForm() {
   saveSettings();
   updateScoreboard();
   $('#settings-hint').textContent = 'Kaydedildi ✓';
+}
+
+// ---- oyun ici menü + çıkış onayı ----
+function openPauseMenu() {
+  $('#quit-confirm').hidden = true;
+  $('#pause-menu').hidden = false;
+}
+function closePauseMenu() {
+  $('#pause-menu').hidden = true;
+  $('#quit-confirm').hidden = true;
+}
+function showQuitConfirm() {
+  $('#pause-menu').hidden = true;
+  $('#quit-confirm').hidden = false;
+}
+function cancelQuit() {
+  $('#quit-confirm').hidden = true;
+  $('#pause-menu').hidden = false;
+}
+function confirmQuit() {
+  closePauseMenu();
+  settingsReturn = 'menu';
+  leaveOnlineIfAny();
+  show('menu');
 }
 
 // ---- olay yonlendirme ----
@@ -474,14 +503,38 @@ document.addEventListener('click', (event) => {
       $('#odice-btn').disabled = true;
       break;
     case 'open-settings':
-      openSettings();
+      openSettings('menu');
       break;
     case 'save-settings':
       saveSettingsFromForm();
       break;
     case 'back-menu':
+      if (settingsReturn === 'game') {
+        settingsReturn = 'menu';
+        show(currentGameScreen);
+        break;
+      }
       leaveOnlineIfAny();
       show('menu');
+      break;
+    case 'open-pause':
+      openPauseMenu();
+      break;
+    case 'pause-resume':
+      closePauseMenu();
+      break;
+    case 'pause-settings':
+      closePauseMenu();
+      openSettings('game');
+      break;
+    case 'pause-quit':
+      showQuitConfirm();
+      break;
+    case 'quit-confirm-yes':
+      confirmQuit();
+      break;
+    case 'quit-confirm-no':
+      cancelQuit();
       break;
     case 'start-closest':
       startClosestGame();
@@ -551,6 +604,12 @@ document.addEventListener('click', (event) => {
     default:
       break;
   }
+});
+
+// Oyun ici menünün arka planına tıklayınca menüyü kapat (devam et).
+document.addEventListener('click', (event) => {
+  if (event.target !== $('#pause-menu')) return;
+  closePauseMenu();
 });
 
 // Enter: aktif buton neyse onu tetikle.

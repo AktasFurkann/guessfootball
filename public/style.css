@@ -93,6 +93,11 @@ body {
   background: transparent;
   color: var(--muted);
 }
+.btn--danger {
+  background: linear-gradient(180deg, #ff6b6b, #d9364f);
+  box-shadow: 0 8px 24px rgba(217, 54, 79, 0.4);
+  border-color: transparent;
+}
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1049,6 +1054,47 @@ body {
 }
 .online-dice[hidden] {
   display: none;
+}
+
+/* oyun ici menu + cikis onayi */
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 14, 0.9);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 20px;
+}
+.pause-overlay[hidden] {
+  display: none;
+}
+.pause-card {
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+  background: var(--board-blue);
+  border: 3px solid #000;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pause-card h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+.pause-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.pause-card .btn {
+  width: 100%;
 }
 
 /* toast */
