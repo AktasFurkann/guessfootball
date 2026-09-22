@@ -685,6 +685,7 @@ body {
   box-shadow: var(--shadow);
   border: 3px solid #000;
   overflow: hidden;
+  position: relative; /* zar örtüsü için */
 }
 .squad-top {
   display: grid;
@@ -814,7 +815,8 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top center;
+  object-position: center 18%;
+  display: block;
 }
 .slot.is-target .slot__circle {
   border-color: var(--accent);
@@ -892,8 +894,113 @@ body {
   padding: 10px 12px;
   background: linear-gradient(0deg, #2a3350, var(--board-blue));
 }
-.squad-actions .round-tag {
+#sq-turn {
   margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* hedef yazisi */
+.squad-objective {
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(1rem, 3.5vw, 1.3rem);
+  letter-spacing: 0.02em;
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 8px 12px;
+  margin: 0 10px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(215, 255, 62, 0.35);
+}
+
+/* sirasi gelen oyuncunun karti vurgulu */
+.squad-total.is-turn {
+  transform: scale(1.04);
+}
+.squad-total.is-turn .squad-total__num {
+  box-shadow: 0 0 16px rgba(215, 255, 62, 0.55);
+}
+.sq-input-wrap.is-off {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* zar ile baslama */
+.squad-dice {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 8, 14, 0.82);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  border-radius: var(--radius);
+}
+.squad-dice[hidden] {
+  display: none;
+}
+.dice-card {
+  text-align: center;
+  padding: 20px 26px;
+}
+.dice-card h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+  margin: 0 0 18px;
+}
+.dice-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin-bottom: 12px;
+}
+.dice-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.dice-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: #000;
+  padding: 3px 12px;
+  border-radius: 7px;
+}
+.die {
+  font-size: 4.5rem;
+  line-height: 1;
+  color: var(--white);
+}
+.die.is-rolling {
+  animation: diebounce 0.3s infinite alternate;
+}
+@keyframes diebounce {
+  from {
+    transform: translateY(-6px) rotate(-8deg);
+  }
+  to {
+    transform: translateY(6px) rotate(8deg);
+  }
+}
+.die.is-winner {
+  color: var(--accent);
+  text-shadow: 0 0 18px rgba(215, 255, 62, 0.8);
+}
+.dice-vs {
+  font-family: 'Barlow Condensed', sans-serif;
+  color: var(--muted);
+  font-size: 1.3rem;
+}
+.dice-result {
+  min-height: 1.4em;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem;
+  color: var(--accent);
+  margin: 6px 0 16px;
 }
 
 /* toast */

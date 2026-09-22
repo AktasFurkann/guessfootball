@@ -208,7 +208,7 @@
     <section class="screen screen--squad" id="screen-squad">
       <div class="squad-board">
         <div class="squad-top">
-          <div class="squad-total scorecard--left">
+          <div class="squad-total scorecard--left" id="sq-card-0">
             <span class="squad-total__name" id="sq-name1">OYUNCU 1</span>
             <span class="squad-total__num"><b id="sq-total1">0</b><small>maç</small></span>
           </div>
@@ -216,7 +216,7 @@
             <img id="sq-flag" alt="" />
             <b id="sq-country">—</b>
           </div>
-          <div class="squad-total scorecard--right">
+          <div class="squad-total scorecard--right" id="sq-card-1">
             <span class="squad-total__name" id="sq-name2">OYUNCU 2</span>
             <span class="squad-total__num"><b id="sq-total2">0</b><small>maç</small></span>
           </div>
@@ -227,12 +227,14 @@
           <div class="pitch" id="sq-pitch-1"></div>
         </div>
 
+        <div class="squad-objective" id="sq-objective">🎯 Milli takımda en çok maça çıkmış kadroyu kur!</div>
+
         <div class="squad-controls">
           <div class="sq-input-wrap" data-side="0">
             <input class="name-input" id="sq-input-0" placeholder="oyuncu yaz…" autocomplete="off" />
             <ul class="suggest" hidden></ul>
           </div>
-          <button class="btn btn--primary" id="sq-btn" data-action="squad-guess">GÖSTER</button>
+          <button class="btn btn--primary" id="sq-btn" data-action="squad-send">GÖNDER</button>
           <div class="sq-input-wrap" data-side="1">
             <input class="name-input" id="sq-input-1" placeholder="oyuncu yaz…" autocomplete="off" />
             <ul class="suggest" hidden></ul>
@@ -241,7 +243,28 @@
 
         <div class="squad-actions">
           <button class="icon-btn icon-btn--dark" data-action="back-menu" aria-label="Menü">☰</button>
+          <span class="round-tag" id="sq-turn"></span>
           <span class="round-tag" id="sq-round"></span>
+        </div>
+
+        <!-- Zar ile başlayanı belirleme -->
+        <div class="squad-dice" id="sq-dice" hidden>
+          <div class="dice-card">
+            <h3 id="dice-title">Kim başlıyor?</h3>
+            <div class="dice-row">
+              <div class="dice-col">
+                <span class="dice-name" id="dice-name-0">OYUNCU 1</span>
+                <span class="die" id="die-0">⚀</span>
+              </div>
+              <span class="dice-vs">VS</span>
+              <div class="dice-col">
+                <span class="dice-name" id="dice-name-1">OYUNCU 2</span>
+                <span class="die" id="die-1">⚀</span>
+              </div>
+            </div>
+            <p class="dice-result" id="dice-result"></p>
+            <button class="btn btn--primary" id="dice-btn" data-action="squad-roll">ZAR AT</button>
+          </div>
         </div>
       </div>
     </section>
