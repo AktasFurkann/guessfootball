@@ -1134,7 +1134,7 @@ function attachSquadAutocomplete(input, side) {
       .map(
         (r, i) =>
           `<li data-i="${i}" class="${i === active ? 'is-active' : ''}"><b>${r.name}</b>` +
-          `<small>${r.position || ''} · ${r.caps} maç</small></li>`,
+          `<small>${r.position || ''}</small></li>`,
       )
       .join('');
     list.hidden = results.length === 0;
@@ -1148,7 +1148,7 @@ function attachSquadAutocomplete(input, side) {
 
   const fetchList = async (q) => {
     const positions = remainingPositions(side).join(',');
-    const params = new URLSearchParams({ country: squad.country.country, positions });
+    const params = new URLSearchParams({ country: squad.country.country, positions, limit: '60' });
     if (q) params.set('q', q);
     try {
       const res = await fetch(`/api/players/search?${params}`);

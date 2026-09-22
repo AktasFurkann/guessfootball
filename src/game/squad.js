@@ -20,6 +20,18 @@ export const FORMATION = [
 // kullanildigi icin mevki basina 1 yeterli).
 const NEED = { Kaleci: 1, Defans: 1, 'Orta Saha': 1, Forvet: 1 };
 
+// Rastgele ulke yalnizca bu buyuk milli takimlardan secilir (FIFA/Dunya Kupasi
+// olceginde ~48 ulke). Isimler veritabanindaki milli takim adlariyla birebir.
+const TOP_COUNTRIES = new Set([
+  'Arjantin', 'Brezilya', 'Fransa', 'İngiltere', 'İspanya', 'Portekiz', 'Hollanda',
+  'Belçika', 'İtalya', 'Almanya', 'Hırvatistan', 'Uruguay', 'Kolombiya', 'Fas',
+  'Meksika', 'Amerika Birleşik Devletleri', 'Senegal', 'Japonya', 'İran', 'Güney Kore',
+  'Avustralya', 'İsviçre', 'Danimarka', 'Polonya', 'Galler', 'Sırbistan', 'Ekvador',
+  'Kanada', 'Katar', 'Suudi Arabistan', 'Tunus', 'Gana', 'Kamerun', 'Nijerya',
+  'Cezayir', 'Mısır', 'İsveç', 'Norveç', 'Türkiye', 'Ukrayna', 'Çekya', 'Avusturya',
+  'Macaristan', 'Şili', 'Peru', 'Paraguay', 'Kosta Rika', 'Yunanistan',
+]);
+
 let eligible = null; // [{ country, flag }]
 
 async function buildEligible() {
@@ -36,6 +48,7 @@ async function buildEligible() {
 
   eligible = [];
   for (const [country, counts] of byCountry) {
+    if (!TOP_COUNTRIES.has(country)) continue; // yalnizca buyuk milli takimlar
     if (Object.entries(NEED).every(([cat, n]) => counts[cat] >= n)) {
       const flag = await getFlag(country);
       eligible.push({ country, flag });

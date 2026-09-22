@@ -861,7 +861,13 @@ body {
 }
 .sq-input-wrap[data-side='0'] .suggest {
   right: auto;
-  width: max(100%, 240px);
+  width: max(100%, 260px);
+}
+/* Girisler ekranin altinda oldugu icin oneri listesi YUKARI acilir. */
+.sq-input-wrap .suggest {
+  top: auto;
+  bottom: calc(100% + 6px);
+  max-height: 320px;
 }
 .squad-controls .btn--primary {
   align-self: center;

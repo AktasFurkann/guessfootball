@@ -193,7 +193,8 @@ playersRouter.get('/', async (req, res, next) => {
 playersRouter.get('/search', async (req, res, next) => {
   try {
     const q = typeof req.query.q === 'string' ? req.query.q : '';
-    const limit = Math.min(Math.max(Number(req.query.limit) || 8, 1), 15);
+    // Milli kadro modunda tum ulke oyuncularini gostermek icin daha yuksek tavan.
+    const limit = Math.min(Math.max(Number(req.query.limit) || 8, 1), 60);
     // Milli Kadro modu: ulke + mevki(ler) filtresi.
     const country = typeof req.query.country === 'string' && req.query.country ? req.query.country : null;
     const positions =

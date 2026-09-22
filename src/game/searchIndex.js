@@ -99,6 +99,8 @@ export async function search(query, opts = {}) {
   const scored = [];
   for (const p of idx) {
     if (country && p.nt?.country !== country) continue;
+    // Milli kadro modu: sadece o ulkeyle en az 1 maça çıkmış oyuncular.
+    if (country && (p.nt?.caps ?? 0) < 1) continue;
     if (positions && !positions.includes(p.cat)) continue;
 
     let rank = 0;
