@@ -1078,6 +1078,13 @@ function remainingPositions(side) {
 }
 
 async function startSquadGame() {
+  // Ekrani hemen ac + "Hazırlanıyor…" goster (ilk yuklemede indeks kurulabilir).
+  show('squad');
+  $('#dice-title').textContent = 'Hazırlanıyor…';
+  $('#dice-result').textContent = 'İlk açılışta oyuncu veritabanı hazırlanıyor';
+  $('#dice-btn').hidden = true;
+  $('#sq-dice').hidden = false;
+
   const res = await fetch('/api/game/squad/formation');
   squad.formation = (await res.json()).formation;
   try {
@@ -1085,6 +1092,7 @@ async function startSquadGame() {
   } catch {
     squad.reel = [];
   }
+  $('#dice-btn').hidden = false;
   squad.slots = [0, 1].map(() => squad.formation.map((f) => ({ pos: f.pos, filled: false, player: null })));
   squad.totals = [0, 0];
   squad.round = 0;
@@ -1115,10 +1123,12 @@ function openDice() {
   $('#die-1').textContent = '⚀';
   $('#die-0').classList.remove('is-winner');
   $('#die-1').classList.remove('is-winner');
+  $('#dice-title').textContent = 'Kim başlıyor?';
   $('#dice-result').textContent = '';
   const btn = $('#dice-btn');
   btn.textContent = 'ZAR AT';
   btn.disabled = false;
+  btn.hidden = false;
   $('#sq-dice').hidden = false;
 }
 

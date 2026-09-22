@@ -9,6 +9,8 @@ import { playersRouter } from './routes/players.js';
 import { teamsRouter } from './routes/teams.js';
 import { gameRouter } from './routes/game.js';
 import { attachRealtime } from './realtime.js';
+import { ensureIndex } from './game/searchIndex.js';
+import { listCountries } from './game/squad.js';
 
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -71,6 +73,14 @@ async function start() {
   server.listen(config.port, '0.0.0.0', () => {
     console.log(`[server] http://localhost:${config.port} uzerinde dinleniyor`);
   });
+
+  // Arama indeksini ve ulke listesini ARKA PLANDA isit: ilk oyun (ozellikle
+  // Milli Kadro) 16k+ oyuncunun indeksini beklemesin, hizli baslasin.
+  const t0 = Date.now();
+  ensureIndex()
+    .then(() => listCountries())
+    .then(() => console.log(`[warm] Arama indeksi hazır (${Date.now() - t0}ms)`))
+    .catch((err) => console.error('[warm] Isıtma hatası:', err.message));
 
   const shutdown = async (signal) => {
     console.log(`\n[server] ${signal} alindi, kapatiliyor...`);
