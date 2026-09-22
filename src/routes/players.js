@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { players } from '../db.js';
 import { checkGuess, candidateNames, primaryNames, normalize } from '../game/matcher.js';
 import { poolFilter } from '../game/roundData.js';
+import { search as searchPlayers } from '../game/searchIndex.js';
 
 export const playersRouter = Router();
 
@@ -178,6 +179,22 @@ playersRouter.get('/', async (req, res, next) => {
         nationalities: player.nationalities ?? [],
       })),
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/players/search?q=...&limit=8
+ * Isim otomatik tamamlama (kiyas modu icin). Bellek ici indeks; hizli.
+ * ":id" rotasindan ONCE tanimli olmali (aksi halde "search" bir id sanilir).
+ */
+playersRouter.get('/search', async (req, res, next) => {
+  try {
+    const q = typeof req.query.q === 'string' ? req.query.q : '';
+    const limit = Math.min(Math.max(Number(req.query.limit) || 8, 1), 15);
+    const results = await searchPlayers(q, limit);
+    res.json({ query: q, results });
   } catch (error) {
     next(error);
   }

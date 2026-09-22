@@ -52,7 +52,7 @@ const ROWS = [
 ];
 
 const state = {
-  names: ['HİKMET', 'MERT'],
+  names: ['OYUNCU 1', 'OYUNCU 2'],
   resetOnNewGame: true,
   scores: [0, 0],
   round: 0,
@@ -331,8 +331,8 @@ function openSettings() {
   show('settings');
 }
 function saveSettingsFromForm() {
-  const n1 = $('#setting-name1').value.trim().toUpperCase() || 'HİKMET';
-  const n2 = $('#setting-name2').value.trim().toUpperCase() || 'MERT';
+  const n1 = $('#setting-name1').value.trim().toUpperCase() || 'OYUNCU 1';
+  const n2 = $('#setting-name2').value.trim().toUpperCase() || 'OYUNCU 2';
   state.names = [n1, n2];
   state.resetOnNewGame = $('#setting-reset').checked;
   saveSettings();
@@ -367,8 +367,17 @@ document.addEventListener('click', (event) => {
     case 'start-closest':
       startClosestGame();
       break;
+    case 'start-compare':
+      startCompareGame();
+      break;
     case 'reveal-row':
       submitRow();
+      break;
+    case 'compare-guess':
+      compareSubmit();
+      break;
+    case 'compare-next':
+      compareNextRound();
       break;
     case 'next':
       nextRound();
@@ -414,6 +423,9 @@ document.addEventListener('keydown', (event) => {
   else if (action === 'next') nextRound();
   else if (action === 'online-guess') onlineGuess();
   else if (action === 'online-next') online.socket?.emit('game:next');
+  else if (action === 'compare-next') compareNextRound();
+  // compare-guess: Enter otomatik tamamlamada secim icin kullanildigindan
+  // butona birakilir (asagida autocomplete Enter'i yonetir).
 });
 
 // ================= ONLINE MOD =================
@@ -668,6 +680,315 @@ function onOnlineRoundEnd({ scores }) {
 
   if (online.isHost) setPrimary('SONRAKİ OYUNCU ›', 'online-next');
   else setPrimary('HOST BEKLENİYOR…', 'online-next', true);
+}
+
+// ================= KARİYER KIYASI MODU =================
+const compare = {
+  center: null, // {id,name,portraitUrl,rows,values}
+  rows: [],
+  activeRow: 0,
+  revealed: false,
+  round: 0,
+  picks: [null, null], // aktif satir icin {id,name}
+  statsCache: new Map(), // id -> values
+};
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
+/** Kiyas degerini ekranda gosterime cevirir. */
+function compareFormat(key, v) {
+  if (v == null) return '—';
+  if (key === 'marketValue') {
+    const m = v / 1_000_000;
+    return `€${m.toFixed(m < 10 ? 1 : 0).replace('.', ',')}M`;
+  }
+  if (key === 'heightCm') return `${v} cm`;
+  return `${v}`;
+}
+
+function compareDiffLabel(key, d) {
+  if (key === 'marketValue') return `fark €${(d / 1_000_000).toFixed(1)}M`;
+  return `fark ${Math.round(d)}`;
+}
+
+async function fetchCompareStats(id) {
+  if (compare.statsCache.has(id)) return compare.statsCache.get(id);
+  const res = await fetch(`/api/game/compare/player/${id}`);
+  if (!res.ok) throw new Error('istatistik alınamadı');
+  const data = await res.json();
+  compare.statsCache.set(id, data.values);
+  return data.values;
+}
+
+async function startCompareGame() {
+  if (state.resetOnNewGame) {
+    state.scores = [0, 0];
+    state.round = 0;
+  }
+  compare.round = 0;
+  compare.statsCache.clear();
+  show('game');
+  await compareNextRound();
+}
+
+async function compareNextRound() {
+  setPrimary('YÜKLENİYOR…', 'compare-guess', true);
+  try {
+    const res = await fetch('/api/game/compare/random');
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+    compare.center = await res.json();
+  } catch (err) {
+    toast(`Oyuncu alınamadı: ${err.message}`);
+    setPrimary('TEKRAR DENE', 'compare-next');
+    return;
+  }
+
+  compare.rows = compare.center.rows;
+  compare.activeRow = 0;
+  compare.round += 1;
+
+  $('#score-name1').textContent = state.names[0];
+  $('#score-name2').textContent = state.names[1];
+  $('#score-value1').textContent = state.scores[0];
+  $('#score-value2').textContent = state.scores[1];
+
+  $('#hero-name').textContent = compare.center.name;
+  const photo = $('#hero-photo');
+  photo.src = compare.center.portraitUrl || '';
+  photo.alt = compare.center.name;
+
+  renderCompareRows();
+  for (const card of document.querySelectorAll('.scorecard')) card.classList.remove('is-winner');
+  setCompareActiveRow(0);
+}
+
+function renderCompareRows() {
+  const container = $('#rows');
+  container.innerHTML = '';
+  compare.rows.forEach((row, index) => {
+    const el = document.createElement('div');
+    el.className = 'row is-locked';
+    el.dataset.index = index;
+    el.innerHTML = `
+      ${nameCell(0, row)}
+      <div class="row__label">
+        <b>${row.label}</b>
+        <span class="row__answer" data-answer></span>
+      </div>
+      ${nameCell(1, row)}`;
+    container.appendChild(el);
+  });
+}
+
+function nameCell(side, row) {
+  return `
+    <div class="row__cell row__cell--name" data-side="${side}">
+      <input type="text" class="name-input" placeholder="oyuncu ara…" autocomplete="off" disabled
+             aria-label="${state.names[side]} - ${row.label}" />
+      <ul class="suggest" hidden></ul>
+      <span class="row__answer-name" data-name></span>
+      <span class="row__diff"></span>
+    </div>`;
+}
+
+function setCompareActiveRow(index) {
+  compare.activeRow = index;
+  compare.revealed = false;
+  compare.picks = [null, null];
+
+  document.querySelectorAll('#rows .row').forEach((rowEl) => {
+    const i = Number(rowEl.dataset.index);
+    const inputs = rowEl.querySelectorAll('input');
+    rowEl.classList.remove('is-active', 'is-locked');
+    if (i === index) {
+      rowEl.classList.add('is-active');
+      inputs.forEach((inp, side) => {
+        inp.disabled = false;
+        inp.value = '';
+        attachAutocomplete(inp, side);
+      });
+    } else if (i > index) {
+      rowEl.classList.add('is-locked');
+      inputs.forEach((inp) => (inp.disabled = true));
+    }
+  });
+
+  $('#round-tag').textContent = `Satır ${index + 1}/${compare.rows.length}`;
+  setPrimary('GÖSTER', 'compare-guess');
+  document.querySelector(`#rows .row[data-index="${index}"] input`)?.focus();
+}
+
+/** Bir isim girisine otomatik tamamlama baglar. */
+function attachAutocomplete(input, side) {
+  const cell = input.closest('.row__cell');
+  const list = cell.querySelector('.suggest');
+  let items = [];
+  let active = -1;
+
+  const hide = () => {
+    list.hidden = true;
+    active = -1;
+  };
+  const render = (results) => {
+    items = results;
+    list.innerHTML = results
+      .map(
+        (r, i) =>
+          `<li data-i="${i}" class="${i === active ? 'is-active' : ''}"><b>${r.name}</b>` +
+          `<small>${[r.position, r.club].filter(Boolean).join(' · ')}</small></li>`,
+      )
+      .join('');
+    list.hidden = results.length === 0;
+  };
+
+  const pick = (r) => {
+    if (!r) return;
+    input.value = r.name;
+    compare.picks[side] = { id: r.id, name: r.name };
+    hide();
+  };
+
+  const run = debounce(async (q) => {
+    if (q.trim().length < 2) return hide();
+    try {
+      const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      active = -1;
+      render(data.results || []);
+    } catch {
+      hide();
+    }
+  }, 160);
+
+  input.oninput = () => {
+    compare.picks[side] = null; // yeniden yaziyorsa secim gecersiz
+    run(input.value);
+  };
+  input.onkeydown = (e) => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      active = Math.min(active + 1, items.length - 1);
+      render(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = Math.max(active - 1, 0);
+      render(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      pick(items[active >= 0 ? active : 0]);
+    } else if (e.key === 'Escape') {
+      hide();
+    }
+  };
+  input.onblur = () => setTimeout(hide, 150); // tiklama secimine firsat ver
+  list.onmousedown = (e) => {
+    const li = e.target.closest('li');
+    if (li) pick(items[Number(li.dataset.i)]);
+  };
+}
+
+/** Secilmemis ama yazilmis bir taraf icin ilk arama sonucunu otomatik sec. */
+async function resolvePick(side) {
+  if (compare.picks[side]) return compare.picks[side];
+  const input = document.querySelector(`#rows .row[data-index="${compare.activeRow}"] .row__cell[data-side="${side}"] input`);
+  const text = input.value.trim();
+  if (!text) return null;
+  try {
+    const res = await fetch(`/api/players/search?q=${encodeURIComponent(text)}`);
+    const data = await res.json();
+    const first = data.results?.[0];
+    if (first) {
+      compare.picks[side] = { id: first.id, name: first.name };
+      input.value = first.name;
+      return compare.picks[side];
+    }
+  } catch {
+    /* yok say */
+  }
+  return null;
+}
+
+async function compareSubmit() {
+  if (compare.revealed || !compare.center) return;
+
+  const [p0, p1] = await Promise.all([resolvePick(0), resolvePick(1)]);
+  if (!p0 || !p1) {
+    const side = !p0 ? 0 : 1;
+    toast(`${state.names[side]} bir oyuncu ismi yazmalı.`, 2200);
+    document.querySelector(`#rows .row[data-index="${compare.activeRow}"] .row__cell[data-side="${side}"] input`)?.focus();
+    return;
+  }
+
+  setPrimary('AÇILIYOR…', 'compare-guess', true);
+  let s0;
+  let s1;
+  try {
+    [s0, s1] = await Promise.all([fetchCompareStats(p0.id), fetchCompareStats(p1.id)]);
+  } catch (err) {
+    toast(`Hata: ${err.message}`);
+    setPrimary('GÖSTER', 'compare-guess');
+    return;
+  }
+
+  const row = compare.rows[compare.activeRow];
+  const key = row.key;
+  const target = compare.center.values[key];
+  const rowEl = document.querySelector(`#rows .row[data-index="${compare.activeRow}"]`);
+  const cells = rowEl.querySelectorAll('.row__cell');
+  const inputs = rowEl.querySelectorAll('input');
+
+  rowEl.classList.remove('is-active');
+  rowEl.classList.add('is-done');
+  rowEl.querySelector('[data-answer]').textContent = compareFormat(key, target);
+  for (const inp of inputs) inp.disabled = true;
+
+  const picks = [p0, p1];
+  const stats = [s0, s1];
+  const vals = [stats[0][key], stats[1][key]];
+  const diffs = vals.map((v) => (v == null || target == null ? Infinity : Math.abs(v - target)));
+
+  // Hedef yoksa satir puanlanmaz.
+  const best = target == null ? Infinity : Math.min(diffs[0], diffs[1]);
+
+  [0, 1].forEach((side) => {
+    const cell = cells[side];
+    cell.querySelector('[data-name]').textContent = compareFormat(key, vals[side]);
+    const diffEl = cell.querySelector('.row__diff');
+    if (best !== Infinity && diffs[side] === best) {
+      cell.classList.add('is-win');
+      state.scores[side] += 1;
+      diffEl.textContent = diffs[side] === 0 ? 'tam isabet!' : compareDiffLabel(key, diffs[side]);
+    } else if (best !== Infinity) {
+      cell.classList.add('is-lose');
+      diffEl.textContent = compareDiffLabel(key, diffs[side]);
+    } else {
+      diffEl.textContent = '—';
+    }
+  });
+
+  $('#score-value1').textContent = state.scores[0];
+  $('#score-value2').textContent = state.scores[1];
+  const cards = document.querySelectorAll('.scorecard');
+  cards.forEach((c) => c.classList.remove('is-winner'));
+  if (state.scores[0] !== state.scores[1]) cards[state.scores[0] > state.scores[1] ? 0 : 1].classList.add('is-winner');
+
+  compare.revealed = true;
+
+  if (compare.activeRow >= compare.rows.length - 1) {
+    const [a, b] = state.scores;
+    const verdict = a === b ? 'Berabere' : `${state.names[a > b ? 0 : 1]} önde`;
+    toast(`Oyuncu bitti — ${verdict} (${a}–${b})`);
+    setPrimary('SONRAKİ OYUNCU ›', 'compare-next');
+  } else {
+    setCompareActiveRow(compare.activeRow + 1);
+  }
 }
 
 // ---- baslat ----

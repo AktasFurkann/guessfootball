@@ -233,6 +233,39 @@ async function run() {
     }
   });
 
+  console.log('--- otomatik tamamlama + kiyas ---');
+  await test('isim aramasi sonuc doner (mes -> Messi)', async () => {
+    const { status, body } = await get('/api/players/search?q=mes');
+    assert.equal(status, 200);
+    assert.ok(body.results.length > 0, 'sonuc olmali');
+    assert.ok(
+      body.results.some((r) => /messi/i.test(r.name)),
+      'Messi bulunmali',
+    );
+  });
+
+  await test('aksanli arama normalize edilir (kante -> Kanté)', async () => {
+    const { body } = await get('/api/players/search?q=kante');
+    assert.ok(body.results.some((r) => /kant/i.test(r.name)), 'Kanté bulunmali');
+  });
+
+  await test('kiyas/random orta oyuncu ve degerler doner', async () => {
+    const { status, body } = await get('/api/game/compare/random');
+    assert.equal(status, 200);
+    assert.ok(body.name, 'orta oyuncu ismi');
+    assert.equal(body.rows.length, 5, '5 satir');
+    for (const key of ['clubGoals', 'ntGoals', 'marketValue', 'heightCm', 'birthYear']) {
+      assert.ok(key in body.values, `values.${key}`);
+    }
+  });
+
+  await test('kiyas/player belirli oyuncunun degerlerini doner', async () => {
+    const { status, body } = await get(`/api/game/compare/player/${messi._id}`);
+    assert.equal(status, 200);
+    assert.equal(body.name, messi.name);
+    assert.ok(body.values.clubGoals > 0, 'Messi kulup golu > 0');
+  });
+
   await test('bilinmeyen API yolu 404 JSON doner', async () => {
     assert.equal((await get('/api/yok')).status, 404);
   });

@@ -367,6 +367,66 @@ body {
   border-style: dashed;
 }
 
+/* ---- kariyer kiyasi: isim girisi + otomatik tamamlama ---- */
+.row__cell--name {
+  overflow: visible; /* acilir liste tasabilsin */
+}
+.row__cell--name input {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  max-width: 100%;
+}
+.row__cell--name .row__answer-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  color: var(--white);
+  text-align: center;
+  min-height: 1em;
+  line-height: 1.1;
+}
+.suggest {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 4px;
+  position: absolute;
+  top: 100%;
+  left: 6px;
+  right: 6px;
+  z-index: 20;
+  background: #0f1320;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.suggest[hidden] {
+  display: none;
+}
+.suggest li {
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+}
+.suggest li:hover,
+.suggest li.is-active {
+  background: rgba(63, 91, 246, 0.35);
+}
+.suggest li b {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.suggest li small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 /* ================= OYUN TAHTASI ================= */
 .board {
   background: var(--board-blue);

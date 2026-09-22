@@ -39,9 +39,19 @@ Arayuz `public/` altinda saf HTML/CSS/JS'tir ve Express tarafindan ayni origin'd
 sunulur; bu yuzden `localhost` API'sine sorunsuz erisir. Ayarlar (oyuncu adlari,
 puan sifirlama) tarayicida `localStorage`'da tutulur.
 
-### İki oynanış modu
+### Oyun modları
 
-- **Aynı Ekranda:** İki oyuncu tek cihazda sırayla girer (yukarıdaki akış).
+- **En Yakın Tahmin — Aynı Ekranda:** İki oyuncu tek cihazda, sırayla değer tahmin eder.
+- **En Yakın Tahmin — Online:** Herkes kendi cihazından (aşağıda).
+- **Kariyer Kıyası:** Ortada bir oyuncu gösterilir; iki taraf BAŞKA futbolcular
+  yazar ve o futbolcunun aynı satırdaki değeri (kariyer golü, milli gol, piyasa
+  değeri, boy, doğum yılı) ortadakine en yakın olan satırı kazanır. İsim yazarken
+  otomatik tamamlama çıkar (bellek içi indeks; aksan/Türkçe harf farkını yok
+  sayar, ünlü oyuncuları öne alır). Oyuncu adları varsayılan "Oyuncu 1 / Oyuncu 2",
+  Ayarlar'dan değiştirilebilir.
+
+Online oynanış detayı:
+
 - **Online — Arkadaşınla:** Herkes kendi cihazından oynar. Biri **Oda Kur** der,
   4 haneli bir kod alır; arkadaşı **Odaya Katıl** ile kodu girer. Sunucu
   futbolcuyu seçer, iki ekranı Socket.IO ile senkronlar; her oyuncu yalnızca

@@ -1,15 +1,14 @@
 import { Router } from 'express';
-import { pickRandomGamePlayer } from '../game/roundData.js';
+import { players } from '../db.js';
+import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
+import { COMPARE_ROWS, compareValues } from '../game/compare.js';
 
 export const gameRouter = Router();
 
 /**
  * "En Yakin Tahmin" - yerel (ayni ekran) mod icin rastgele oyuncu.
- *
- * Isim tahmini modunun tersine oyuncunun kimligi aciktir; iki oyuncu
- * satirlardaki degerleri tahmin eder. Bu yuzden yanit gizlenmez; dogru
- * degerler `answers` altinda gonderilir. (Online mod cevaplari istemciye
- * gondermez; onlari sunucu tutar - bkz. src/realtime.js.)
+ * Cevaplar `answers` altinda acik gonderilir (yerel modda gizleme yok).
+ * Online mod cevaplari sunucuda tutar (bkz. src/realtime.js).
  */
 gameRouter.get('/random', async (req, res, next) => {
   try {
@@ -21,6 +20,46 @@ gameRouter.get('/random', async (req, res, next) => {
       });
     }
     res.json(player);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * "Kariyer Kıyası" - rastgele ORTA oyuncu + kiyas degerleri.
+ * Iki taraf baska oyuncular yazip bu degerlere yakinlik yarisir.
+ */
+gameRouter.get('/compare/random', async (req, res, next) => {
+  try {
+    const pool = ['famous', 'stars', 'all'].includes(req.query.pool) ? req.query.pool : 'famous';
+    const [player] = await players()
+      .aggregate([{ $match: poolFilter(pool) }, { $sample: { size: 1 } }])
+      .toArray();
+    if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
+
+    res.json({
+      id: player._id,
+      name: player.name,
+      portraitUrl: player.portraitUrl,
+      rows: COMPARE_ROWS,
+      values: compareValues(player),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Tahmin edilen bir oyuncunun kiyas degerleri (isim secildikten sonra). */
+gameRouter.get('/compare/player/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Geçersiz ID.' });
+    const player = await players().findOne(
+      { _id: id },
+      { projection: { name: 1, portraitUrl: 1, careerTotals: 1, careerByClub: 1, marketValue: 1, heightCm: 1, dateOfBirth: 1 } },
+    );
+    if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
+    res.json({ id: player._id, name: player.name, values: compareValues(player) });
   } catch (error) {
     next(error);
   }
