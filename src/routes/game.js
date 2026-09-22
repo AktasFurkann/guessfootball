@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { players } from '../db.js';
 import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
+import { FORMATION, randomCountry, nationalCaps } from '../game/squad.js';
 
 export const gameRouter = Router();
 
@@ -43,6 +44,45 @@ gameRouter.get('/compare/random', async (req, res, next) => {
       portraitUrl: player.portraitUrl,
       rows: COMPARE_ROWS,
       values: compareValues(player),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** "Milli Kadro" - dizilis + rastgele ulke (bayragiyla). */
+gameRouter.get('/squad/formation', (_req, res) => {
+  res.json({ formation: FORMATION });
+});
+
+gameRouter.get('/squad/country', async (_req, res, next) => {
+  try {
+    const country = await randomCountry();
+    if (!country) return res.status(404).json({ error: 'Uygun ülke bulunamadı.' });
+    res.json(country);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Tahmin edilen oyuncunun BELIRLI ulkedeki milli maç sayisi. */
+gameRouter.get('/squad/player/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const country = req.query.country;
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Geçersiz ID.' });
+    if (!country) return res.status(400).json({ error: 'country parametresi gerekli.' });
+    const player = await players().findOne(
+      { _id: id },
+      { projection: { name: 1, portraitUrl: 1, 'position.category': 1, careerByClub: 1 } },
+    );
+    if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
+    res.json({
+      id: player._id,
+      name: player.name,
+      portraitUrl: player.portraitUrl,
+      category: player.position?.category ?? null,
+      caps: await nationalCaps(player, country),
     });
   } catch (error) {
     next(error);

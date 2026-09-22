@@ -87,6 +87,7 @@ const screens = {
   online: document.getElementById('screen-online'),
   settings: document.getElementById('screen-settings'),
   game: document.getElementById('screen-game'),
+  squad: document.getElementById('screen-squad'),
   quit: document.getElementById('screen-quit'),
 };
 function show(name) {
@@ -369,6 +370,15 @@ document.addEventListener('click', (event) => {
       break;
     case 'start-compare':
       startCompareGame();
+      break;
+    case 'start-squad':
+      startSquadGame();
+      break;
+    case 'squad-guess':
+      squadSubmit();
+      break;
+    case 'squad-next':
+      squadNextCountry();
       break;
     case 'reveal-row':
       submitRow();
@@ -841,7 +851,7 @@ function attachAutocomplete(input, side) {
       .map(
         (r, i) =>
           `<li data-i="${i}" class="${i === active ? 'is-active' : ''}"><b>${r.name}</b>` +
-          `<small>${[r.position, r.club].filter(Boolean).join(' · ')}</small></li>`,
+          `<small>${[r.country, r.position, r.club].filter(Boolean).join(' · ')}</small></li>`,
       )
       .join('');
     list.hidden = results.length === 0;
@@ -989,6 +999,290 @@ async function compareSubmit() {
   } else {
     setCompareActiveRow(compare.activeRow + 1);
   }
+}
+
+// ================= MİLLİ KADRO MODU =================
+const POS_LABEL = { Kaleci: 'KL', Defans: 'DEF', 'Orta Saha': 'ORT', Forvet: 'FOR' };
+// Sahada gosterim sirasi (ust: forvet, alt: kaleci) ve her satirdaki mevki.
+const PITCH_ROWS = ['Forvet', 'Orta Saha', 'Defans', 'Kaleci'];
+
+const squad = {
+  formation: [], // [{pos, short}]
+  slots: [[], []], // her taraf: [{pos, filled, player}]
+  used: [new Set(), new Set()], // taraf basina kullanilan oyuncu id'leri
+  country: null, // {country, flag}
+  totals: [0, 0],
+  picks: [null, null], // bu tur {id, name, category}
+  round: 0,
+  over: false,
+};
+
+function remainingPositions(side) {
+  return [...new Set(squad.slots[side].filter((s) => !s.filled).map((s) => s.pos))];
+}
+
+async function startSquadGame() {
+  const res = await fetch('/api/game/squad/formation');
+  squad.formation = (await res.json()).formation;
+  squad.slots = [0, 1].map(() => squad.formation.map((f) => ({ pos: f.pos, filled: false, player: null })));
+  squad.used = [new Set(), new Set()];
+  squad.totals = [0, 0];
+  squad.round = 0;
+  squad.over = false;
+
+  $('#sq-name1').textContent = state.names[0];
+  $('#sq-name2').textContent = state.names[1];
+  $('#sq-total1').textContent = '0';
+  $('#sq-total2').textContent = '0';
+  renderPitch(0);
+  renderPitch(1);
+  show('squad');
+  await squadNextCountry();
+}
+
+function renderPitch(side) {
+  const pitch = $(`#sq-pitch-${side}`);
+  pitch.innerHTML = '';
+  for (const rowPos of PITCH_ROWS) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'pitch-row';
+    squad.slots[side].forEach((slot, idx) => {
+      if (slot.pos !== rowPos) return;
+      const el = document.createElement('div');
+      el.className = 'slot' + (slot.filled ? ' is-filled' : '');
+      el.dataset.slot = idx;
+      if (slot.filled && slot.player) {
+        el.innerHTML = `
+          <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${slot.player.portraitUrl}" alt="">` : POS_LABEL[slot.pos]}</div>
+          <div class="slot__caps">${slot.player.caps}</div>
+          <div class="slot__name">${shortName(slot.player.name)}</div>`;
+      } else {
+        el.innerHTML = `<div class="slot__circle">${POS_LABEL[slot.pos]}</div><div class="slot__caps"></div><div class="slot__name"></div>`;
+      }
+      rowEl.appendChild(el);
+    });
+    pitch.appendChild(rowEl);
+  }
+}
+
+function shortName(name) {
+  const parts = String(name).split(' ');
+  return parts.length > 1 ? `${parts[0][0]}. ${parts.slice(1).join(' ')}` : name;
+}
+
+async function squadNextCountry() {
+  if (squad.over) return;
+  setPrimarySquad('YÜKLENİYOR…', 'squad-guess', true);
+  try {
+    const res = await fetch('/api/game/squad/country');
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+    squad.country = await res.json();
+  } catch (err) {
+    toast(`Ülke alınamadı: ${err.message}`);
+    setPrimarySquad('TEKRAR DENE', 'squad-next');
+    return;
+  }
+
+  squad.round += 1;
+  squad.picks = [null, null];
+  $('#sq-country').textContent = squad.country.country;
+  const flag = $('#sq-flag');
+  flag.src = squad.country.flag || '';
+  flag.alt = squad.country.country;
+
+  [0, 1].forEach((side) => {
+    const input = $(`#sq-input-${side}`);
+    input.value = '';
+    input.placeholder = `${squad.country.country} oyuncusu…`;
+    input.disabled = false;
+    // Onceki ulkenin oneri listesini temizle.
+    const oldList = input.closest('.sq-input-wrap').querySelector('.suggest');
+    oldList.innerHTML = '';
+    oldList.hidden = true;
+    attachSquadAutocomplete(input, side);
+  });
+
+  $('#sq-round').textContent = `Tur ${squad.round}`;
+  setPrimarySquad('GÖSTER', 'squad-guess');
+  $('#sq-input-0').focus();
+}
+
+function setPrimarySquad(text, action, disabled = false) {
+  const b = $('#sq-btn');
+  b.textContent = text;
+  b.dataset.action = action;
+  b.disabled = disabled;
+}
+
+/** Kadro modunda ulke + kalan mevki filtresiyle otomatik tamamlama. */
+function attachSquadAutocomplete(input, side) {
+  const wrap = input.closest('.sq-input-wrap');
+  const list = wrap.querySelector('.suggest');
+  let items = [];
+  let active = -1;
+
+  const hide = () => {
+    list.hidden = true;
+    active = -1;
+  };
+  const render = (results) => {
+    items = results;
+    list.innerHTML = results
+      .map(
+        (r, i) =>
+          `<li data-i="${i}" class="${i === active ? 'is-active' : ''}"><b>${r.name}</b>` +
+          `<small>${r.position || ''} · ${r.caps} maç</small></li>`,
+      )
+      .join('');
+    list.hidden = results.length === 0;
+  };
+  const pick = (r) => {
+    if (!r) return;
+    input.value = r.name;
+    squad.picks[side] = { id: r.id, name: r.name };
+    hide();
+  };
+
+  const fetchList = async (q) => {
+    const positions = remainingPositions(side).join(',');
+    const params = new URLSearchParams({ country: squad.country.country, positions });
+    if (q) params.set('q', q);
+    try {
+      const res = await fetch(`/api/players/search?${params}`);
+      const data = await res.json();
+      active = -1;
+      render(data.results || []);
+    } catch {
+      hide();
+    }
+  };
+  const run = debounce((q) => fetchList(q), 160);
+
+  input.oninput = () => {
+    squad.picks[side] = null;
+    run(input.value.trim());
+  };
+  input.onfocus = () => {
+    if (!input.value.trim()) fetchList(''); // tiklayinca ulkenin en cok maçlilari
+  };
+  input.onkeydown = (e) => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      active = Math.min(active + 1, items.length - 1);
+      render(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = Math.max(active - 1, 0);
+      render(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      pick(items[active >= 0 ? active : 0]);
+    } else if (e.key === 'Escape') {
+      hide();
+    }
+  };
+  input.onblur = () => setTimeout(hide, 150);
+  list.onmousedown = (e) => {
+    const li = e.target.closest('li');
+    if (li) pick(items[Number(li.dataset.i)]);
+  };
+}
+
+async function squadSubmit() {
+  if (squad.over || !squad.country) return;
+
+  // Iki taraf da secim yapmali (yazip secmediyse ilk sonucu coz).
+  const resolved = await Promise.all([resolveSquadPick(0), resolveSquadPick(1)]);
+  for (const side of [0, 1]) {
+    if (!resolved[side]) {
+      toast(`${state.names[side]} bu turda bir oyuncu seçmeli.`, 2200);
+      $(`#sq-input-${side}`).focus();
+      return;
+    }
+  }
+
+  setPrimarySquad('AÇILIYOR…', 'squad-guess', true);
+  let stats;
+  try {
+    stats = await Promise.all(
+      resolved.map((p) =>
+        fetch(`/api/game/squad/player/${p.id}?country=${encodeURIComponent(squad.country.country)}`).then((r) => r.json()),
+      ),
+    );
+  } catch {
+    toast('İstatistik alınamadı.');
+    setPrimarySquad('GÖSTER', 'squad-guess');
+    return;
+  }
+
+  // Yerlestirme dogrulamasi: mevki uygun ve dolu degil, ayni oyuncu tekrar degil.
+  for (const side of [0, 1]) {
+    const cat = stats[side].category;
+    const slotIdx = squad.slots[side].findIndex((s) => !s.filled && s.pos === cat);
+    if (slotIdx < 0) {
+      toast(`${state.names[side]}: ${POS_LABEL[cat] || cat} için boş yer yok, başka mevki seç.`, 2600);
+      setPrimarySquad('GÖSTER', 'squad-guess');
+      return;
+    }
+    if (squad.used[side].has(stats[side].id)) {
+      toast(`${state.names[side]} bu oyuncuyu zaten kullandı.`, 2400);
+      setPrimarySquad('GÖSTER', 'squad-guess');
+      return;
+    }
+    stats[side]._slot = slotIdx;
+  }
+
+  // Yerlestir + puanla.
+  [0, 1].forEach((side) => {
+    const st = stats[side];
+    const slot = squad.slots[side][st._slot];
+    slot.filled = true;
+    slot.player = { id: st.id, name: st.name, caps: st.caps, portraitUrl: st.portraitUrl };
+    squad.used[side].add(st.id);
+    squad.totals[side] += st.caps || 0;
+    $(`#sq-input-${side}`).disabled = true;
+    $(`#sq-input-${side}`).value = `${st.name} · ${st.caps} maç`;
+    renderPitch(side);
+  });
+
+  $('#sq-total1').textContent = squad.totals[0];
+  $('#sq-total2').textContent = squad.totals[1];
+  const tops = document.querySelectorAll('.squad-total');
+  tops.forEach((t) => t.classList.remove('is-winner'));
+  if (squad.totals[0] !== squad.totals[1]) tops[squad.totals[0] > squad.totals[1] ? 0 : 1].classList.add('is-winner');
+
+  const full = squad.slots[0].every((s) => s.filled) && squad.slots[1].every((s) => s.filled);
+  if (full) {
+    squad.over = true;
+    const [a, b] = squad.totals;
+    const verdict = a === b ? 'Berabere!' : `${state.names[a > b ? 0 : 1]} kazandı!`;
+    toast(`Kadrolar tamam — ${verdict} (${a} - ${b} maç)`, 5000);
+    setPrimarySquad('YENİDEN OYNA ›', 'start-squad');
+  } else {
+    setPrimarySquad('SONRAKİ ÜLKE ›', 'squad-next');
+  }
+}
+
+async function resolveSquadPick(side) {
+  if (squad.picks[side]) return squad.picks[side];
+  const input = $(`#sq-input-${side}`);
+  const text = input.value.trim();
+  if (!text) return null;
+  const positions = remainingPositions(side).join(',');
+  const params = new URLSearchParams({ country: squad.country.country, positions, q: text });
+  try {
+    const res = await fetch(`/api/players/search?${params}`);
+    const first = (await res.json()).results?.[0];
+    if (first) {
+      squad.picks[side] = { id: first.id, name: first.name };
+      input.value = first.name;
+      return squad.picks[side];
+    }
+  } catch {
+    /* yok say */
+  }
+  return null;
 }
 
 // ---- baslat ----

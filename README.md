@@ -47,8 +47,13 @@ puan sifirlama) tarayicida `localStorage`'da tutulur.
   yazar ve o futbolcunun aynı satırdaki değeri (kariyer golü, milli gol, piyasa
   değeri, boy, doğum yılı) ortadakine en yakın olan satırı kazanır. İsim yazarken
   otomatik tamamlama çıkar (bellek içi indeks; aksan/Türkçe harf farkını yok
-  sayar, ünlü oyuncuları öne alır). Oyuncu adları varsayılan "Oyuncu 1 / Oyuncu 2",
-  Ayarlar'dan değiştirilebilir.
+  sayar, ünlü oyuncuları öne alır, öneride ülke·mevki·kulüp gösterir). Oyuncu
+  adları varsayılan "Oyuncu 1 / Oyuncu 2", Ayarlar'dan değiştirilebilir.
+- **Milli Kadro:** Rastgele bir ülke bayrağı çıkar; iki taraf o ülkenin senior
+  milli takımında oynamış futbolcularla kadro kurar (1 KL, 2 DEF, 2 ORT, 1 FOR).
+  Otomatik tamamlama sadece o ülkenin ve boş mevkinin oyuncularını gösterir (en
+  çok maça çıkanlar önce). Her oyuncunun milli maç sayısı altında görünür; her
+  tur yeni bir ülke gelir, kadro dolunca en yüksek toplam milli maça ulaşan kazanır.
 
 Online oynanış detayı:
 

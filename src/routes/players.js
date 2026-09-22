@@ -193,7 +193,13 @@ playersRouter.get('/search', async (req, res, next) => {
   try {
     const q = typeof req.query.q === 'string' ? req.query.q : '';
     const limit = Math.min(Math.max(Number(req.query.limit) || 8, 1), 15);
-    const results = await searchPlayers(q, limit);
+    // Milli Kadro modu: ulke + mevki(ler) filtresi.
+    const country = typeof req.query.country === 'string' && req.query.country ? req.query.country : null;
+    const positions =
+      typeof req.query.positions === 'string' && req.query.positions
+        ? req.query.positions.split(',').map((s) => s.trim()).filter(Boolean)
+        : null;
+    const results = await searchPlayers(q, { limit, country, positions });
     res.json({ query: q, results });
   } catch (error) {
     next(error);

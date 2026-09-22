@@ -57,14 +57,16 @@
             <span class="game-card__go">OYNA ›</span>
           </button>
 
-          <div class="game-card game-card--soon">
+          <button class="game-card" data-action="start-squad">
             <span class="game-card__badge">3</span>
             <span class="game-card__body">
-              <span class="game-card__title">Daha Fazlası</span>
-              <span class="game-card__desc">Yeni modlar yolda.</span>
+              <span class="game-card__title">Milli Kadro</span>
+              <span class="game-card__desc">
+                Çıkan ülkeden oyuncularla kadro kur; en çok milli maça ulaşan kazanır.
+              </span>
             </span>
-            <span class="game-card__soon">YAKINDA</span>
-          </div>
+            <span class="game-card__go">OYNA ›</span>
+          </button>
         </div>
       </div>
     </section>
@@ -199,6 +201,48 @@
 
         <!-- Tur sonucu bildirimi -->
         <div class="toast" id="toast" hidden></div>
+      </div>
+    </section>
+
+    <!-- ================= MİLLİ KADRO ================= -->
+    <section class="screen screen--squad" id="screen-squad">
+      <div class="squad-board">
+        <div class="squad-top">
+          <div class="squad-total scorecard--left">
+            <span class="squad-total__name" id="sq-name1">OYUNCU 1</span>
+            <span class="squad-total__num"><b id="sq-total1">0</b><small>maç</small></span>
+          </div>
+          <div class="squad-flag">
+            <img id="sq-flag" alt="" />
+            <b id="sq-country">—</b>
+          </div>
+          <div class="squad-total scorecard--right">
+            <span class="squad-total__name" id="sq-name2">OYUNCU 2</span>
+            <span class="squad-total__num"><b id="sq-total2">0</b><small>maç</small></span>
+          </div>
+        </div>
+
+        <div class="pitches">
+          <div class="pitch" id="sq-pitch-0"></div>
+          <div class="pitch" id="sq-pitch-1"></div>
+        </div>
+
+        <div class="squad-controls">
+          <div class="sq-input-wrap" data-side="0">
+            <input class="name-input" id="sq-input-0" placeholder="oyuncu yaz…" autocomplete="off" />
+            <ul class="suggest" hidden></ul>
+          </div>
+          <button class="btn btn--primary" id="sq-btn" data-action="squad-guess">GÖSTER</button>
+          <div class="sq-input-wrap" data-side="1">
+            <input class="name-input" id="sq-input-1" placeholder="oyuncu yaz…" autocomplete="off" />
+            <ul class="suggest" hidden></ul>
+          </div>
+        </div>
+
+        <div class="squad-actions">
+          <button class="icon-btn icon-btn--dark" data-action="back-menu" aria-label="Menü">☰</button>
+          <span class="round-tag" id="sq-round"></span>
+        </div>
       </div>
     </section>
 

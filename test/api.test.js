@@ -266,6 +266,25 @@ async function run() {
     assert.ok(body.values.clubGoals > 0, 'Messi kulup golu > 0');
   });
 
+  console.log('--- milli kadro ---');
+  await test('ulke + mevki filtreli arama caps ile doner', async () => {
+    const { body } = await get('/api/players/search?country=Arjantin&positions=Forvet&q=messi');
+    assert.ok(body.results.some((r) => /messi/i.test(r.name)), 'Messi (Arjantin/Forvet)');
+    assert.ok(body.results.every((r) => typeof r.caps === 'number'), 'caps sayisal');
+  });
+
+  await test('squad/formation 6 slot doner', async () => {
+    const { body } = await get('/api/game/squad/formation');
+    assert.equal(body.formation.length, 6);
+  });
+
+  await test('squad/player belirli ulkedeki caps', async () => {
+    const { status, body } = await get(`/api/game/squad/player/${messi._id}?country=Arjantin`);
+    assert.equal(status, 200);
+    assert.ok(body.caps > 0, 'Messi Arjantin caps > 0');
+    assert.ok(body.category, 'kategori');
+  });
+
   await test('bilinmeyen API yolu 404 JSON doner', async () => {
     assert.equal((await get('/api/yok')).status, 404);
   });
