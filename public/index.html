@@ -35,7 +35,7 @@
           <h2>Oyun Seç</h2>
         </header>
         <div class="game-list">
-          <button class="game-card" data-action="open-closest-mode">
+          <button class="game-card" data-action="choose-game" data-mode="closest">
             <span class="game-card__badge">1</span>
             <span class="game-card__body">
               <span class="game-card__title">En Yakın Tahmin</span>
@@ -46,7 +46,7 @@
             <span class="game-card__go">OYNA ›</span>
           </button>
 
-          <button class="game-card" data-action="start-compare">
+          <button class="game-card" data-action="choose-game" data-mode="compare">
             <span class="game-card__badge">2</span>
             <span class="game-card__body">
               <span class="game-card__title">Kariyer Kıyası</span>
@@ -57,7 +57,7 @@
             <span class="game-card__go">OYNA ›</span>
           </button>
 
-          <button class="game-card" data-action="start-squad">
+          <button class="game-card" data-action="choose-game" data-mode="squad">
             <span class="game-card__badge">3</span>
             <span class="game-card__body">
               <span class="game-card__title">Milli Kadro</span>
@@ -76,10 +76,10 @@
       <div class="panel">
         <header class="panel__head">
           <button class="icon-btn" data-action="open-play" aria-label="Geri">‹</button>
-          <h2>En Yakın Tahmin</h2>
+          <h2 id="mode-title">Oyun</h2>
         </header>
         <div class="game-list">
-          <button class="game-card" data-action="start-closest">
+          <button class="game-card" data-action="mode-local">
             <span class="game-card__badge">👥</span>
             <span class="game-card__body">
               <span class="game-card__title">Aynı Ekranda</span>
@@ -87,7 +87,7 @@
             </span>
             <span class="game-card__go">OYNA ›</span>
           </button>
-          <button class="game-card" data-action="open-online">
+          <button class="game-card" data-action="mode-online">
             <span class="game-card__badge">🌐</span>
             <span class="game-card__body">
               <span class="game-card__title">Online — Arkadaşınla</span>
@@ -103,7 +103,7 @@
     <section class="screen screen--settings" id="screen-online">
       <div class="panel">
         <header class="panel__head">
-          <button class="icon-btn" data-action="open-closest-mode" aria-label="Geri">‹</button>
+          <button class="icon-btn" data-action="online-leave" aria-label="Geri">‹</button>
           <h2>Online Oyna</h2>
         </header>
 
@@ -268,6 +268,26 @@
         </div>
       </div>
     </section>
+
+    <!-- ================= ONLINE ZAR ÖRTÜSÜ ================= -->
+    <div class="online-dice" id="online-dice" hidden>
+      <div class="dice-card">
+        <h3 id="odice-title">Kim başlıyor?</h3>
+        <div class="dice-row">
+          <div class="dice-col">
+            <span class="dice-name" id="odice-name-0">SEN</span>
+            <span class="die" id="odie-0">⚀</span>
+          </div>
+          <span class="dice-vs">VS</span>
+          <div class="dice-col">
+            <span class="dice-name" id="odice-name-1">RAKİP</span>
+            <span class="die" id="odie-1">⚀</span>
+          </div>
+        </div>
+        <p class="dice-result" id="odice-result"></p>
+        <button class="btn btn--primary" id="odice-btn" data-action="online-dice-roll">ZAR AT</button>
+      </div>
+    </div>
 
     <!-- ================= CIKIS ================= -->
     <section class="screen screen--quit" id="screen-quit">

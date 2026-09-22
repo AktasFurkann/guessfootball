@@ -1016,6 +1016,19 @@ body {
   margin: 6px 0 16px;
 }
 
+/* online zar ortusu (tum ekrani kaplar) */
+.online-dice {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 14, 0.9);
+  display: grid;
+  place-items: center;
+  z-index: 40;
+}
+.online-dice[hidden] {
+  display: none;
+}
+
 /* toast */
 .toast {
   position: fixed;

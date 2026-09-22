@@ -351,9 +351,19 @@ document.addEventListener('click', (event) => {
       leaveOnlineIfAny();
       show('select');
       break;
-    case 'open-closest-mode':
+    case 'choose-game':
       leaveOnlineIfAny();
-      show('mode');
+      chooseGame(target.dataset.mode);
+      break;
+    case 'mode-local':
+      startLocalGame();
+      break;
+    case 'mode-online':
+      openOnline(pendingGameMode);
+      break;
+    case 'online-dice-roll':
+      online.socket?.emit('dice:roll');
+      $('#odice-btn').disabled = true;
       break;
     case 'open-settings':
       openSettings();
@@ -421,6 +431,15 @@ document.addEventListener('click', (event) => {
     case 'online-next':
       online.socket?.emit('game:next');
       break;
+    case 'online-compare-guess':
+      onlineCompareGuess();
+      break;
+    case 'online-squad-send':
+      onlineSquadSend();
+      break;
+    case 'online-next-round':
+      online.socket?.emit('game:next-round');
+      break;
     default:
       break;
   }
@@ -438,6 +457,8 @@ document.addEventListener('keydown', (event) => {
     const action = $('#sq-btn').dataset.action;
     if (action === 'squad-send') squadSend();
     else if (action === 'squad-next') squadNextCountry();
+    else if (action === 'online-squad-send') onlineSquadSend();
+    else if (action === 'online-next-round') online.socket?.emit('game:next-round');
     return;
   }
 
@@ -448,14 +469,32 @@ document.addEventListener('keydown', (event) => {
   else if (action === 'next') nextRound();
   else if (action === 'online-guess') onlineGuess();
   else if (action === 'online-next') online.socket?.emit('game:next');
+  else if (action === 'online-next-round') online.socket?.emit('game:next-round');
   else if (action === 'compare-next') compareNextRound();
   // compare-guess: Enter otomatik tamamlamada secim icin kullanildigindan
   // butona birakilir (asagida autocomplete Enter'i yonetir).
 });
 
+// ================= OYUN MODU SEÇİMİ =================
+const MODE_TITLES = { closest: 'En Yakın Tahmin', compare: 'Kariyer Kıyası', squad: 'Milli Kadro' };
+let pendingGameMode = 'closest';
+
+function chooseGame(mode) {
+  pendingGameMode = MODE_TITLES[mode] ? mode : 'closest';
+  $('#mode-title').textContent = MODE_TITLES[pendingGameMode];
+  show('mode');
+}
+
+function startLocalGame() {
+  if (pendingGameMode === 'compare') startCompareGame();
+  else if (pendingGameMode === 'squad') startSquadGame();
+  else startClosestGame();
+}
+
 // ================= ONLINE MOD =================
 const online = {
   socket: null,
+  mode: 'closest',
   roomCode: null,
   youId: null,
   oppId: null,
@@ -465,6 +504,12 @@ const online = {
   activeRow: 0,
   submitted: false,
   active: false, // online oyun ekrani acik mi
+  // turn-based (compare/squad) durum
+  turnId: null,
+  center: null, // compare orta oyuncu
+  slots: {}, // squad: id -> slot dizisi
+  country: null, // squad ulke
+  target: null, // squad hedef slot
 };
 
 /** Socket baglantisini (bir kez) kurar ve olaylari baglar. */
@@ -484,32 +529,121 @@ function connectSocket() {
     renderLobby(room);
   });
   socket.on('game:error', ({ message }) => toast(message || 'Bir hata oluştu.'));
+
+  // ---- closest ----
   socket.on('game:round', onOnlineRound);
   socket.on('row:progress', onOnlineProgress);
   socket.on('row:result', onOnlineResult);
   socket.on('row:active', ({ activeRow }) => setOnlineActiveRow(activeRow));
   socket.on('round:end', onOnlineRoundEnd);
 
+  // ---- zar (compare + squad) ----
+  socket.on('dice:begin', ({ room }) => {
+    online.players = room.players;
+    online.isHost = room.hostId === online.youId;
+    online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
+    openOnlineDice();
+  });
+  socket.on('dice:update', ({ rolls }) => {
+    for (const [id, v] of Object.entries(rolls)) {
+      const die = $(`#odie-${id === online.youId ? 0 : 1}`);
+      if (die) {
+        die.classList.remove('is-rolling');
+        die.textContent = DICE[v - 1] || '⚀';
+      }
+    }
+  });
+  socket.on('dice:tie', () => {
+    $('#odie-0').classList.remove('is-rolling');
+    $('#odie-1').classList.remove('is-rolling');
+    $('#odice-result').textContent = 'Berabere! Tekrar atın.';
+    const btn = $('#odice-btn');
+    btn.textContent = 'TEKRAR AT';
+    btn.disabled = false;
+  });
+  socket.on('dice:winner', ({ starterId, rolls }) => {
+    for (const [id, v] of Object.entries(rolls)) {
+      const die = $(`#odie-${id === online.youId ? 0 : 1}`);
+      if (die) die.textContent = DICE[v - 1] || '⚀';
+    }
+    const side = starterId === online.youId ? 0 : 1;
+    $(`#odie-${side}`).classList.add('is-winner');
+    $('#odice-result').textContent = starterId === online.youId ? 'Sen başlıyorsun!' : 'Rakip başlıyor.';
+    $('#odice-btn').hidden = true;
+  });
+
+  // ---- compare (Kariyer Kıyası) ----
+  socket.on('compare:round', onOnlineCompareRound);
+  socket.on('compare:guessed', ({ by }) => {
+    const side = by === online.youId ? 0 : 1;
+    const cell = document.querySelector(
+      `#rows .row[data-index="${online.compareActiveRow}"] .row__cell[data-side="${side}"]`,
+    );
+    const diff = cell?.querySelector('.row__diff');
+    if (diff && !cell.classList.contains('is-win') && !cell.classList.contains('is-lose')) {
+      diff.textContent = 'yazdı ✓';
+    }
+  });
+  socket.on('compare:turn', ({ turnId }) => setOnlineCompareTurn(turnId));
+  socket.on('compare:result', onOnlineCompareResult);
+  socket.on('compare:active', ({ activeRow, turnId }) => {
+    online.compareActiveRow = activeRow;
+    setOnlineCompareTurn(turnId);
+  });
+  socket.on('compare:over', onOnlineCompareOver);
+
+  // ---- squad (Milli Kadro) ----
+  socket.on('squad:round', onOnlineSquadRound);
+  socket.on('squad:placed', onOnlineSquadPlaced);
+  socket.on('squad:turn', ({ turnId }) => setOnlineSquadTurn(turnId));
+  socket.on('squad:round-done', () => {
+    squad.turn = -1;
+    renderPitch(0);
+    renderPitch(1);
+    $('#sq-turn').textContent = '';
+    $('#sq-card-0').classList.remove('is-turn');
+    $('#sq-card-1').classList.remove('is-turn');
+    if (online.isHost) setPrimarySquad('YENİ ÜLKE ›', 'online-next-round');
+    else setPrimarySquad('HOST BEKLENİYOR…', 'online-next-round', true);
+  });
+  socket.on('squad:over', ({ scores }) => {
+    squad.over = true;
+    squad.turn = -1;
+    renderPitch(0);
+    renderPitch(1);
+    const a = scores[online.youId] ?? 0;
+    const b = scores[online.oppId] ?? 0;
+    const verdict = a > b ? 'Kazandın! 🎉' : a < b ? 'Rakip kazandı.' : 'Berabere!';
+    $('#sq-turn').textContent = '';
+    toast(`Kadrolar tamam — ${verdict} (${a}–${b} maç)`, 5000);
+    setPrimarySquad('BİTTİ', 'online-squad-send', true);
+  });
+
   return socket;
 }
 
-function openOnline() {
+function openOnline(mode = 'closest') {
+  online.mode = ['closest', 'compare', 'squad'].includes(mode) ? mode : 'closest';
   connectSocket();
   online.active = false;
   $('#online-entry').hidden = false;
   $('#online-lobby').hidden = true;
   $('#online-hint').textContent = '';
+  $('#online-dice').hidden = true;
   $('#online-name').value = state.names[0];
+  const title = $('#screen-online h2');
+  if (title) title.textContent = `Online — ${MODE_TITLES[online.mode] || 'Oyna'}`;
   show('online');
 }
 
 function onlineCreate() {
   const name = $('#online-name').value.trim() || 'Oyuncu 1';
-  connectSocket().emit('room:create', { name }, (res) => {
+  connectSocket().emit('room:create', { name, mode: online.mode }, (res) => {
     if (!res?.ok) return ($('#online-hint').textContent = res?.error || 'Oda kurulamadı.');
     online.roomCode = res.code;
     online.youId = res.youId;
     online.isHost = true;
+    if (res.mode) online.mode = res.mode;
     showLobby(res.code);
   });
 }
@@ -523,6 +657,7 @@ function onlineJoin() {
     online.roomCode = res.code;
     online.youId = res.youId;
     online.isHost = false;
+    online.mode = res.mode || 'closest';
     showLobby(res.code);
   });
 }
@@ -568,6 +703,7 @@ function leaveOnlineIfAny() {
   if (online.socket && online.roomCode) online.socket.emit('room:leave');
   online.roomCode = null;
   online.active = false;
+  $('#online-dice').hidden = true;
 }
 
 // ---- online oyun akisi ----
@@ -1497,6 +1633,415 @@ async function squadSend() {
     squad.starter = 1 - squad.starter; // sonraki turda diger oyuncu baslar
     setPrimarySquad('YENİ ÜLKE ›', 'squad-next');
   }
+}
+
+// ================= ONLINE — ZAR (compare + squad ortak) =================
+function openOnlineDice() {
+  const you = online.players.find((p) => p.id === online.youId);
+  const opp = online.players.find((p) => p.id !== online.youId);
+  $('#odice-name-0').textContent = (you?.name || 'SEN').toUpperCase();
+  $('#odice-name-1').textContent = (opp?.name || 'RAKİP').toUpperCase();
+  $('#odie-0').textContent = '⚀';
+  $('#odie-1').textContent = '⚀';
+  $('#odie-0').classList.remove('is-winner', 'is-rolling');
+  $('#odie-1').classList.remove('is-winner', 'is-rolling');
+  $('#odice-title').textContent = 'Kim başlıyor?';
+  $('#odice-result').textContent = '';
+  const btn = $('#odice-btn');
+  btn.textContent = 'ZAR AT';
+  btn.disabled = false;
+  btn.hidden = false;
+  $('#online-dice').hidden = false;
+}
+
+// ================= ONLINE — KARİYER KIYASI =================
+function onOnlineCompareRound({ player, rows, activeRow, turnId, room, scores }) {
+  $('#online-dice').hidden = true;
+  online.mode = 'compare';
+  online.active = true;
+  online.isHost = room.hostId === online.youId;
+  online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
+  online.players = room.players;
+  online.compareRows = rows;
+  online.compareActiveRow = activeRow ?? 0;
+  online.center = player;
+  online.comparePick = null;
+
+  const you = room.players.find((p) => p.id === online.youId);
+  const opp = room.players.find((p) => p.id !== online.youId);
+  $('#score-name1').textContent = (you?.name || 'SEN').toUpperCase();
+  $('#score-name2').textContent = (opp?.name || 'RAKİP').toUpperCase();
+  $('#score-value1').textContent = scores[online.youId] ?? 0;
+  $('#score-value2').textContent = scores[online.oppId] ?? 0;
+
+  $('#hero-name').textContent = player.name;
+  const photo = $('#hero-photo');
+  photo.src = player.portraitUrl || '';
+  photo.alt = player.name;
+
+  renderOnlineCompareRows();
+  for (const card of document.querySelectorAll('.scorecard')) card.classList.remove('is-winner');
+  show('game');
+  setOnlineCompareTurn(turnId);
+}
+
+function renderOnlineCompareRows() {
+  const container = $('#rows');
+  container.innerHTML = '';
+  online.compareRows.forEach((row, index) => {
+    const el = document.createElement('div');
+    el.className = 'row is-locked';
+    el.dataset.index = index;
+    el.innerHTML = `
+      <div class="row__cell row__cell--name" data-side="0">
+        <input type="text" class="name-input" placeholder="oyuncu ara…" autocomplete="off" disabled />
+        <ul class="suggest" hidden></ul>
+        <span class="row__answer-name" data-name></span>
+        <span class="row__diff"></span>
+      </div>
+      <div class="row__label">
+        <b>${row.label}</b>
+        <span class="row__answer" data-answer></span>
+      </div>
+      <div class="row__cell row__cell--name" data-side="1">
+        <input type="text" class="name-input" placeholder="rakip…" autocomplete="off" disabled />
+        <ul class="suggest" hidden></ul>
+        <span class="row__answer-name" data-name></span>
+        <span class="row__diff"></span>
+      </div>`;
+    container.appendChild(el);
+  });
+}
+
+/** Sirayi ayarlar: yalnizca sirasi gelen oyuncunun (sen) girisi acilir. */
+function setOnlineCompareTurn(turnId) {
+  online.turnId = turnId;
+  online.comparePick = null;
+  const idx = online.compareActiveRow;
+  const mine = turnId === online.youId;
+
+  document.querySelectorAll('#rows .row').forEach((rowEl) => {
+    const i = Number(rowEl.dataset.index);
+    const inputs = rowEl.querySelectorAll('input');
+    rowEl.classList.remove('is-active', 'is-locked');
+    if (i === idx) {
+      rowEl.classList.add('is-active');
+      inputs[1].disabled = true;
+      if (mine) {
+        inputs[0].disabled = false;
+        inputs[0].value = '';
+        inputs[0].placeholder = 'oyuncu ara…';
+        attachOnlineCompareAutocomplete(inputs[0]);
+      } else {
+        inputs[0].disabled = true;
+        inputs[0].placeholder = 'sıra rakipte…';
+        inputs[1].placeholder = 'rakip yazıyor…';
+      }
+    } else if (i > idx) {
+      rowEl.classList.add('is-locked');
+      inputs.forEach((inp) => (inp.disabled = true));
+    }
+  });
+
+  $('#round-tag').textContent = `Satır ${idx + 1}/${online.compareRows.length}`;
+  if (mine) {
+    setPrimary('GÖNDER', 'online-compare-guess');
+    document.querySelector(`#rows .row[data-index="${idx}"] .row__cell[data-side="0"] input`)?.focus();
+  } else {
+    setPrimary('RAKİP YAZIYOR…', 'online-compare-guess', true);
+  }
+}
+
+/** Online kiyas icin isim otomatik tamamlama (secimi online.comparePick'e yazar). */
+function attachOnlineCompareAutocomplete(input) {
+  const cell = input.closest('.row__cell');
+  const list = cell.querySelector('.suggest');
+  let items = [];
+  let active = -1;
+
+  const hide = () => {
+    list.hidden = true;
+    active = -1;
+  };
+  const render = (results) => {
+    items = results;
+    list.innerHTML = results
+      .map(
+        (r, i) =>
+          `<li data-i="${i}" class="${i === active ? 'is-active' : ''}"><b>${r.name}</b>` +
+          `<small>${[r.country, r.position, r.club].filter(Boolean).join(' · ')}</small></li>`,
+      )
+      .join('');
+    list.hidden = results.length === 0;
+  };
+  const pick = (r) => {
+    if (!r) return;
+    input.value = r.name;
+    online.comparePick = { id: r.id, name: r.name };
+    hide();
+  };
+  const run = debounce(async (q) => {
+    if (q.trim().length < 2) return hide();
+    try {
+      const res = await fetch(`/api/players/search?live=1&q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      active = -1;
+      render(data.results || []);
+    } catch {
+      hide();
+    }
+  }, 220);
+
+  input.oninput = () => {
+    online.comparePick = null;
+    run(input.value);
+  };
+  input.onkeydown = (e) => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      active = Math.min(active + 1, items.length - 1);
+      render(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = Math.max(active - 1, 0);
+      render(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      pick(items[active >= 0 ? active : 0]);
+    } else if (e.key === 'Escape') {
+      hide();
+    }
+  };
+  input.onblur = () => setTimeout(hide, 150);
+  list.onmousedown = (e) => {
+    const li = e.target.closest('li');
+    if (li) pick(items[Number(li.dataset.i)]);
+  };
+}
+
+async function resolveOnlineComparePick() {
+  if (online.comparePick) return online.comparePick;
+  const input = document.querySelector(
+    `#rows .row[data-index="${online.compareActiveRow}"] .row__cell[data-side="0"] input`,
+  );
+  const text = input?.value.trim();
+  if (!text) return null;
+  try {
+    const res = await fetch(`/api/players/search?q=${encodeURIComponent(text)}`);
+    const first = (await res.json()).results?.[0];
+    if (first) {
+      online.comparePick = { id: first.id, name: first.name };
+      input.value = first.name;
+      return online.comparePick;
+    }
+  } catch {
+    /* yok say */
+  }
+  return null;
+}
+
+async function onlineCompareGuess() {
+  if (online.turnId !== online.youId) return;
+  const pick = await resolveOnlineComparePick();
+  if (!pick) {
+    toast('Bir oyuncu ismi yaz.', 2000);
+    document
+      .querySelector(`#rows .row[data-index="${online.compareActiveRow}"] .row__cell[data-side="0"] input`)
+      ?.focus();
+    return;
+  }
+  online.socket.emit('compare:guess', { playerId: pick.id });
+  const input = document.querySelector(
+    `#rows .row[data-index="${online.compareActiveRow}"] .row__cell[data-side="0"] input`,
+  );
+  if (input) {
+    input.disabled = true;
+    input.value = pick.name;
+  }
+  setPrimary('RAKİP BEKLENİYOR…', 'online-compare-guess', true);
+}
+
+function onOnlineCompareResult({ rowIndex, key, truthText, truthValue, guesses, winners, scores }) {
+  const rowEl = document.querySelector(`#rows .row[data-index="${rowIndex}"]`);
+  if (!rowEl) return;
+  rowEl.classList.remove('is-active');
+  rowEl.classList.add('is-done');
+  rowEl.querySelector('[data-answer]').textContent = truthText;
+  const cells = rowEl.querySelectorAll('.row__cell');
+  const inputs = rowEl.querySelectorAll('input');
+
+  [online.youId, online.oppId].forEach((id, side) => {
+    const g = guesses[id] || {};
+    inputs[side].disabled = true;
+    inputs[side].value = g.name || '';
+    const cell = cells[side];
+    cell.querySelector('[data-name]').textContent = compareFormat(key, g.value);
+    const diffEl = cell.querySelector('.row__diff');
+    cell.classList.remove('is-win', 'is-lose');
+    if (winners.includes(id)) cell.classList.add('is-win');
+    else if (winners.length) cell.classList.add('is-lose');
+    if (truthValue == null || g.value == null) diffEl.textContent = '—';
+    else
+      diffEl.textContent =
+        Math.abs(g.value - truthValue) === 0 ? 'tam isabet!' : compareDiffLabel(key, Math.abs(g.value - truthValue));
+  });
+
+  $('#score-value1').textContent = scores[online.youId] ?? 0;
+  $('#score-value2').textContent = scores[online.oppId] ?? 0;
+  flashOnlineLeader(scores);
+}
+
+function onOnlineCompareOver({ scores }) {
+  const you = scores[online.youId] ?? 0;
+  const opp = scores[online.oppId] ?? 0;
+  const verdict = you > opp ? 'Kazandın! 🎉' : you < opp ? 'Rakip kazandı.' : 'Berabere.';
+  toast(`Oyuncu bitti. ${verdict} (${you}–${opp})`);
+  if (online.isHost) setPrimary('SONRAKİ OYUNCU ›', 'online-next-round');
+  else setPrimary('HOST BEKLENİYOR…', 'online-next-round', true);
+}
+
+// ================= ONLINE — MİLLİ KADRO =================
+async function onlineEnsureReel() {
+  if (squad.reel && squad.reel.length) return;
+  try {
+    squad.reel = (await (await fetch('/api/game/squad/countries')).json()).countries || [];
+  } catch {
+    squad.reel = [];
+  }
+}
+
+/** Sunucudan gelen (id->slots) yapiyi ekran taraflarina (0=sen,1=rakip) esler. */
+function applyOnlineSlots(slots) {
+  const map = (arr) => (arr || []).map((s) => ({ pos: s.pos, filled: s.filled, player: s.player }));
+  squad.slots = [map(slots[online.youId]), map(slots[online.oppId])];
+}
+
+function refreshUsedIdsFromSlots() {
+  squad.usedIds = new Set();
+  for (const arr of squad.slots) for (const s of arr) if (s.filled && s.player) squad.usedIds.add(s.player.id);
+}
+
+async function onOnlineSquadRound({ country, formation, round, turnId, slots, scores, room }) {
+  $('#online-dice').hidden = true;
+  online.mode = 'squad';
+  online.active = true;
+  online.isHost = room.hostId === online.youId;
+  online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
+  online.players = room.players;
+
+  squad.formation = formation;
+  squad.country = country;
+  squad.over = false;
+  squad.pick = [null, null];
+  squad.target = null;
+  applyOnlineSlots(slots);
+  refreshUsedIdsFromSlots();
+
+  const you = room.players.find((p) => p.id === online.youId);
+  const opp = room.players.find((p) => p.id !== online.youId);
+  $('#sq-name1').textContent = (you?.name || 'SEN').toUpperCase();
+  $('#sq-name2').textContent = (opp?.name || 'RAKİP').toUpperCase();
+  squad.totals = [scores[online.youId] ?? 0, scores[online.oppId] ?? 0];
+  $('#sq-total1').textContent = squad.totals[0];
+  $('#sq-total2').textContent = squad.totals[1];
+  $('#sq-round').textContent = `Tur ${round}`;
+  for (const t of document.querySelectorAll('.squad-total')) t.classList.remove('is-winner', 'is-turn');
+
+  // Girisleri kilitle (spin bitince sira acilir).
+  for (const side of [0, 1]) {
+    const input = $(`#sq-input-${side}`);
+    input.disabled = true;
+    input.value = '';
+    input.closest('.sq-input-wrap').classList.add('is-off');
+    const l = input.closest('.sq-input-wrap').querySelector('.suggest');
+    l.innerHTML = '';
+    l.hidden = true;
+  }
+  squad.turn = -1;
+  renderPitch(0);
+  renderPitch(1);
+  setPrimarySquad('…', 'online-squad-send', true);
+  show('squad');
+
+  await onlineEnsureReel();
+  await spinCountry(country);
+  $('#sq-flag').alt = country.country;
+  setOnlineSquadTurn(turnId);
+}
+
+/** Online kadroda sirayi ayarlar: sirasi sende ise (side 0) girisin/tahta acilir. */
+function setOnlineSquadTurn(turnId) {
+  const myTurn = turnId === online.youId;
+  squad.turn = myTurn ? 0 : -1; // -1: hicbir tahta tiklanamaz
+  squad.target = null;
+  squad.pick = [null, null];
+  renderPitch(0);
+  renderPitch(1);
+
+  $('#sq-card-0').classList.toggle('is-turn', myTurn);
+  $('#sq-card-1').classList.toggle('is-turn', turnId === online.oppId);
+
+  const input = $('#sq-input-0');
+  const wrap = input.closest('.sq-input-wrap');
+  if (myTurn) {
+    wrap.classList.remove('is-off');
+    input.disabled = false;
+    input.value = '';
+    input.placeholder = `${squad.country.country} oyuncusu…`;
+    attachSquadAutocomplete(input, 0);
+    $('#sq-turn').textContent = 'Sıra: SEN';
+    setPrimarySquad('GÖNDER', 'online-squad-send');
+  } else {
+    wrap.classList.add('is-off');
+    input.disabled = true;
+    input.value = '';
+    $('#sq-turn').textContent = 'Sıra: RAKİP';
+    setPrimarySquad('RAKİP OYNUYOR…', 'online-squad-send', true);
+  }
+  // Rakip girisi ekranimda hep kapali.
+  const owrap = $('#sq-input-1').closest('.sq-input-wrap');
+  owrap.classList.add('is-off');
+  $('#sq-input-1').disabled = true;
+}
+
+async function onlineSquadSend() {
+  if (squad.over || !squad.country) return;
+  if (squad.turn !== 0) return; // rakip sirasi
+  const pick = await resolveCurrentPick(0);
+  if (!pick) {
+    toast('Bir oyuncu seç.', 2000);
+    $('#sq-input-0').focus();
+    return;
+  }
+  if (squad.usedIds.has(pick.id)) {
+    toast('Bu oyuncu bu oyunda kullanıldı, başkasını seç.', 2400);
+    return;
+  }
+  setPrimarySquad('…', 'online-squad-send', true);
+  const slotIdx = squad.target != null ? squad.target : -1;
+  online.socket.emit('squad:place', { playerId: pick.id, slotIdx });
+}
+
+function onOnlineSquadPlaced({ by, player, slots, scores }) {
+  applyOnlineSlots(slots);
+  if (player) squad.usedIds.add(player.id);
+  squad.totals = [scores[online.youId] ?? 0, scores[online.oppId] ?? 0];
+  $('#sq-total1').textContent = squad.totals[0];
+  $('#sq-total2').textContent = squad.totals[1];
+  const tops = document.querySelectorAll('.squad-total');
+  tops.forEach((t) => t.classList.remove('is-winner'));
+  if (squad.totals[0] !== squad.totals[1]) tops[squad.totals[0] > squad.totals[1] ? 0 : 1].classList.add('is-winner');
+
+  if (by === online.youId) {
+    const i = $('#sq-input-0');
+    i.value = `${player.name} · ${player.caps} maç`;
+    i.disabled = true;
+    i.closest('.sq-input-wrap').classList.add('is-off');
+    $('#sq-card-0').classList.remove('is-turn');
+  }
+  renderPitch(0);
+  renderPitch(1);
 }
 
 // ---- baslat ----
