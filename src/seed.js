@@ -28,16 +28,23 @@ async function upsert(collection, documents, label) {
     return;
   }
 
-  const result = await collection.bulkWrite(
-    documents.map((doc) => ({
-      updateOne: { filter: { _id: doc._id }, update: { $set: doc }, upsert: true },
-    })),
-    { ordered: false },
-  );
+  // Buyuk veri setini parca parca yaz (tek dev bulkWrite yerine).
+  const CHUNK = 500;
+  let upserted = 0;
+  let modified = 0;
+  for (let i = 0; i < documents.length; i += CHUNK) {
+    const slice = documents.slice(i, i + CHUNK);
+    const result = await collection.bulkWrite(
+      slice.map((doc) => ({
+        updateOne: { filter: { _id: doc._id }, update: { $set: doc }, upsert: true },
+      })),
+      { ordered: false },
+    );
+    upserted += result.upsertedCount;
+    modified += result.modifiedCount;
+  }
 
-  console.log(
-    `[seed] ${label}: ${result.upsertedCount} eklendi, ${result.modifiedCount} guncellendi`,
-  );
+  console.log(`[seed] ${label}: ${upserted} eklendi, ${modified} guncellendi`);
 }
 
 async function main() {
@@ -53,7 +60,12 @@ async function main() {
     if (player.scrapedAt) player.scrapedAt = new Date(player.scrapedAt);
   }
 
-  await upsert(players(), playerDocs, 'players');
+  // Kariyer verisi olmayan (hicbir mac oynamamis) oyuncular oyuna uygun degil.
+  const playable = playerDocs.filter((p) => (p.careerByClub?.length ?? 0) > 0);
+  const dropped = playerDocs.length - playable.length;
+  if (dropped) console.log(`[seed] ${dropped} kariyer verisi bos oyuncu atlandı`);
+
+  await upsert(players(), playable, 'players');
   await upsert(teams(), teamDocs, 'teams');
 
   console.log('[seed] Tamamlandi.');

@@ -11,9 +11,10 @@ export const gameRouter = Router();
  * degerler `answers` altinda gonderilir. (Online mod cevaplari istemciye
  * gondermez; onlari sunucu tutar - bkz. src/realtime.js.)
  */
-gameRouter.get('/random', async (_req, res, next) => {
+gameRouter.get('/random', async (req, res, next) => {
   try {
-    const player = await pickRandomGamePlayer();
+    const pool = ['famous', 'stars', 'all'].includes(req.query.pool) ? req.query.pool : 'famous';
+    const player = await pickRandomGamePlayer({ pool });
     if (!player) {
       return res.status(404).json({
         error: 'Veritabaninda oyuncu yok. Once "npm run scrape" veya "npm run seed" calistir.',

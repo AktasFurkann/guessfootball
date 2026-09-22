@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { players } from '../db.js';
 import { checkGuess, candidateNames, primaryNames, normalize } from '../game/matcher.js';
+import { poolFilter } from '../game/roundData.js';
 
 export const playersRouter = Router();
 
@@ -92,8 +93,9 @@ playersRouter.get('/random', async (req, res, next) => {
       ? req.query.difficulty
       : 'normal';
 
-    // Kolay modda cok kulup gezmis, taninmasi gorece kolay oyuncular secilir.
-    const filter = difficulty === 'easy' ? { 'careerTotals.games': { $gte: 300 } } : {};
+    // Veritabaninda binlerce oyuncu var; oyunun keyifli olmasi icin taninir
+    // havuzdan secilir. Kolay modda daha da bilindik (yildiz) oyuncular gelir.
+    const filter = poolFilter(difficulty === 'easy' ? 'stars' : 'famous');
 
     const [player] = await players()
       .aggregate([{ $match: filter }, { $sample: { size: 1 } }])

@@ -15,6 +15,18 @@ npm run dev               # http://localhost:3000
 Tarayicida **http://localhost:3000** adresini ac: ana menu (Oyna / Ayarlar /
 Oyundan Cik) ve **"En Yakin Tahmin"** oyunu gelir.
 
+### Veri hacmi ve oyuncu havuzu
+
+Veritabani iki asamada doldurulur: `npm run scrape` kurasyonlu 80 yildizi (hizli),
+`npm run collect-ids` + `npm run scrape-bulk` ise **7000+** oyuncuyu (12 buyuk lig
+guncel kadrolari + milli takimlar + ~180 efsane, Super Lig dahil) getirir.
+
+Veritabaninda binlerce oyuncu olsa da cogu taninmadigi icin oyun rastgele secimi
+varsayilan olarak **taninir havuzdan** yapar (zirve piyasa degeri >= 20M **veya**
+mac sayisi >= 350; ikincisi eski/Turk efsanelerini de kapsar). Genisletmek icin:
+`GET /api/game/random?pool=all` (tum 7000+), `?pool=stars` (en bilindik ~1200).
+Isim-tahmini modunda `?difficulty=easy` en bilindik havuzu kullanir.
+
 ## Oyun: En Yakin Tahmin
 
 Iki oyuncu ayni ekranda oynar. Ortaya rastgele bir futbolcu (isim + foto) gelir;
@@ -68,11 +80,12 @@ ve sunucu açıkken oynanır.
 
 | Komut | Aciklama |
 |---|---|
-| `npm run scrape` | 80 futbolcunun verisini cekip `players` + `teams` koleksiyonlarina yazar |
-| `npm run scrape -- --limit=3` | Sadece ilk 3 oyuncu (hizli duman testi) |
-| `npm run scrape -- --only=28003,8198` | Belirli Transfermarkt ID'leri |
+| `npm run scrape` | Kurasyonlu 80 yildizi cekip DB'ye yazar (kucuk/hizli set) |
 | `npm run scrape -- --dry-run` | DB'ye yazmaz, `data/players.json` + `data/teams.json` uretir |
-| `npm run seed` | `data/*.json` dosyalarini DB'ye yukler (yeniden cekmeden) |
+| `npm run collect-ids` | Genis ID listesi toplar (ligler + milli takimlar + efsaneler) -> `data/ids.json` |
+| `npm run scrape-bulk` | `data/ids.json`'daki herkesi ceker (7000+); **resumable**, `data/*.json`'a yazar |
+| `npm run scrape-bulk -- --limit=50` | Ilk 50 (duman testi) · `--full` transfer+piyasa gecmisi de · `--to-db` dogrudan DB |
+| `npm run seed` | `data/*.json` dosyalarini DB'ye yukler (kariyeri bos olanlari atlar) |
 | `npm start` / `npm run dev` | API sunucusu + oyun arayuzu + online (Socket.IO) |
 | `npm test` | Bellek ici MongoDB ile uctan uca API testi (Atlas gerekmez) |
 | `npm run test:online` | Online oda motorunun socket testi (sunucu ayakta olmali) |
@@ -184,7 +197,10 @@ src/
   seed.js                   JSON -> MongoDB yukleyici
   server.js                 Express + HTTP + Socket.IO baglama
   realtime.js               Socket.IO oda motoru (online mod)
-  data/playerIds.js         80 dogrulanmis Transfermarkt ID'si
+  collectIds.js             Genis ID toplama (lig/milli/efsane)
+  scrapeBulk.js             Resumable toplu veri cekimi
+  data/playerIds.js         80 dogrulanmis Transfermarkt ID'si (kurasyonlu set)
+  data/sources.js           Ligler, milli takimlar, efsane isimleri
   transfermarkt/
     endpoints.js            Uc tanimlari
     client.js               Gecikmeli/yeniden denemeli HTTP istemcisi

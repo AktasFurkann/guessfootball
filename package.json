@@ -10,7 +10,9 @@
     "scrape": "node src/scraper.js",
     "seed": "node src/seed.js",
     "test": "node test/api.test.js",
-    "test:online": "node test/realtime.test.js"
+    "test:online": "node test/realtime.test.js",
+    "collect-ids": "node src/collectIds.js",
+    "scrape-bulk": "node src/scrapeBulk.js"
   },
   "engines": {
     "node": ">=18"

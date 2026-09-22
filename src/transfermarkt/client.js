@@ -44,20 +44,36 @@ async function throttle() {
  * cekilmeli. 404 kalici kabul edilir ve tekrar denenmez.
  */
 export async function request(url, { label = url } = {}) {
+  return requestRaw(url, { label, parse: 'json' });
+}
+
+/** JSON yerine ham HTML/metin dondurur (schnellsuche gibi ucnlar icin). */
+export async function requestText(url, { label = url } = {}) {
+  return requestRaw(url, { label, parse: 'text' });
+}
+
+async function requestRaw(url, { label = url, parse = 'json' } = {}) {
   let lastError;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     await throttle();
 
     try {
+      const headers = {
+        'User-Agent': pick(USER_AGENTS),
+        'Accept-Language': ACCEPT_LANGUAGE,
+        Referer: 'https://www.transfermarkt.com.tr/',
+      };
+      if (parse === 'text') {
+        // schnellsuche XHR basligiyla bos donuyor; tam HTML sayfasi iste.
+        headers.Accept = 'text/html,application/xhtml+xml,*/*';
+      } else {
+        headers.Accept = 'application/json, text/plain, */*';
+        headers['X-Requested-With'] = 'XMLHttpRequest';
+      }
+
       const response = await fetch(url, {
-        headers: {
-          'User-Agent': pick(USER_AGENTS),
-          Accept: 'application/json, text/plain, */*',
-          'Accept-Language': ACCEPT_LANGUAGE,
-          Referer: 'https://www.transfermarkt.com.tr/',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
+        headers,
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
 
@@ -71,7 +87,7 @@ export async function request(url, { label = url } = {}) {
         throw new Error(`HTTP ${response.status} - ${label}`);
       }
 
-      return await response.json();
+      return parse === 'text' ? await response.text() : await response.json();
     } catch (error) {
       lastError = error;
       if (error.permanent || attempt === MAX_ATTEMPTS) break;

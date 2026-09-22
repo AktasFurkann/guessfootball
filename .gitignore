@@ -2,3 +2,6 @@ node_modules/
 .env
 *.log
 .DS_Store
+
+# Yerel veri ciktilari (Atlas'ta yukludur; repoya girmez)
+/data/

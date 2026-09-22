@@ -45,8 +45,9 @@ async function setup() {
 
   await connect();
 
-  const playerDocs = JSON.parse(await readFile('data/players.json', 'utf8'));
-  const teamDocs = JSON.parse(await readFile('data/teams.json', 'utf8'));
+  // Sabit kucuk fixture (80 kurasyonlu yildiz) - canli data/ ciktisindan bagimsiz.
+  const playerDocs = JSON.parse(await readFile('test/fixtures/players.json', 'utf8'));
+  const teamDocs = JSON.parse(await readFile('test/fixtures/teams.json', 'utf8'));
 
   await players().insertMany(playerDocs);
   await teams().insertMany(teamDocs);
