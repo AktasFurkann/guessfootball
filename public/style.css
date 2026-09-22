@@ -798,8 +798,8 @@ body {
   gap: 2px;
 }
 .slot__circle {
-  width: clamp(52px, 13vw, 72px);
-  height: clamp(52px, 13vw, 72px);
+  width: clamp(56px, 14vw, 78px);
+  height: clamp(56px, 14vw, 78px);
   border-radius: 50%;
   background: #dfe4ee;
   color: #2a3350;
@@ -816,7 +816,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 8%;
+  object-position: center top; /* basin ustu kirpilmasin */
   display: block;
   border-radius: 50%;
 }

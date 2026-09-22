@@ -1266,33 +1266,35 @@ function setTurnUI(side) {
       input.disabled = true;
     }
   });
-  // Sahada ustten (forvet) ilk bos slotu hedef al (tiklayarak degistirilebilir).
-  let firstEmpty = -1;
-  for (const rowPos of PITCH_ROWS) {
-    firstEmpty = squad.slots[side].findIndex((s) => !s.filled && s.pos === rowPos);
-    if (firstEmpty >= 0) break;
-  }
-  setTarget(firstEmpty >= 0 ? firstEmpty : 0);
+  // Baslangicta hedef YOK: tum takim (kalan mevkiler) onerilir. Bir slota
+  // tiklarsa o mevkiye filtreler; ayni slota tekrar tiklarsa yine tum takim.
+  squad.target = null;
+  renderPitch(side);
+  const input = $(`#sq-input-${side}`);
+  input.placeholder = `${squad.country.country} oyuncusu…`;
+  const list = input.closest('.sq-input-wrap').querySelector('.suggest');
+  list.innerHTML = '';
+  list.hidden = true;
 
   $('#sq-turn').textContent = `Sıra: ${state.names[side]}`;
   setPrimarySquad('GÖNDER', 'squad-send');
-  $(`#sq-input-${side}`).focus();
+  // Otomatik odak/acilis YOK: kullanici girise tiklayinca oneri cikar.
 }
 
-/** Sirasi gelen oyuncunun dolduracagi slotu (bolgeyi) belirler. */
+/** Hedef bolgeyi belirler (null = tum takim). Ayni slota tekrar tiklamak kapatir. */
 function setTarget(slotIdx) {
-  squad.target = slotIdx;
   const side = squad.turn;
-  const cat = squad.slots[side][slotIdx]?.pos;
+  squad.target = squad.target === slotIdx ? null : slotIdx; // toggle
   renderPitch(side); // is-target vurgusu
   const input = $(`#sq-input-${side}`);
-  input.placeholder = `${squad.country.country} — ${POS_LABEL[cat] || cat}`;
-  // Bolgeye gore listeyi tazele.
-  if (input.value.trim()) input.dispatchEvent(new Event('input'));
-  else input.dispatchEvent(new Event('focus'));
+  const cat = squad.target !== null ? squad.slots[side][squad.target]?.pos : null;
+  input.placeholder = cat ? `${squad.country.country} — ${POS_LABEL[cat] || cat}` : `${squad.country.country} oyuncusu…`;
+  // Slota tiklayinca HEMEN acma; sadece liste zaten acıksa tazele.
+  const list = input.closest('.sq-input-wrap').querySelector('.suggest');
+  if (!list.hidden) input.dispatchEvent(new Event('input'));
 }
 
-// Slot'a tiklayinca (sirasi gelenin sahasinda, bos slot) o bolgeyi hedefle.
+// Slot'a tiklayinca (sirasi gelenin sahasinda, bos slot) o bolgeyi hedefle/kapat.
 document.addEventListener('click', (event) => {
   if (squad.over) return;
   if (!screens.squad.classList.contains('is-active')) return;
@@ -1303,8 +1305,7 @@ document.addEventListener('click', (event) => {
   if (side !== squad.turn) return;
   const idx = Number(slotEl.dataset.slot);
   if (squad.slots[side][idx].filled) return;
-  setTarget(idx);
-  $(`#sq-input-${side}`).focus();
+  setTarget(idx); // odak vermiyoruz; kullanici girise tiklayinca acilir
 });
 
 function setPrimarySquad(text, action, disabled = false) {
@@ -1345,9 +1346,10 @@ function attachSquadAutocomplete(input, side) {
   };
 
   const fetchList = async (q) => {
-    // Hedef slotun bolgesine gore filtrele (tiklanan mevki).
-    const cat = squad.slots[side][squad.target]?.pos;
-    const params = new URLSearchParams({ country: squad.country.country, positions: cat || '', limit: '60' });
+    // Hedef varsa o bolge; yoksa TUM TAKIM (kalan tum mevkiler).
+    const positions =
+      squad.target !== null ? squad.slots[side][squad.target]?.pos || '' : remainingPositions(side).join(',');
+    const params = new URLSearchParams({ country: squad.country.country, positions, limit: '60' });
     if (q) params.set('q', q);
     try {
       const res = await fetch(`/api/players/search?${params}`);
@@ -1397,8 +1399,9 @@ async function resolveCurrentPick(side) {
   const input = $(`#sq-input-${side}`);
   const text = input.value.trim();
   if (!text) return null;
-  const cat = squad.slots[side][squad.target]?.pos;
-  const params = new URLSearchParams({ country: squad.country.country, positions: cat || '', q: text });
+  const positions =
+    squad.target !== null ? squad.slots[side][squad.target]?.pos || '' : remainingPositions(side).join(',');
+  const params = new URLSearchParams({ country: squad.country.country, positions, q: text });
   try {
     const res = await fetch(`/api/players/search?${params}`);
     const first = (await res.json()).results?.find((r) => !squad.usedIds.has(r.id));
