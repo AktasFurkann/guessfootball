@@ -756,6 +756,18 @@ body {
   font-size: 1.1rem;
   letter-spacing: 0.03em;
 }
+.squad-flag img.is-spinning {
+  animation: flagpulse 0.35s infinite alternate;
+  box-shadow: 0 0 14px rgba(215, 255, 62, 0.7);
+}
+@keyframes flagpulse {
+  from {
+    transform: scale(0.94);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
 
 .pitches {
   display: grid;

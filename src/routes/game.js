@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { players } from '../db.js';
 import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
-import { FORMATION, randomCountry, nationalCaps } from '../game/squad.js';
+import { FORMATION, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
 import { ensurePlayer } from '../game/ensurePlayer.js';
 
 export const gameRouter = Router();
@@ -61,6 +61,15 @@ gameRouter.get('/squad/country', async (_req, res, next) => {
     const country = await randomCountry();
     if (!country) return res.status(404).json({ error: 'Uygun ülke bulunamadı.' });
     res.json(country);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Bayrak "cark" animasyonu icin uygun ulke+bayrak listesi. */
+gameRouter.get('/squad/countries', async (_req, res, next) => {
+  try {
+    res.json({ countries: await listCountries() });
   } catch (error) {
     next(error);
   }

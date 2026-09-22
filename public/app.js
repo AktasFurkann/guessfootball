@@ -1014,11 +1014,44 @@ const squad = {
   slots: [[], []], // her taraf: [{pos, filled, player}]
   used: [new Set(), new Set()], // taraf basina kullanilan oyuncu id'leri
   country: null, // {country, flag}
+  reel: [], // cark animasyonu icin ulke+bayrak listesi
   totals: [0, 0],
   picks: [null, null], // bu tur {id, name, category}
   round: 0,
   over: false,
 };
+
+/** Bayrak "cark"ini ~2 sn dondurur, sonra gercek ulkede durur. */
+function spinCountry(finalCountry) {
+  return new Promise((resolve) => {
+    const flag = $('#sq-flag');
+    const nameEl = $('#sq-country');
+    const reel = squad.reel.length ? squad.reel : [finalCountry];
+    if (reel.length < 2) {
+      flag.src = finalCountry.flag || '';
+      nameEl.textContent = finalCountry.country;
+      return resolve();
+    }
+    flag.classList.add('is-spinning');
+    const start = Date.now();
+    const tick = () => {
+      const r = reel[Math.floor(Math.random() * reel.length)];
+      flag.src = r.flag || '';
+      nameEl.textContent = r.country;
+      if (Date.now() - start < 2000) {
+        // Hizli baslar, sona dogru yavaslar (daha "cark" hissi).
+        const t = (Date.now() - start) / 2000;
+        setTimeout(tick, 60 + t * t * 160);
+      } else {
+        flag.classList.remove('is-spinning');
+        flag.src = finalCountry.flag || '';
+        nameEl.textContent = finalCountry.country;
+        resolve();
+      }
+    };
+    tick();
+  });
+}
 
 function remainingPositions(side) {
   return [...new Set(squad.slots[side].filter((s) => !s.filled).map((s) => s.pos))];
@@ -1027,6 +1060,12 @@ function remainingPositions(side) {
 async function startSquadGame() {
   const res = await fetch('/api/game/squad/formation');
   squad.formation = (await res.json()).formation;
+  // Bayrak carki icin ulke listesini (bir kez) al.
+  try {
+    squad.reel = (await (await fetch('/api/game/squad/countries')).json()).countries || [];
+  } catch {
+    squad.reel = [];
+  }
   squad.slots = [0, 1].map(() => squad.formation.map((f) => ({ pos: f.pos, filled: false, player: null })));
   squad.used = [new Set(), new Set()];
   squad.totals = [0, 0];
@@ -1088,10 +1127,14 @@ async function squadNextCountry() {
 
   squad.round += 1;
   squad.picks = [null, null];
-  $('#sq-country').textContent = squad.country.country;
-  const flag = $('#sq-flag');
-  flag.src = squad.country.flag || '';
-  flag.alt = squad.country.country;
+  $('#sq-round').textContent = `Tur ${squad.round}`;
+
+  // Girisleri kilitle, bayrak carkini dondur, sonra turu ac.
+  for (const side of [0, 1]) $(`#sq-input-${side}`).disabled = true;
+  setPrimarySquad('…', 'squad-guess', true);
+  await spinCountry(squad.country);
+
+  $('#sq-flag').alt = squad.country.country;
 
   [0, 1].forEach((side) => {
     const input = $(`#sq-input-${side}`);

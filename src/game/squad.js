@@ -46,19 +46,23 @@ async function buildEligible() {
     c[p.cat] += 1;
   }
 
-  eligible = [];
+  const list = [];
   for (const [country, counts] of byCountry) {
     if (!TOP_COUNTRIES.has(country)) continue; // yalnizca buyuk milli takimlar
     if (Object.entries(NEED).every(([cat, n]) => counts[cat] >= n)) {
       const flag = await getFlag(country);
-      eligible.push({ country, flag });
+      list.push({ country, flag });
     }
   }
-  return eligible;
+  return list;
 }
 
+let buildingEligible = null;
 async function ensureEligible() {
-  if (!eligible) eligible = await buildEligible();
+  if (eligible) return eligible;
+  // Tek seferde kur (eszamanli cagrilarin diziyi ikiye katlamasini onle).
+  if (!buildingEligible) buildingEligible = buildEligible();
+  eligible = await buildingEligible;
   return eligible;
 }
 
@@ -67,6 +71,11 @@ export async function randomCountry() {
   const list = await ensureEligible();
   if (!list.length) return null;
   return list[Math.floor(Math.random() * list.length)];
+}
+
+/** Uygun tum ulkeler (bayrak "cark" animasyonu icin). */
+export async function listCountries() {
+  return ensureEligible();
 }
 
 /** Bir oyuncunun BELIRLI ulkedeki senior milli maç sayisi. */
