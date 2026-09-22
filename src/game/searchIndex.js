@@ -112,9 +112,20 @@ export async function search(query, opts = {}) {
     scored.push({ rank, p });
   }
 
-  // Ulke modunda caps'e gore (en cok maca cikan once), yoksa bilinirlik (mac).
-  const weight = (p) => (country ? p.nt?.caps ?? 0 : p.games);
-  scored.sort((a, b) => a.rank - b.rank || weight(b.p) - weight(a.p));
+  if (country) {
+    // Milli kadro: mevkiye gore sirala (Forvet -> Kaleci), sonra alfabetik.
+    // Caps'e gore SIRALAMA YOK (yoksa en cok maci onde gosterip kopya olur).
+    const POS_ORDER = { Forvet: 0, 'Orta Saha': 1, Defans: 2, Kaleci: 3 };
+    scored.sort(
+      (a, b) =>
+        a.rank - b.rank ||
+        (POS_ORDER[a.p.cat] ?? 9) - (POS_ORDER[b.p.cat] ?? 9) ||
+        a.p.norm.localeCompare(b.p.norm),
+    );
+  } else {
+    // Normal arama: bilinirlik (mac sayisi) azalan.
+    scored.sort((a, b) => a.rank - b.rank || b.p.games - a.p.games);
+  }
 
   return scored.slice(0, limit).map(({ p }) => ({
     id: p.id,
