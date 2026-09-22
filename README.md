@@ -21,6 +21,11 @@ Veritabani iki asamada doldurulur: `npm run scrape` kurasyonlu 80 yildizi (hizli
 `npm run collect-ids` + `npm run scrape-bulk` ise **7000+** oyuncuyu (12 buyuk lig
 guncel kadrolari + milli takimlar + ~180 efsane, Super Lig dahil) getirir.
 
+Aranan oyuncu veritabaninda yoksa (emekli efsaneler gibi) otomatik tamamlama
+canli olarak Transfermarkt'tan da arar; secilince o oyuncu aninda cekilip DB'ye
+eklenir (bir daha cekilmez). Boylece "Alex de Souza" gibi listede olmayan taninmis
+oyuncular da bulunabilir.
+
 Veritabaninda binlerce oyuncu olsa da cogu taninmadigi icin oyun rastgele secimi
 varsayilan olarak **taninir havuzdan** yapar (zirve piyasa degeri >= 20M **veya**
 mac sayisi >= 350; ikincisi eski/Turk efsanelerini de kapsar). Genisletmek icin:

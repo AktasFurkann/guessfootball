@@ -851,7 +851,9 @@ function attachAutocomplete(input, side) {
       .map(
         (r, i) =>
           `<li data-i="${i}" class="${i === active ? 'is-active' : ''}"><b>${r.name}</b>` +
-          `<small>${[r.country, r.position, r.club].filter(Boolean).join(' · ')}</small></li>`,
+          `<small>${[r.country, r.position, r.club, r.birthYear ? `${r.birthYear}` : null]
+            .filter(Boolean)
+            .join(' · ')}${r.isNew ? ' · yeni' : ''}</small></li>`,
       )
       .join('');
     list.hidden = results.length === 0;
@@ -867,14 +869,15 @@ function attachAutocomplete(input, side) {
   const run = debounce(async (q) => {
     if (q.trim().length < 2) return hide();
     try {
-      const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`);
+      // live=1: DB'de yoksa Transfermarkt'tan da ara (emekli/eksik oyuncular).
+      const res = await fetch(`/api/players/search?live=1&q=${encodeURIComponent(q)}`);
       const data = await res.json();
       active = -1;
       render(data.results || []);
     } catch {
       hide();
     }
-  }, 160);
+  }, 220);
 
   input.oninput = () => {
     compare.picks[side] = null; // yeniden yaziyorsa secim gecersiz

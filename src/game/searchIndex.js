@@ -124,6 +124,31 @@ export async function search(query, opts = {}) {
   }));
 }
 
+/** Anında çekilen bir oyuncuyu bellek içi indekse ekler/günceller. */
+export function addDoc(doc) {
+  if (!index) return; // indeks henuz kurulmadi; sonraki build zaten alir
+  const norm = normalize(doc.name);
+  const ntCands = (doc.careerByClub || []).filter(
+    (c) => c.isNationalTeam && !/\d/.test(c.name || '') && !/olim|olym/i.test(c.name || ''),
+  );
+  const best = ntCands.length ? ntCands.reduce((a, b) => ((b.games || 0) > (a.games || 0) ? b : a)) : null;
+  const entry = {
+    id: doc._id,
+    name: doc.name,
+    position: doc.position?.name ?? null,
+    cat: doc.position?.category ?? null,
+    club: doc.currentClub?.name ?? null,
+    country: doc.nationalities?.[0] ?? null,
+    games: doc.careerTotals?.games ?? 0,
+    nt: best ? { country: best.name, caps: best.games || 0 } : null,
+    norm,
+    words: norm.split(' ').filter(Boolean),
+  };
+  const at = index.findIndex((p) => p.id === doc._id);
+  if (at >= 0) index[at] = entry;
+  else index.push(entry);
+}
+
 export function resetIndex() {
   index = null;
   flags = null;

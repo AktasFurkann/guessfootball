@@ -3,6 +3,7 @@ import { players } from '../db.js';
 import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
 import { FORMATION, randomCountry, nationalCaps } from '../game/squad.js';
+import { ensurePlayer } from '../game/ensurePlayer.js';
 
 export const gameRouter = Router();
 
@@ -72,10 +73,7 @@ gameRouter.get('/squad/player/:id', async (req, res, next) => {
     const country = req.query.country;
     if (!Number.isFinite(id)) return res.status(400).json({ error: 'Geçersiz ID.' });
     if (!country) return res.status(400).json({ error: 'country parametresi gerekli.' });
-    const player = await players().findOne(
-      { _id: id },
-      { projection: { name: 1, portraitUrl: 1, 'position.category': 1, careerByClub: 1 } },
-    );
+    const player = await ensurePlayer(id);
     if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
     res.json({
       id: player._id,
@@ -94,10 +92,8 @@ gameRouter.get('/compare/player/:id', async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) return res.status(400).json({ error: 'Geçersiz ID.' });
-    const player = await players().findOne(
-      { _id: id },
-      { projection: { name: 1, portraitUrl: 1, careerTotals: 1, careerByClub: 1, marketValue: 1, heightCm: 1, dateOfBirth: 1 } },
-    );
+    // DB'de yoksa anında çek (canlı aramadan seçilmiş olabilir).
+    const player = await ensurePlayer(id);
     if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
     res.json({ id: player._id, name: player.name, values: compareValues(player) });
   } catch (error) {

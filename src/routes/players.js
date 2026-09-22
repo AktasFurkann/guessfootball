@@ -3,6 +3,7 @@ import { players } from '../db.js';
 import { checkGuess, candidateNames, primaryNames, normalize } from '../game/matcher.js';
 import { poolFilter } from '../game/roundData.js';
 import { search as searchPlayers } from '../game/searchIndex.js';
+import { liveSearch } from '../game/liveSearch.js';
 
 export const playersRouter = Router();
 
@@ -200,6 +201,21 @@ playersRouter.get('/search', async (req, res, next) => {
         ? req.query.positions.split(',').map((s) => s.trim()).filter(Boolean)
         : null;
     const results = await searchPlayers(q, { limit, country, positions });
+
+    // Canlı fallback (yalnızca ülke filtresi yokken): DB sonucu az ise
+    // Transfermarkt'tan da arayıp DB'de olmayan (emekli vb.) oyuncuları ekle.
+    if (req.query.live === '1' && !country && q.length >= 3 && results.length < limit) {
+      const have = new Set(results.map((r) => r.id));
+      const live = await liveSearch(q, limit);
+      for (const r of live) {
+        if (results.length >= limit) break;
+        if (!have.has(r.id)) {
+          results.push(r);
+          have.add(r.id);
+        }
+      }
+    }
+
     res.json({ query: q, results });
   } catch (error) {
     next(error);
