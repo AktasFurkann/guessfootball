@@ -62,6 +62,10 @@ export function createApp() {
   return app;
 }
 
+// Tek bir oda/istekteki beklenmeyen hata tüm sunucuyu çökertmesin.
+process.on('unhandledRejection', (err) => console.error('[server] unhandledRejection:', err));
+process.on('uncaughtException', (err) => console.error('[server] uncaughtException:', err));
+
 async function start() {
   await connect();
 
