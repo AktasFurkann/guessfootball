@@ -5,6 +5,8 @@ import { COMPARE_ROWS, compareValues } from './game/compare.js';
 import { FORMATION, randomCountry, listCountries, nationalCaps } from './game/squad.js';
 import { FORMATION as SUPERLIG_FORMATION, randomSuperligTeam, listSuperligTeams, superligGoals } from './game/superlig.js';
 import { latestSuperligClub, isSuperligActive } from './game/superligTeams.js';
+import { FORMATION as MARKET_FORMATION, randomMarketTeam, listMarketTeams } from './game/market.js';
+import { marketClubOf, marketFee } from './game/marketLogic.js';
 import { slotOf } from './game/positions.js';
 import { ensurePlayer } from './game/ensurePlayer.js';
 import { players } from './db.js';
@@ -22,7 +24,7 @@ import { players } from './db.js';
  */
 
 const MAX_PLAYERS = 2;
-const MODES = new Set(['closest', 'compare', 'squad', 'superlig']);
+const MODES = new Set(['closest', 'compare', 'squad', 'superlig', 'market']);
 const TURN_SECONDS = 15;
 const rooms = new Map();
 
@@ -85,6 +87,9 @@ export function attachRealtime(httpServer) {
         // superlig
         team: null,
         usedTeams: new Set(),
+        // market (Bonservis Avı)
+        marketTeam: null,
+        usedMarketTeams: new Set(),
         // yeni oyun oylamasi
         newGameVotes: new Set(),
         turnTimer: null,
@@ -174,12 +179,21 @@ export function attachRealtime(httpServer) {
       await superligPlace(io, room, socket.id, playerId, slotIdx);
     });
 
+    // ---- market (Bonservis Avı) ----
+    socket.on('market:place', async ({ playerId, slotIdx } = {}) => {
+      const room = rooms.get(socket.data.roomCode);
+      if (!room || room.mode !== 'market' || room.phase !== 'playing') return;
+      if (currentTurnId(room) !== socket.id) return;
+      await marketPlace(io, room, socket.id, playerId, slotIdx);
+    });
+
     socket.on('game:next-round', async () => {
       const room = rooms.get(socket.data.roomCode);
       if (!room || room.hostId !== socket.id) return;
       if (room.mode === 'compare') await startCompareRound(io, room);
       else if (room.mode === 'squad') await startSquadRound(io, room);
       else if (room.mode === 'superlig') await startSuperligRound(io, room);
+      else if (room.mode === 'market') await startMarketRound(io, room);
     });
 
     socket.on('game:new', async () => {
@@ -233,6 +247,8 @@ function resetRoomState(room) {
   room.usedCountries = new Set();
   room.team = null;
   room.usedTeams = new Set();
+  room.marketTeam = null;
+  room.usedMarketTeams = new Set();
   room.placed = new Map();
   room.newGameVotes = new Set();
 }
@@ -289,6 +305,7 @@ function resolveDice(io, room) {
     if (room.mode === 'compare') startCompareRound(io, room, true);
     else if (room.mode === 'squad') startSquadRound(io, room, true);
     else if (room.mode === 'superlig') startSuperligRound(io, room, true);
+    else if (room.mode === 'market') startMarketRound(io, room, true);
   }, 1400);
 }
 
@@ -785,4 +802,139 @@ async function superligPlace(io, room, sid, playerId, slotIdx) {
   });
 
   superligAdvanceAfterPlace(io, room, sid);
+}
+
+// ================= MARKET (Bonservis Avı) =================
+function startMarketTurnTimer(io, room, delay = 0) {
+  clearTurnTimer(room);
+  const sid = currentTurnId(room);
+  room.turnTimer = setTimeout(() => {
+    room.turnTimer = null;
+    if (room.phase !== 'playing' || room.mode !== 'market' || currentTurnId(room) !== sid) return;
+    marketTimeout(io, room, sid);
+  }, delay + TURN_SECONDS * 1000);
+}
+
+function marketTimeout(io, room, sid) {
+  if (room.placed.get(sid)) return;
+  const myslots = room.slots.get(sid);
+  const idx = myslots.findIndex((s) => !s.filled);
+  const empty = { id: null, name: 'SÜRE DOLDU', fee: 0, portraitUrl: null, timeout: true };
+  if (idx >= 0) {
+    myslots[idx] = { pos: myslots[idx].pos, filled: true, player: empty };
+  }
+  room.placed.set(sid, true);
+  io.to(room.code).emit('market:placed', {
+    by: sid,
+    slotIdx: idx,
+    player: empty,
+    slots: publicSlots(room),
+    scores: scoreMap(room),
+    timeout: true,
+  });
+  marketAdvanceAfterPlace(io, room, sid);
+}
+
+function marketAdvanceAfterPlace(io, room, sid) {
+  const other = otherId(room, sid);
+  if (!room.placed.get(other)) {
+    room.turn ^= 1;
+    io.to(room.code).emit('market:turn', { turnId: currentTurnId(room), seconds: TURN_SECONDS });
+    startMarketTurnTimer(io, room);
+    return;
+  }
+
+  const full = [...room.slots.values()].every((arr) => arr.every((s) => s.filled));
+  if (full) {
+    room.phase = 'ended';
+    io.to(room.code).emit('market:over', { scores: scoreMap(room) });
+  } else {
+    io.to(room.code).emit('market:round-done', { scores: scoreMap(room) });
+  }
+}
+
+async function startMarketRound(io, room, firstRound = false) {
+  clearTurnTimer(room);
+  if (firstRound) {
+    room.slots = new Map(ids(room).map((id) => [id, MARKET_FORMATION.map((f) => ({ pos: f.pos, filled: false, player: null }))]));
+    room.usedMarketTeams = new Set();
+    room.round = 0;
+  } else {
+    room.starter ^= 1;
+  }
+
+  let team;
+  try {
+    const eligible = (await listMarketTeams()).filter((t) => !room.usedMarketTeams.has(t.id));
+    team = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomMarketTeam();
+  } catch {
+    team = null;
+  }
+  if (!team) return io.to(room.code).emit('game:error', { message: 'Bonservis Avı takımı bulunamadı.' });
+
+  room.marketTeam = team;
+  room.usedMarketTeams.add(team.id);
+  room.round += 1;
+  room.placed = new Map(ids(room).map((id) => [id, false]));
+  room.turn = room.starter;
+  room.phase = 'playing';
+
+  io.to(room.code).emit('market:round', {
+    team,
+    formation: MARKET_FORMATION,
+    round: room.round,
+    turnId: currentTurnId(room),
+    slots: publicSlots(room),
+    seconds: TURN_SECONDS,
+    scores: scoreMap(room),
+    room: publicRoom(room),
+  });
+  startMarketTurnTimer(io, room, SQUAD_REVEAL_MS);
+}
+
+async function marketPlace(io, room, sid, playerId, slotIdx) {
+  const id = Number(playerId);
+  if (!Number.isFinite(id)) return;
+  if (room.placed.get(sid)) return;
+  if (room.usedIds.has(id)) return io.to(sid).emit('game:error', { message: 'Bu oyuncu kullanıldı.' });
+
+  let doc;
+  try {
+    doc = await ensurePlayer(id);
+  } catch {
+    doc = null;
+  }
+  if (!doc) return io.to(sid).emit('game:error', { message: 'Oyuncu getirilemedi.' });
+
+  if (marketClubOf(doc) !== room.marketTeam.id) {
+    return io.to(sid).emit('game:error', { message: 'Bu oyuncu bu takımın güncel kadrosunda değil.' });
+  }
+
+  const fee = marketFee(doc);
+  if (fee == null) return io.to(sid).emit('game:error', { message: 'Bu oyuncunun bonservis verisi yok.' });
+
+  const slot = slotOf(doc.position?.name);
+  const myslots = room.slots.get(sid);
+
+  let idx = Number(slotIdx);
+  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || myslots[idx].pos !== slot) {
+    idx = myslots.findIndex((s) => !s.filled && s.pos === slot);
+  }
+  if (idx < 0) return io.to(sid).emit('game:error', { message: 'Bu mevki için boş yer yok.' });
+
+  myslots[idx] = { pos: myslots[idx].pos, filled: true, player: { id, name: doc.name, fee, portraitUrl: doc.portraitUrl } };
+  clearTurnTimer(room);
+  room.usedIds.add(id);
+  room.players.get(sid).score += fee;
+  room.placed.set(sid, true);
+
+  io.to(room.code).emit('market:placed', {
+    by: sid,
+    slotIdx: idx,
+    player: { id, name: doc.name, fee, portraitUrl: doc.portraitUrl },
+    slots: publicSlots(room),
+    scores: scoreMap(room),
+  });
+
+  marketAdvanceAfterPlace(io, room, sid);
 }

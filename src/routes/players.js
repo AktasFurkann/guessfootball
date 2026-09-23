@@ -203,11 +203,13 @@ playersRouter.get('/search', async (req, res, next) => {
         : null;
     // Süper Lig Gol modu: aktif kulüp filtresi.
     const team = typeof req.query.team === 'string' && req.query.team ? req.query.team : null;
-    const results = await searchPlayers(q, { limit, country, positions, team });
+    // Bonservis Avı modu: seçkin takım filtresi.
+    const marketTeam = typeof req.query.marketTeam === 'string' && req.query.marketTeam ? req.query.marketTeam : null;
+    const results = await searchPlayers(q, { limit, country, positions, team, marketTeam });
 
     // Canlı fallback (yalnızca ülke filtresi yokken): DB sonucu az ise
     // Transfermarkt'tan da arayıp DB'de olmayan (emekli vb.) oyuncuları ekle.
-    if (req.query.live === '1' && !country && !team && q.length >= 3 && results.length < limit) {
+    if (req.query.live === '1' && !country && !team && !marketTeam && q.length >= 3 && results.length < limit) {
       const have = new Set(results.map((r) => r.id));
       const live = await liveSearch(q, limit);
       for (const r of live) {

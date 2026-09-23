@@ -12,6 +12,7 @@ import { attachRealtime } from './realtime.js';
 import { ensureIndex } from './game/searchIndex.js';
 import { listCountries } from './game/squad.js';
 import { listSuperligTeams } from './game/superlig.js';
+import { listMarketTeams } from './game/market.js';
 
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -85,6 +86,7 @@ async function start() {
   ensureIndex()
     .then(() => listCountries())
     .then(() => listSuperligTeams())
+    .then(() => listMarketTeams())
     .then(() => console.log(`[warm] Arama indeksi hazır (${Date.now() - t0}ms)`))
     .catch((err) => console.error('[warm] Isıtma hatası:', err.message));
 

@@ -9,6 +9,7 @@ import { players, teams } from '../db.js';
 import { normalize } from './matcher.js';
 import { slotOf, orderOf } from './positions.js';
 import { latestSuperligClub, isSuperligActive } from './superligTeams.js';
+import { marketClubOf, marketFee } from './marketLogic.js';
 
 let index = null; // [{ id, name, norm, words, games, position, cat, club, country, nt }]
 let flags = null; // Map(country -> flagUrl)
@@ -39,6 +40,7 @@ async function build() {
             'careerTotals.games': 1,
             'careerTotals.goals': 1,
             'marketValue.determined': 1,
+            'marketValue.highest': 1,
             'careerByClub.name': 1,
             'careerByClub.clubId': 1,
             'careerByClub.games': 1,
@@ -57,6 +59,7 @@ async function build() {
   index = docs.map((d) => {
     const norm = normalize(d.name);
     const slClubRow = latestSuperligClub(d);
+    const marketClub = marketClubOf(d);
     return {
       id: d._id,
       name: d.name,
@@ -70,6 +73,9 @@ async function build() {
       nt: seniorNationalTeam(d),
       slClub: slClubRow ? String(slClubRow.clubId) : null,
       slActive: slClubRow ? isSuperligActive(d) : false,
+      marketClub,
+      marketActive: !!marketClub,
+      marketFee: marketFee(d),
       norm,
       words: norm.split(' ').filter(Boolean),
     };
@@ -98,15 +104,16 @@ export async function getFlag(country) {
 /**
  * Sorguya uyan oyuncular.
  * @param {string} query
- * @param {{limit?:number, country?:string, positions?:string[], team?:string}} [opts]
+ * @param {{limit?:number, country?:string, positions?:string[], team?:string, marketTeam?:string}} [opts]
  *   country: sadece o milli takimda senior oynamislar; team: sadece o aktif
- *   Süper Lig kulübünde oynayanlar; positions: mevki kategorileri.
+ *   Süper Lig kulübünde oynayanlar; marketTeam: Bonservis Avı modu takımı;
+ *   positions: mevki kategorileri.
  */
 export async function search(query, opts = {}) {
   const idx = await ensureIndex();
-  const { limit = 8, country = null, positions = null, team = null } = opts;
+  const { limit = 8, country = null, positions = null, team = null, marketTeam = null } = opts;
   const q = normalize(query);
-  if (!q && !country && !team) return [];
+  if (!q && !country && !team && !marketTeam) return [];
 
   const scored = [];
   for (const p of idx) {
@@ -116,6 +123,10 @@ export async function search(query, opts = {}) {
     // Süper Lig Gol modu: sadece ilgili aktif kulüp oyuncuları.
     if (team && p.slClub !== team) continue;
     if (team && !p.slActive) continue;
+    // Bonservis Avı modu: sadece ilgili seçkin takımın oyuncuları.
+    if (marketTeam && p.marketClub !== marketTeam) continue;
+    if (marketTeam && !p.marketActive) continue;
+    if (marketTeam && p.marketFee == null) continue;
     // positions = slot bolgeleri (FOR/ORT/DEF/KL); ozel esleme (slot) ile suz.
     if (positions && !positions.includes(p.slot)) continue;
 
@@ -128,8 +139,8 @@ export async function search(query, opts = {}) {
     scored.push({ rank, p });
   }
 
-  if (country || team) {
-    // Milli kadro / Süper Lig Gol: detayli mevki sirasina gore
+  if (country || team || marketTeam) {
+    // Milli kadro / Süper Lig Gol / Bonservis Avı: detayli mevki sirasina gore
     // (Santrafor -> ... -> Kaleci),
     // sonra alfabetik. Caps'e gore SIRALAMA YOK (kopya olmasin).
     scored.sort(
@@ -148,6 +159,7 @@ export async function search(query, opts = {}) {
     country: p.country,
     caps: p.nt?.caps ?? 0,
     goals: p.goals ?? 0,
+    marketFee: p.marketFee ?? null,
   }));
 }
 
@@ -156,6 +168,7 @@ export function addDoc(doc) {
   if (!index) return; // indeks henuz kurulmadi; sonraki build zaten alir
   const norm = normalize(doc.name);
   const slClubRow = latestSuperligClub(doc);
+  const marketClub = marketClubOf(doc);
   const ntCands = (doc.careerByClub || []).filter(
     (c) => c.isNationalTeam && !/\d/.test(c.name || '') && !/olim|olym/i.test(c.name || ''),
   );
@@ -173,6 +186,9 @@ export function addDoc(doc) {
     nt: best ? { country: best.name, caps: best.games || 0 } : null,
     slClub: slClubRow ? String(slClubRow.clubId) : null,
     slActive: slClubRow ? isSuperligActive(doc) : false,
+    marketClub,
+    marketActive: !!marketClub,
+    marketFee: marketFee(doc),
     norm,
     words: norm.split(' ').filter(Boolean),
   };

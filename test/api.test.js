@@ -304,6 +304,24 @@ async function run() {
     assert.equal(status, 400);
   });
 
+  console.log('--- bonservis avı ---');
+  await test('market/formation kalecisiz 6 slot doner', async () => {
+    const { body } = await get('/api/game/market/formation');
+    assert.equal(body.formation.length, 6);
+    assert.ok(body.formation.every((slot) => slot.pos !== 'Kaleci'), 'kaleci olmamali');
+  });
+
+  await test('market/teams liste doner', async () => {
+    const { status, body } = await get('/api/game/market/teams');
+    assert.equal(status, 200);
+    assert.ok(Array.isArray(body.teams), 'teams dizisi olmali');
+  });
+
+  await test('market/player team parametresi ister', async () => {
+    const { status } = await get(`/api/game/market/player/${messi._id}`);
+    assert.equal(status, 400);
+  });
+
   await test('bilinmeyen API yolu 404 JSON doner', async () => {
     assert.equal((await get('/api/yok')).status, 404);
   });

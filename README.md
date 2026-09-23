@@ -63,6 +63,10 @@ puan sifirlama) tarayicida `localStorage`'da tutulur.
   Süper Lig takımı gelir; iki taraf o takımın oyuncularıyla 2 Forvet, 2 Orta Saha,
   2 Defans kurar (kaleci yok). Oyuncuların kulüp kariyeri golleri toplanır; kadro
   dolunca en yüksek toplam gole ulaşan kazanır.
+- **Bonservis Avı:** 4 büyükler (Beşiktaş, Galatasaray, Fenerbahçe, Trabzonspor)
+  ve büyük liglerin seçkin takımları arasından gelen takımdan en yüksek bonservisli
+  kadroyu kur. Oyuncunun en yüksek piyasa değeri milyon € cinsinden, tek ondalığa
+  kesilmiş olarak yazılır; en yüksek toplam değere ulaşan kazanır.
 
 Oyun bitince (kadro modlarında) iki oyuncunun da onaylaması gereken **Yeni Oyun**
 butonu çıkar; ayrıca tüm modlarda oyun içi menüden yeni oyun istenebilir.

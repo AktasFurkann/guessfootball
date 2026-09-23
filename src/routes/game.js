@@ -5,6 +5,8 @@ import { COMPARE_ROWS, compareValues } from '../game/compare.js';
 import { FORMATION, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
 import { FORMATION as SUPERLIG_FORMATION, randomSuperligTeam, listSuperligTeams, superligGoals } from '../game/superlig.js';
 import { latestSuperligClub, isSuperligActive } from '../game/superligTeams.js';
+import { FORMATION as MARKET_FORMATION, randomMarketTeam, listMarketTeams } from '../game/market.js';
+import { marketClubOf, marketFee } from '../game/marketLogic.js';
 import { ensurePlayer } from '../game/ensurePlayer.js';
 import { slotOf } from '../game/positions.js';
 
@@ -123,6 +125,55 @@ gameRouter.get('/superlig/player/:id', async (req, res, next) => {
       portraitUrl: player.portraitUrl,
       slot: slotOf(player.position?.name),
       goals: superligGoals(player),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** "Bonservis Avı" - diziliş + rastgele seçkin takım (logosuyla). */
+gameRouter.get('/market/formation', (_req, res) => {
+  res.json({ formation: MARKET_FORMATION });
+});
+
+gameRouter.get('/market/team', async (_req, res, next) => {
+  try {
+    const team = await randomMarketTeam();
+    if (!team) return res.status(404).json({ error: 'Uygun takım bulunamadı.' });
+    res.json(team);
+  } catch (error) {
+    next(error);
+  }
+});
+
+gameRouter.get('/market/teams', async (_req, res, next) => {
+  try {
+    res.json({ teams: await listMarketTeams() });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Tahmin edilen oyuncunun en yüksek bonservis değeri (milyon €). */
+gameRouter.get('/market/player/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const team = req.query.team;
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Geçersiz ID.' });
+    if (!team) return res.status(400).json({ error: 'team parametresi gerekli.' });
+    const player = await ensurePlayer(id);
+    if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
+
+    if (marketClubOf(player) !== team) {
+      return res.status(400).json({ error: 'Bu oyuncu bu takımın güncel kadrosunda değil.' });
+    }
+
+    res.json({
+      id: player._id,
+      name: player.name,
+      portraitUrl: player.portraitUrl,
+      slot: slotOf(player.position?.name),
+      fee: marketFee(player),
     });
   } catch (error) {
     next(error);
