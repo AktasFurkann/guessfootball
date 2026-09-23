@@ -92,6 +92,7 @@ const screens = {
 };
 let currentGameScreen = 'game';
 let settingsReturn = 'menu';
+let newGameVotes = new Set();
 
 function show(name) {
   for (const el of Object.values(screens)) el.classList.remove('is-active');
@@ -426,6 +427,7 @@ function announceRound() {
 
 // ---- oyunu baslat ----
 function startClosestGame() {
+  currentLocalMode = 'closest';
   if (state.resetOnNewGame) {
     state.scores = [0, 0];
     state.round = 0;
@@ -473,9 +475,65 @@ function cancelQuit() {
 }
 function confirmQuit() {
   closePauseMenu();
+  $('#newgame-confirm').hidden = true;
+  newGameVotes = new Set();
   settingsReturn = 'menu';
   leaveOnlineIfAny();
   show('menu');
+}
+
+// ---- yeni oyun (iki oyuncu onayi) ----
+function requestNewGame() {
+  closePauseMenu();
+  if (online.active && online.socket && online.roomCode) {
+    online.socket.emit('game:new');
+    setPrimary('BEKLENİYOR…', 'new-game', true);
+    setPrimarySquad('BEKLENİYOR…', 'new-game', true);
+    toast('Yeni oyun isteği gönderildi. Rakip onaylayınca başlar.');
+    return;
+  }
+  openNewGameConfirm();
+}
+
+function openNewGameConfirm() {
+  closePauseMenu();
+  newGameVotes = new Set();
+  $('#newgame-name-0').textContent = state.names[0];
+  $('#newgame-name-1').textContent = state.names[1];
+  for (const side of [0, 1]) {
+    const btn = $(`#newgame-vote-${side}`);
+    btn.disabled = false;
+    btn.classList.remove('is-voted');
+    btn.innerHTML = `<span class="newgame-vote-name" id="newgame-name-${side}">${state.names[side]}</span> — EVET`;
+  }
+  $('#newgame-confirm').hidden = false;
+}
+
+function closeNewGameConfirm() {
+  $('#newgame-confirm').hidden = true;
+  newGameVotes = new Set();
+}
+
+function voteLocalNewGame(side) {
+  if (![0, 1].includes(side)) return;
+  const btn = $(`#newgame-vote-${side}`);
+  if (newGameVotes.has(side) || btn.disabled) return;
+  newGameVotes.add(side);
+  btn.disabled = true;
+  btn.classList.add('is-voted');
+  btn.innerHTML = `<span class="newgame-vote-name">${state.names[side]}</span> — ONAYLANDI ✓`;
+
+  if (newGameVotes.has(0) && newGameVotes.has(1)) {
+    startLocalNewGame();
+  }
+}
+
+function startLocalNewGame() {
+  closeNewGameConfirm();
+  if (currentLocalMode === 'compare') startCompareGame();
+  else if (currentLocalMode === 'squad') startSquadGame();
+  else if (currentLocalMode === 'superlig') startSuperligGame();
+  else startClosestGame();
 }
 
 // ---- olay yonlendirme ----
@@ -545,6 +603,9 @@ document.addEventListener('click', (event) => {
     case 'start-squad':
       startSquadGame();
       break;
+    case 'start-superlig':
+      startSuperligGame();
+      break;
     case 'squad-roll':
       squadRollDice();
       break;
@@ -552,7 +613,7 @@ document.addEventListener('click', (event) => {
       squadSend();
       break;
     case 'squad-next':
-      squadNextCountry();
+      squadNextRound();
       break;
     case 'reveal-row':
       submitRow();
@@ -598,8 +659,20 @@ document.addEventListener('click', (event) => {
     case 'online-squad-send':
       onlineSquadSend();
       break;
+    case 'online-superlig-send':
+      onlineSuperligSend();
+      break;
     case 'online-next-round':
       online.socket?.emit('game:next-round');
+      break;
+    case 'new-game':
+      requestNewGame();
+      break;
+    case 'newgame-vote':
+      voteLocalNewGame(Number(target.dataset.side));
+      break;
+    case 'newgame-cancel':
+      closeNewGameConfirm();
       break;
     default:
       break;
@@ -615,6 +688,7 @@ document.addEventListener('click', (event) => {
 // Enter: aktif buton neyse onu tetikle.
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Enter') return;
+  if (!$('#newgame-confirm').hidden) return;
 
   // Kadro modu: oneri listesi kapaliyken Enter aktif butonu tetikler.
   if (screens.squad.classList.contains('is-active')) {
@@ -623,9 +697,11 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     const action = $('#sq-btn').dataset.action;
     if (action === 'squad-send') squadSend();
-    else if (action === 'squad-next') squadNextCountry();
+    else if (action === 'squad-next') squadNextRound();
     else if (action === 'online-squad-send') onlineSquadSend();
+    else if (action === 'online-superlig-send') onlineSuperligSend();
     else if (action === 'online-next-round') online.socket?.emit('game:next-round');
+    else if (action === 'new-game') requestNewGame();
     return;
   }
 
@@ -638,13 +714,20 @@ document.addEventListener('keydown', (event) => {
   else if (action === 'online-next') online.socket?.emit('game:next');
   else if (action === 'online-next-round') online.socket?.emit('game:next-round');
   else if (action === 'compare-next') compareNextRound();
+  else if (action === 'new-game') requestNewGame();
   // compare-guess: Enter otomatik tamamlamada secim icin kullanildigindan
   // butona birakilir (asagida autocomplete Enter'i yonetir).
 });
 
 // ================= OYUN MODU SEÇİMİ =================
-const MODE_TITLES = { closest: 'En Yakın Tahmin', compare: 'Kariyer Kıyası', squad: 'Milli Kadro' };
+const MODE_TITLES = {
+  closest: 'En Yakın Tahmin',
+  compare: 'Kariyer Kıyası',
+  squad: 'Milli Kadro',
+  superlig: 'Süper Lig Gol',
+};
 let pendingGameMode = 'closest';
+let currentLocalMode = 'closest';
 
 function chooseGame(mode) {
   pendingGameMode = MODE_TITLES[mode] ? mode : 'closest';
@@ -655,6 +738,7 @@ function chooseGame(mode) {
 function startLocalGame() {
   if (pendingGameMode === 'compare') startCompareGame();
   else if (pendingGameMode === 'squad') startSquadGame();
+  else if (pendingGameMode === 'superlig') startSuperligGame();
   else startClosestGame();
 }
 
@@ -697,6 +781,9 @@ function connectSocket() {
     renderLobby(room);
   });
   socket.on('game:error', ({ message }) => toast(message || 'Bir hata oluştu.'));
+  socket.on('game:new-vote', ({ votes }) => {
+    toast(`Yeni oyun için ${votes || 0}/2 onay.`);
+  });
 
   // ---- closest ----
   socket.on('game:round', onOnlineRound);
@@ -794,14 +881,43 @@ function connectSocket() {
     const verdict = a > b ? 'Kazandın! 🎉' : a < b ? 'Rakip kazandı.' : 'Berabere!';
     $('#sq-turn').textContent = '';
     toast(`Kadrolar tamam — ${verdict} (${a}–${b} maç)`, 5000);
-    setPrimarySquad('BİTTİ', 'online-squad-send', true);
+    setPrimarySquad('YENİ OYUN', 'new-game');
+  });
+
+  // ---- superlig (Süper Lig Gol) ----
+  socket.on('superlig:round', onOnlineSuperligRound);
+  socket.on('superlig:placed', onOnlineSuperligPlaced);
+  socket.on('superlig:turn', ({ turnId }) => setOnlineSuperligTurn(turnId));
+  socket.on('superlig:round-done', () => {
+    stopCountdown();
+    squad.turn = -1;
+    renderPitch(0);
+    renderPitch(1);
+    $('#sq-turn').textContent = '';
+    $('#sq-card-0').classList.remove('is-turn');
+    $('#sq-card-1').classList.remove('is-turn');
+    if (online.isHost) setPrimarySquad('YENİ TAKIM ›', 'online-next-round');
+    else setPrimarySquad('HOST BEKLENİYOR…', 'online-next-round', true);
+  });
+  socket.on('superlig:over', ({ scores }) => {
+    stopCountdown();
+    squad.over = true;
+    squad.turn = -1;
+    renderPitch(0);
+    renderPitch(1);
+    const a = scores[online.youId] ?? 0;
+    const b = scores[online.oppId] ?? 0;
+    const verdict = a > b ? 'Kazandın! 🎉' : a < b ? 'Rakip kazandı.' : 'Berabere!';
+    $('#sq-turn').textContent = '';
+    toast(`Kadrolar tamam — ${verdict} (${a}–${b} gol)`, 5000);
+    setPrimarySquad('YENİ OYUN', 'new-game');
   });
 
   return socket;
 }
 
 function openOnline(mode = 'closest') {
-  online.mode = ['closest', 'compare', 'squad'].includes(mode) ? mode : 'closest';
+  online.mode = ['closest', 'compare', 'squad', 'superlig'].includes(mode) ? mode : 'closest';
   connectSocket();
   online.active = false;
   $('#online-entry').hidden = false;
@@ -1070,6 +1186,7 @@ async function fetchCompareStats(id) {
 }
 
 async function startCompareGame() {
+  currentLocalMode = 'compare';
   if (state.resetOnNewGame) {
     state.scores = [0, 0];
     state.round = 0;
@@ -1341,17 +1458,19 @@ async function compareSubmit() {
 const POS_LABEL = { Kaleci: 'KL', Defans: 'DEF', 'Orta Saha': 'ORT', Forvet: 'FOR' };
 // Sahada gosterim sirasi (ust: forvet, alt: kaleci) ve her satirdaki mevki.
 const PITCH_ROWS = ['Forvet', 'Orta Saha', 'Defans', 'Kaleci'];
+const PITCH_ROWS_SUPERLIG = ['Forvet', 'Orta Saha', 'Defans'];
 
 const squad = {
+  mode: 'squad', // 'squad' (Milli Kadro) | 'superlig' (Süper Lig Gol)
   formation: [], // [{pos, short}]
   slots: [[], []], // her taraf: [{pos, filled, player}]
-  country: null, // {country, flag}
-  reel: [], // cark + ulke havuzu (uygun ulke listesi)
+  entity: null, // { key, name, image } (ulke adi veya takim id'si)
+  reel: [], // cark + havuz (uygun ulke/takim listesi)
   totals: [0, 0],
   round: 0,
   over: false,
   usedIds: new Set(), // oyun boyunca kullanilan oyuncular (tekrar yok)
-  usedCountries: new Set(), // gelen ulkeler (tekrar yok)
+  usedEntities: new Set(), // gelen ulke/takim (tekrar yok)
   starter: 0, // bu turda ilk yazan (her tur donusumlu)
   turn: 0, // su an sirasi gelen oyuncu
   placed: [false, false], // bu turda yerlestirdi mi
@@ -1359,31 +1478,64 @@ const squad = {
   target: 0, // sirasi gelenin doldurdugu slot (tiklanarak degisir)
 };
 
-/** Bayrak "cark"ini ~2 sn dondurur, sonra gercek ulkede durur. */
-function spinCountry(finalCountry) {
+/** Moda gore sabit metin/url bilgileri. */
+function draftCfg() {
+  if (squad.mode === 'superlig') {
+    return {
+      mode: 'superlig',
+      entityName: 'takım',
+      unit: 'gol',
+      searchKey: 'team',
+      formationUrl: '/api/game/superlig/formation',
+      poolUrl: '/api/game/superlig/teams',
+      poolKey: 'teams',
+      playerUrl: (id, key) => `/api/game/superlig/player/${id}?team=${encodeURIComponent(key)}`,
+      objective: '🎯 Süper Lig takımında en çok gol atmış kadroyu kur!',
+      nextLabel: 'YENİ TAKIM ›',
+      normalize: (item) => ({ key: item.id, name: item.name, image: item.crestUrl || null }),
+    };
+  }
+  return {
+    mode: 'squad',
+    entityName: 'ülke',
+    unit: 'maç',
+    searchKey: 'country',
+    formationUrl: '/api/game/squad/formation',
+    poolUrl: '/api/game/squad/countries',
+    poolKey: 'countries',
+    playerUrl: (id, key) => `/api/game/squad/player/${id}?country=${encodeURIComponent(key)}`,
+    objective: '🎯 Milli takımda en çok maça çıkmış kadroyu kur!',
+    nextLabel: 'YENİ ÜLKE ›',
+    normalize: (item) => ({ key: item.country, name: item.country, image: item.flag || null }),
+  };
+}
+
+/** Bayrak/logo "cark"ini ~2 sn dondurur, sonra gercek varlikta durur. */
+function spinEntity(finalEntity) {
   return new Promise((resolve) => {
     const flag = $('#sq-flag');
     const nameEl = $('#sq-country');
-    const reel = squad.reel.length ? squad.reel : [finalCountry];
+    flag.classList.toggle('is-crest', squad.mode === 'superlig');
+    const reel = squad.reel.length ? squad.reel : [finalEntity];
     if (reel.length < 2) {
-      flag.src = finalCountry.flag || '';
-      nameEl.textContent = finalCountry.country;
+      flag.src = finalEntity.image || '';
+      nameEl.textContent = finalEntity.name;
       return resolve();
     }
     flag.classList.add('is-spinning');
     const start = Date.now();
     const tick = () => {
       const r = reel[Math.floor(Math.random() * reel.length)];
-      flag.src = r.flag || '';
-      nameEl.textContent = r.country;
+      flag.src = r.image || '';
+      nameEl.textContent = r.name;
       if (Date.now() - start < 2000) {
         // Hizli baslar, sona dogru yavaslar (daha "cark" hissi).
         const t = (Date.now() - start) / 2000;
         setTimeout(tick, 60 + t * t * 160);
       } else {
         flag.classList.remove('is-spinning');
-        flag.src = finalCountry.flag || '';
-        nameEl.textContent = finalCountry.country;
+        flag.src = finalEntity.image || '';
+        nameEl.textContent = finalEntity.name;
         resolve();
       }
     };
@@ -1395,7 +1547,20 @@ function remainingPositions(side) {
   return [...new Set(squad.slots[side].filter((s) => !s.filled).map((s) => s.pos))];
 }
 
-async function startSquadGame() {
+function setSquadMode(mode) {
+  squad.mode = mode;
+  const cfg = draftCfg();
+  $('#sq-objective').textContent = cfg.objective;
+  $('#sq-unit-1').textContent = cfg.unit;
+  $('#sq-unit-2').textContent = cfg.unit;
+  $('#sq-flag').classList.toggle('is-crest', mode === 'superlig');
+}
+
+async function startDraftGame(mode) {
+  currentLocalMode = mode;
+  setSquadMode(mode);
+  const cfg = draftCfg();
+
   // Ekrani hemen ac + "Hazırlanıyor…" goster (ilk yuklemede indeks kurulabilir).
   show('squad');
   $('#dice-title').textContent = 'Hazırlanıyor…';
@@ -1403,10 +1568,11 @@ async function startSquadGame() {
   $('#dice-btn').hidden = true;
   $('#sq-dice').hidden = false;
 
-  const res = await fetch('/api/game/squad/formation');
+  const res = await fetch(cfg.formationUrl);
   squad.formation = (await res.json()).formation;
   try {
-    squad.reel = (await (await fetch('/api/game/squad/countries')).json()).countries || [];
+    const pool = await (await fetch(cfg.poolUrl)).json();
+    squad.reel = (pool[cfg.poolKey] || []).map(cfg.normalize);
   } catch {
     squad.reel = [];
   }
@@ -1416,7 +1582,7 @@ async function startSquadGame() {
   squad.round = 0;
   squad.over = false;
   squad.usedIds = new Set();
-  squad.usedCountries = new Set();
+  squad.usedEntities = new Set();
 
   $('#sq-name1').textContent = state.names[0];
   $('#sq-name2').textContent = state.names[1];
@@ -1429,6 +1595,14 @@ async function startSquadGame() {
   renderPitch(1);
   show('squad');
   openDice(); // once zar: kim baslayacak
+}
+
+async function startSquadGame() {
+  await startDraftGame('squad');
+}
+
+async function startSuperligGame() {
+  await startDraftGame('superlig');
 }
 
 // ---- zar ile baslayanin belirlenmesi ----
@@ -1487,7 +1661,7 @@ function squadRollDice() {
       squad.starter = winner;
       setTimeout(() => {
         $('#sq-dice').hidden = true;
-        squadNextCountry();
+        squadNextRound();
       }, 1300);
     }
   };
@@ -1497,7 +1671,8 @@ function squadRollDice() {
 function renderPitch(side) {
   const pitch = $(`#sq-pitch-${side}`);
   pitch.innerHTML = '';
-  for (const rowPos of PITCH_ROWS) {
+  const rows = squad.mode === 'superlig' ? PITCH_ROWS_SUPERLIG : PITCH_ROWS;
+  for (const rowPos of rows) {
     const rowEl = document.createElement('div');
     rowEl.className = 'pitch-row';
     squad.slots[side].forEach((slot, idx) => {
@@ -1516,7 +1691,7 @@ function renderPitch(side) {
           ? `<div class="slot__circle">⏱</div><div class="slot__caps">0</div><div class="slot__name">SÜRE DOLDU</div>`
           : `
             <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${slot.player.portraitUrl}" alt="">` : POS_LABEL[slot.pos]}</div>
-            <div class="slot__caps">${slot.player.caps}</div>
+            <div class="slot__caps">${slot.player.value}</div>
             <div class="slot__name">${shortName(slot.player.name)}</div>`;
       } else {
         el.innerHTML = `<div class="slot__circle">${POS_LABEL[slot.pos]}</div><div class="slot__caps"></div><div class="slot__name"></div>`;
@@ -1532,21 +1707,22 @@ function shortName(name) {
   return parts.length > 1 ? `${parts[0][0]}. ${parts.slice(1).join(' ')}` : name;
 }
 
-/** Havuzdan (reel) daha once gelmemis rastgele ulke sec. */
-function pickCountry() {
-  const pool = squad.reel.filter((c) => !squad.usedCountries.has(c.country));
+/** Havuzdan (reel) daha once gelmemis rastgele ulke/takim sec. */
+function pickEntity() {
+  const pool = squad.reel.filter((e) => !squad.usedEntities.has(e.key));
   const list = pool.length ? pool : squad.reel;
   return list[Math.floor(Math.random() * list.length)];
 }
 
-async function squadNextCountry() {
+async function squadNextRound() {
   if (squad.over) return;
-  squad.country = pickCountry();
-  if (!squad.country) {
-    toast('Uygun ülke bulunamadı.');
+  const cfg = draftCfg();
+  squad.entity = pickEntity();
+  if (!squad.entity) {
+    toast(`Uygun ${cfg.entityName} bulunamadı.`);
     return;
   }
-  squad.usedCountries.add(squad.country.country);
+  squad.usedEntities.add(squad.entity.key);
   squad.round += 1;
   squad.placed = [false, false];
   squad.pick = [null, null];
@@ -1563,8 +1739,8 @@ async function squadNextCountry() {
     list.hidden = true;
   }
   setPrimarySquad('…', 'squad-send', true);
-  await spinCountry(squad.country);
-  $('#sq-flag').alt = squad.country.country;
+  await spinEntity(squad.entity);
+  $('#sq-flag').alt = squad.entity.name;
 
   setTurnUI(squad.starter); // ilk yazan bu turda
 }
@@ -1579,7 +1755,7 @@ function setTurnUI(side) {
     if (s === side) {
       wrap.classList.remove('is-off');
       input.disabled = false;
-      input.placeholder = `${squad.country.country} oyuncusu…`;
+      input.placeholder = `${squad.entity.name} oyuncusu…`;
       attachSquadAutocomplete(input, s);
     } else {
       wrap.classList.add('is-off');
@@ -1591,7 +1767,7 @@ function setTurnUI(side) {
   squad.target = null;
   renderPitch(side);
   const input = $(`#sq-input-${side}`);
-  input.placeholder = `${squad.country.country} oyuncusu…`;
+  input.placeholder = `${squad.entity.name} oyuncusu…`;
   const list = input.closest('.sq-input-wrap').querySelector('.suggest');
   list.innerHTML = '';
   list.hidden = true;
@@ -1608,7 +1784,7 @@ function setTarget(slotIdx) {
   renderPitch(side); // is-target vurgusu
   const input = $(`#sq-input-${side}`);
   const cat = squad.target !== null ? squad.slots[side][squad.target]?.pos : null;
-  input.placeholder = cat ? `${squad.country.country} — ${POS_LABEL[cat] || cat}` : `${squad.country.country} oyuncusu…`;
+  input.placeholder = cat ? `${squad.entity.name} — ${POS_LABEL[cat] || cat}` : `${squad.entity.name} oyuncusu…`;
   // Slota tiklayinca HEMEN acma; sadece liste zaten acıksa tazele.
   const list = input.closest('.sq-input-wrap').querySelector('.suggest');
   if (!list.hidden) input.dispatchEvent(new Event('input'));
@@ -1669,7 +1845,8 @@ function attachSquadAutocomplete(input, side) {
     // Hedef varsa o bolge; yoksa TUM TAKIM (kalan tum mevkiler).
     const positions =
       squad.target !== null ? squad.slots[side][squad.target]?.pos || '' : remainingPositions(side).join(',');
-    const params = new URLSearchParams({ country: squad.country.country, positions, limit: '60' });
+    const cfg = draftCfg();
+    const params = new URLSearchParams({ [cfg.searchKey]: squad.entity.key, positions, limit: '60' });
     if (q) params.set('q', q);
     try {
       const res = await fetch(`/api/players/search?${params}`);
@@ -1721,7 +1898,8 @@ async function resolveCurrentPick(side) {
   if (!text) return null;
   const positions =
     squad.target !== null ? squad.slots[side][squad.target]?.pos || '' : remainingPositions(side).join(',');
-  const params = new URLSearchParams({ country: squad.country.country, positions, q: text });
+  const cfg = draftCfg();
+  const params = new URLSearchParams({ [cfg.searchKey]: squad.entity.key, positions, q: text });
   try {
     const res = await fetch(`/api/players/search?${params}`);
     const first = (await res.json()).results?.find((r) => !squad.usedIds.has(r.id));
@@ -1737,9 +1915,10 @@ async function resolveCurrentPick(side) {
 }
 
 async function squadSend() {
-  if (squad.over || !squad.country) return;
+  if (squad.over || !squad.entity) return;
   const side = squad.turn;
   if (squad.placed[side]) return; // bu turda zaten yerlestirdi
+  const cfg = draftCfg();
 
   const pick = await resolveCurrentPick(side);
   if (!pick) {
@@ -1755,9 +1934,7 @@ async function squadSend() {
   setPrimarySquad('…', 'squad-send', true);
   let st;
   try {
-    st = await fetch(
-      `/api/game/squad/player/${pick.id}?country=${encodeURIComponent(squad.country.country)}`,
-    ).then((r) => r.json());
+    st = await fetch(cfg.playerUrl(pick.id, squad.entity.key)).then((r) => r.json());
   } catch {
     toast('İstatistik alınamadı.');
     setPrimarySquad('GÖNDER', 'squad-send');
@@ -1781,13 +1958,14 @@ async function squadSend() {
   const slotIdx = squad.target;
   const slot = squad.slots[side][slotIdx];
   slot.filled = true;
-  slot.player = { id: st.id, name: st.name, caps: st.caps, portraitUrl: st.portraitUrl };
+  const value = squad.mode === 'superlig' ? st.goals : st.caps;
+  slot.player = { id: st.id, name: st.name, value, portraitUrl: st.portraitUrl };
   squad.usedIds.add(st.id);
-  squad.totals[side] += st.caps || 0;
+  squad.totals[side] += value || 0;
   squad.placed[side] = true;
   const input = $(`#sq-input-${side}`);
   input.disabled = true;
-  input.value = `${st.name} · ${st.caps} maç`;
+  input.value = `${st.name} · ${value} ${cfg.unit}`;
   input.closest('.sq-input-wrap').classList.add('is-off');
   $(`#sq-card-${side}`).classList.remove('is-turn');
   renderPitch(side);
@@ -1811,11 +1989,11 @@ async function squadSend() {
     squad.over = true;
     const [a, b] = squad.totals;
     const verdict = a === b ? 'Berabere!' : `${state.names[a > b ? 0 : 1]} kazandı!`;
-    toast(`Kadrolar tamam — ${verdict} (${a} - ${b} maç)`, 5000);
-    setPrimarySquad('YENİDEN OYNA ›', 'start-squad');
+    toast(`Kadrolar tamam — ${verdict} (${a} - ${b} ${cfg.unit})`, 5000);
+    setPrimarySquad('YENİ OYUN', 'new-game');
   } else {
     squad.starter = 1 - squad.starter; // sonraki turda diger oyuncu baslar
-    setPrimarySquad('YENİ ÜLKE ›', 'squad-next');
+    setPrimarySquad(cfg.nextLabel, 'squad-next');
   }
 }
 
@@ -2094,8 +2272,10 @@ function onOnlineCompareOver({ scores }) {
 // ================= ONLINE — MİLLİ KADRO =================
 async function onlineEnsureReel() {
   if (squad.reel && squad.reel.length) return;
+  const cfg = draftCfg();
   try {
-    squad.reel = (await (await fetch('/api/game/squad/countries')).json()).countries || [];
+    const pool = await (await fetch(cfg.poolUrl)).json();
+    squad.reel = (pool[cfg.poolKey] || []).map(cfg.normalize);
   } catch {
     squad.reel = [];
   }
@@ -2103,7 +2283,14 @@ async function onlineEnsureReel() {
 
 /** Sunucudan gelen (id->slots) yapiyi ekran taraflarina (0=sen,1=rakip) esler. */
 function applyOnlineSlots(slots) {
-  const map = (arr) => (arr || []).map((s) => ({ pos: s.pos, filled: s.filled, player: s.player }));
+  const map = (arr) =>
+    (arr || []).map((s) => ({
+      pos: s.pos,
+      filled: s.filled,
+      player: s.player
+        ? { ...s.player, value: s.player.caps ?? s.player.goals ?? 0 }
+        : null,
+    }));
   squad.slots = [map(slots[online.youId]), map(slots[online.oppId])];
 }
 
@@ -2116,13 +2303,14 @@ function refreshUsedIdsFromSlots() {
 async function onOnlineSquadRound({ country, formation, round, turnId, slots, scores, room }) {
   $('#online-dice').hidden = true;
   online.mode = 'squad';
+  setSquadMode('squad');
   online.active = true;
   online.isHost = room.hostId === online.youId;
   online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
   online.players = room.players;
 
   squad.formation = formation;
-  squad.country = country;
+  squad.entity = draftCfg().normalize(country);
   squad.over = false;
   squad.pick = [null, null];
   squad.target = null;
@@ -2156,8 +2344,8 @@ async function onOnlineSquadRound({ country, formation, round, turnId, slots, sc
   show('squad');
 
   await onlineEnsureReel();
-  await spinCountry(country);
-  $('#sq-flag').alt = country.country;
+  await spinEntity(squad.entity);
+  $('#sq-flag').alt = squad.entity.name;
   setOnlineSquadTurn(turnId);
 }
 
@@ -2179,7 +2367,7 @@ function setOnlineSquadTurn(turnId) {
     wrap.classList.remove('is-off');
     input.disabled = false;
     input.value = '';
-    input.placeholder = `${squad.country.country} oyuncusu…`;
+    input.placeholder = `${squad.entity.name} oyuncusu…`;
     attachSquadAutocomplete(input, 0);
     $('#sq-turn').textContent = 'Sıra: SEN';
     setPrimarySquad('GÖNDER', 'online-squad-send');
@@ -2200,7 +2388,7 @@ function setOnlineSquadTurn(turnId) {
 }
 
 async function onlineSquadSend() {
-  if (squad.over || !squad.country) return;
+  if (squad.over || !squad.entity) return;
   if (squad.turn !== 0) return; // rakip sirasi
   const pick = await resolveCurrentPick(0);
   if (!pick) {
@@ -2231,13 +2419,144 @@ function onOnlineSquadPlaced({ by, player, slots, scores, timeout }) {
 
   if (by === online.youId) {
     const i = $('#sq-input-0');
-    i.value = timeout ? '⏱ süre doldu' : `${player.name} · ${player.caps} maç`;
+    const cfg = draftCfg();
+    i.value = timeout ? '⏱ süre doldu' : `${player.name} · ${player.caps} ${cfg.unit}`;
     i.disabled = true;
     i.closest('.sq-input-wrap').classList.add('is-off');
     $('#sq-card-0').classList.remove('is-turn');
   }
   if (timeout) {
-    toast(by === online.youId ? 'Süren doldu — 0 maç.' : 'Rakip süreyi aştı — 0 maç.');
+    toast(by === online.youId ? 'Süren doldu — 0.' : 'Rakip süreyi aştı — 0.');
+    playTimesUp();
+  }
+  renderPitch(0);
+  renderPitch(1);
+}
+
+// ================= ONLINE — SÜPER LİG GOL =================
+async function onOnlineSuperligRound({ team, formation, round, turnId, slots, scores, room }) {
+  $('#online-dice').hidden = true;
+  online.mode = 'superlig';
+  setSquadMode('superlig');
+  online.active = true;
+  online.isHost = room.hostId === online.youId;
+  online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
+  online.players = room.players;
+
+  squad.formation = formation;
+  squad.entity = draftCfg().normalize(team);
+  squad.over = false;
+  squad.pick = [null, null];
+  squad.target = null;
+  applyOnlineSlots(slots);
+  refreshUsedIdsFromSlots();
+
+  const you = room.players.find((p) => p.id === online.youId);
+  const opp = room.players.find((p) => p.id !== online.youId);
+  $('#sq-name1').textContent = (you?.name || 'SEN').toUpperCase();
+  $('#sq-name2').textContent = (opp?.name || 'RAKİP').toUpperCase();
+  squad.totals = [scores[online.youId] ?? 0, scores[online.oppId] ?? 0];
+  $('#sq-total1').textContent = squad.totals[0];
+  $('#sq-total2').textContent = squad.totals[1];
+  $('#sq-round').textContent = `Tur ${round}`;
+  for (const t of document.querySelectorAll('.squad-total')) t.classList.remove('is-winner', 'is-turn');
+
+  for (const side of [0, 1]) {
+    const input = $(`#sq-input-${side}`);
+    input.disabled = true;
+    input.value = '';
+    input.closest('.sq-input-wrap').classList.add('is-off');
+    const l = input.closest('.sq-input-wrap').querySelector('.suggest');
+    l.innerHTML = '';
+    l.hidden = true;
+  }
+  squad.turn = -1;
+  renderPitch(0);
+  renderPitch(1);
+  setPrimarySquad('…', 'online-superlig-send', true);
+  show('squad');
+
+  await onlineEnsureReel();
+  await spinEntity(squad.entity);
+  $('#sq-flag').alt = squad.entity.name;
+  setOnlineSuperligTurn(turnId);
+}
+
+function setOnlineSuperligTurn(turnId) {
+  const myTurn = turnId === online.youId;
+  squad.turn = myTurn ? 0 : -1;
+  squad.target = null;
+  squad.pick = [null, null];
+  renderPitch(0);
+  renderPitch(1);
+
+  $('#sq-card-0').classList.toggle('is-turn', myTurn);
+  $('#sq-card-1').classList.toggle('is-turn', turnId === online.oppId);
+
+  const input = $('#sq-input-0');
+  const wrap = input.closest('.sq-input-wrap');
+  if (myTurn) {
+    wrap.classList.remove('is-off');
+    input.disabled = false;
+    input.value = '';
+    input.placeholder = `${squad.entity.name} oyuncusu…`;
+    attachSquadAutocomplete(input, 0);
+    $('#sq-turn').textContent = 'Sıra: SEN';
+    setPrimarySquad('GÖNDER', 'online-superlig-send');
+  } else {
+    wrap.classList.add('is-off');
+    input.disabled = true;
+    input.value = '';
+    $('#sq-turn').textContent = 'Sıra: RAKİP';
+    setPrimarySquad('RAKİP OYNUYOR…', 'online-superlig-send', true);
+  }
+  const owrap = $('#sq-input-1').closest('.sq-input-wrap');
+  owrap.classList.add('is-off');
+  $('#sq-input-1').disabled = true;
+  startCountdown(TURN_SECONDS, { tick: myTurn });
+  if (myTurn) playYourTurn();
+  else playSwitch();
+}
+
+async function onlineSuperligSend() {
+  if (squad.over || !squad.entity) return;
+  if (squad.turn !== 0) return;
+  const pick = await resolveCurrentPick(0);
+  if (!pick) {
+    toast('Bir oyuncu seç.', 2000);
+    $('#sq-input-0').focus();
+    return;
+  }
+  if (squad.usedIds.has(pick.id)) {
+    toast('Bu oyuncu bu oyunda kullanıldı, başkasını seç.', 2400);
+    return;
+  }
+  setPrimarySquad('…', 'online-superlig-send', true);
+  const slotIdx = squad.target != null ? squad.target : -1;
+  online.socket.emit('superlig:place', { playerId: pick.id, slotIdx });
+  stopCountdown();
+}
+
+function onOnlineSuperligPlaced({ by, player, slots, scores, timeout }) {
+  stopCountdown();
+  applyOnlineSlots(slots);
+  if (player && player.id != null) squad.usedIds.add(player.id);
+  squad.totals = [scores[online.youId] ?? 0, scores[online.oppId] ?? 0];
+  $('#sq-total1').textContent = squad.totals[0];
+  $('#sq-total2').textContent = squad.totals[1];
+  const tops = document.querySelectorAll('.squad-total');
+  tops.forEach((t) => t.classList.remove('is-winner'));
+  if (squad.totals[0] !== squad.totals[1]) tops[squad.totals[0] > squad.totals[1] ? 0 : 1].classList.add('is-winner');
+
+  if (by === online.youId) {
+    const i = $('#sq-input-0');
+    i.value = timeout ? '⏱ süre doldu' : `${player.name} · ${player.goals} gol`;
+    i.disabled = true;
+    i.closest('.sq-input-wrap').classList.add('is-off');
+    $('#sq-card-0').classList.remove('is-turn');
+  }
+  if (timeout) {
+    toast(by === online.youId ? 'Süren doldu — 0 gol.' : 'Rakip süreyi aştı — 0 gol.');
     playTimesUp();
   }
   renderPitch(0);

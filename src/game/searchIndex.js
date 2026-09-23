@@ -8,6 +8,7 @@
 import { players, teams } from '../db.js';
 import { normalize } from './matcher.js';
 import { slotOf, orderOf } from './positions.js';
+import { latestSuperligClub, isSuperligActive } from './superligTeams.js';
 
 let index = null; // [{ id, name, norm, words, games, position, cat, club, country, nt }]
 let flags = null; // Map(country -> flagUrl)
@@ -36,8 +37,12 @@ async function build() {
             'currentClub.name': 1,
             nationalities: 1,
             'careerTotals.games': 1,
+            'careerTotals.goals': 1,
+            'marketValue.determined': 1,
             'careerByClub.name': 1,
+            'careerByClub.clubId': 1,
             'careerByClub.games': 1,
+            'careerByClub.lastDate': 1,
             'careerByClub.isNationalTeam': 1,
           },
         },
@@ -51,6 +56,7 @@ async function build() {
 
   index = docs.map((d) => {
     const norm = normalize(d.name);
+    const slClubRow = latestSuperligClub(d);
     return {
       id: d._id,
       name: d.name,
@@ -60,7 +66,10 @@ async function build() {
       club: d.currentClub?.name ?? null,
       country: d.nationalities?.[0] ?? null,
       games: d.careerTotals?.games ?? 0,
+      goals: d.careerTotals?.goals ?? 0,
       nt: seniorNationalTeam(d),
+      slClub: slClubRow ? String(slClubRow.clubId) : null,
+      slActive: slClubRow ? isSuperligActive(d, slClubRow) : false,
       norm,
       words: norm.split(' ').filter(Boolean),
     };
@@ -89,20 +98,24 @@ export async function getFlag(country) {
 /**
  * Sorguya uyan oyuncular.
  * @param {string} query
- * @param {{limit?:number, country?:string, positions?:string[]}} [opts]
- *   country: sadece o milli takimda senior oynamislar; positions: mevki kategorileri.
+ * @param {{limit?:number, country?:string, positions?:string[], team?:string}} [opts]
+ *   country: sadece o milli takimda senior oynamislar; team: sadece o aktif
+ *   Süper Lig kulübünde oynayanlar; positions: mevki kategorileri.
  */
 export async function search(query, opts = {}) {
   const idx = await ensureIndex();
-  const { limit = 8, country = null, positions = null } = opts;
+  const { limit = 8, country = null, positions = null, team = null } = opts;
   const q = normalize(query);
-  if (!q && !country) return [];
+  if (!q && !country && !team) return [];
 
   const scored = [];
   for (const p of idx) {
     if (country && p.nt?.country !== country) continue;
     // Milli kadro modu: sadece o ulkeyle en az 1 maça çıkmış oyuncular.
     if (country && (p.nt?.caps ?? 0) < 1) continue;
+    // Süper Lig Gol modu: sadece ilgili aktif kulüp oyuncuları.
+    if (team && p.slClub !== team) continue;
+    if (team && !p.slActive) continue;
     // positions = slot bolgeleri (FOR/ORT/DEF/KL); ozel esleme (slot) ile suz.
     if (positions && !positions.includes(p.slot)) continue;
 
@@ -115,8 +128,9 @@ export async function search(query, opts = {}) {
     scored.push({ rank, p });
   }
 
-  if (country) {
-    // Milli kadro: detayli mevki sirasina gore (Santrafor -> ... -> Kaleci),
+  if (country || team) {
+    // Milli kadro / Süper Lig Gol: detayli mevki sirasina gore
+    // (Santrafor -> ... -> Kaleci),
     // sonra alfabetik. Caps'e gore SIRALAMA YOK (kopya olmasin).
     scored.sort(
       (a, b) => a.rank - b.rank || a.p.order - b.p.order || a.p.norm.localeCompare(b.p.norm),
@@ -133,6 +147,7 @@ export async function search(query, opts = {}) {
     club: p.club,
     country: p.country,
     caps: p.nt?.caps ?? 0,
+    goals: p.goals ?? 0,
   }));
 }
 
@@ -140,6 +155,7 @@ export async function search(query, opts = {}) {
 export function addDoc(doc) {
   if (!index) return; // indeks henuz kurulmadi; sonraki build zaten alir
   const norm = normalize(doc.name);
+  const slClubRow = latestSuperligClub(doc);
   const ntCands = (doc.careerByClub || []).filter(
     (c) => c.isNationalTeam && !/\d/.test(c.name || '') && !/olim|olym/i.test(c.name || ''),
   );
@@ -153,7 +169,10 @@ export function addDoc(doc) {
     club: doc.currentClub?.name ?? null,
     country: doc.nationalities?.[0] ?? null,
     games: doc.careerTotals?.games ?? 0,
+    goals: doc.careerTotals?.goals ?? 0,
     nt: best ? { country: best.name, caps: best.games || 0 } : null,
+    slClub: slClubRow ? String(slClubRow.clubId) : null,
+    slActive: slClubRow ? isSuperligActive(doc, slClubRow) : false,
     norm,
     words: norm.split(' ').filter(Boolean),
   };

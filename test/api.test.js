@@ -286,6 +286,24 @@ async function run() {
     assert.ok(body.slot, 'slot (FOR/ORT/DEF/KL)');
   });
 
+  console.log('--- süper lig gol ---');
+  await test('superlig/formation kalecisiz 6 slot doner', async () => {
+    const { body } = await get('/api/game/superlig/formation');
+    assert.equal(body.formation.length, 6);
+    assert.ok(body.formation.every((slot) => slot.pos !== 'Kaleci'), 'kaleci olmamali');
+  });
+
+  await test('superlig/teams liste doner', async () => {
+    const { status, body } = await get('/api/game/superlig/teams');
+    assert.equal(status, 200);
+    assert.ok(Array.isArray(body.teams), 'teams dizisi olmali');
+  });
+
+  await test('superlig/player team parametresi ister', async () => {
+    const { status } = await get(`/api/game/superlig/player/${messi._id}`);
+    assert.equal(status, 400);
+  });
+
   await test('bilinmeyen API yolu 404 JSON doner', async () => {
     assert.equal((await get('/api/yok')).status, 404);
   });

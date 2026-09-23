@@ -3,6 +3,8 @@ import { players } from '../db.js';
 import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
 import { FORMATION, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
+import { FORMATION as SUPERLIG_FORMATION, randomSuperligTeam, listSuperligTeams, superligGoals } from '../game/superlig.js';
+import { latestSuperligClub, isSuperligActive } from '../game/superligTeams.js';
 import { ensurePlayer } from '../game/ensurePlayer.js';
 import { slotOf } from '../game/positions.js';
 
@@ -71,6 +73,57 @@ gameRouter.get('/squad/country', async (_req, res, next) => {
 gameRouter.get('/squad/countries', async (_req, res, next) => {
   try {
     res.json({ countries: await listCountries() });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** "Süper Lig Gol" - diziliş + rastgele aktif Süper Lig takımı (logosuyla). */
+gameRouter.get('/superlig/formation', (_req, res) => {
+  res.json({ formation: SUPERLIG_FORMATION });
+});
+
+gameRouter.get('/superlig/team', async (_req, res, next) => {
+  try {
+    const team = await randomSuperligTeam();
+    if (!team) return res.status(404).json({ error: 'Uygun Süper Lig takımı bulunamadı.' });
+    res.json(team);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Logo "çark" animasyonu için uygun Süper Lig takım listesi. */
+gameRouter.get('/superlig/teams', async (_req, res, next) => {
+  try {
+    res.json({ teams: await listSuperligTeams() });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Tahmin edilen oyuncunun kulüp kariyerindeki toplam gol sayısı. */
+gameRouter.get('/superlig/player/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const team = req.query.team;
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Geçersiz ID.' });
+    if (!team) return res.status(400).json({ error: 'team parametresi gerekli.' });
+    const player = await ensurePlayer(id);
+    if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
+
+    const clubRow = latestSuperligClub(player);
+    if (!clubRow || String(clubRow.clubId) !== team || !isSuperligActive(player, clubRow)) {
+      return res.status(400).json({ error: 'Bu oyuncu bu takımın aktif kadrosunda değil.' });
+    }
+
+    res.json({
+      id: player._id,
+      name: player.name,
+      portraitUrl: player.portraitUrl,
+      slot: slotOf(player.position?.name),
+      goals: superligGoals(player),
+    });
   } catch (error) {
     next(error);
   }

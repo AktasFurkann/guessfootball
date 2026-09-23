@@ -788,6 +788,13 @@ body {
   animation: flagpulse 0.35s infinite alternate;
   box-shadow: 0 0 14px rgba(215, 255, 62, 0.7);
 }
+.squad-flag img.is-crest {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: transparent;
+  border: none;
+}
 @keyframes flagpulse {
   from {
     transform: scale(0.94);
@@ -1095,6 +1102,11 @@ body {
 }
 .pause-card .btn {
   width: 100%;
+}
+.pause-card .btn.is-voted {
+  border-color: var(--win);
+  color: var(--win);
+  opacity: 0.9;
 }
 
 /* toast */

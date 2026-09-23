@@ -3,6 +3,8 @@ import { GAME_ROWS, rowsMeta } from './game/rows.js';
 import { pickRandomGamePlayer, poolFilter } from './game/roundData.js';
 import { COMPARE_ROWS, compareValues } from './game/compare.js';
 import { FORMATION, randomCountry, listCountries, nationalCaps } from './game/squad.js';
+import { FORMATION as SUPERLIG_FORMATION, randomSuperligTeam, listSuperligTeams, superligGoals } from './game/superlig.js';
+import { latestSuperligClub, isSuperligActive } from './game/superligTeams.js';
 import { slotOf } from './game/positions.js';
 import { ensurePlayer } from './game/ensurePlayer.js';
 import { players } from './db.js';
@@ -10,16 +12,17 @@ import { players } from './db.js';
 /**
  * Online oyun motoru - oda tabanli, iki oyunculu, sunucu-otoriter.
  *
- * Uc mod:
+ * Dort mod:
  *  - closest: "En Yakin Tahmin" (es zamanli tahmin, en yakin kazanir)
  *  - compare: "Kariyer Kiyasi" (zar + sirali, ortadakine en yakin isim)
  *  - squad:   "Milli Kadro" (zar + sirali, ulkeden kadro kur)
+ *  - superlig: "Süper Lig Gol" (zar + sirali, aktif Süper Lig takimindan kadro kur)
  * compare/squad turn-based: once zar (herkes kendi zarini atar), sonra sirayla;
  * bir oyuncu ismi bir oyunda tekrar kullanilamaz.
  */
 
 const MAX_PLAYERS = 2;
-const MODES = new Set(['closest', 'compare', 'squad']);
+const MODES = new Set(['closest', 'compare', 'squad', 'superlig']);
 const TURN_SECONDS = 15;
 const rooms = new Map();
 
@@ -79,6 +82,11 @@ export function attachRealtime(httpServer) {
         country: null,
         usedCountries: new Set(),
         placed: new Map(),
+        // superlig
+        team: null,
+        usedTeams: new Set(),
+        // yeni oyun oylamasi
+        newGameVotes: new Set(),
         turnTimer: null,
         rowTimer: null,
       };
@@ -158,11 +166,31 @@ export function attachRealtime(httpServer) {
       await squadPlace(io, room, socket.id, playerId, slotIdx);
     });
 
+    // ---- superlig ----
+    socket.on('superlig:place', async ({ playerId, slotIdx } = {}) => {
+      const room = rooms.get(socket.data.roomCode);
+      if (!room || room.mode !== 'superlig' || room.phase !== 'playing') return;
+      if (currentTurnId(room) !== socket.id) return;
+      await superligPlace(io, room, socket.id, playerId, slotIdx);
+    });
+
     socket.on('game:next-round', async () => {
       const room = rooms.get(socket.data.roomCode);
       if (!room || room.hostId !== socket.id) return;
       if (room.mode === 'compare') await startCompareRound(io, room);
       else if (room.mode === 'squad') await startSquadRound(io, room);
+      else if (room.mode === 'superlig') await startSuperligRound(io, room);
+    });
+
+    socket.on('game:new', async () => {
+      const room = rooms.get(socket.data.roomCode);
+      if (!room || !room.players.has(socket.id)) return;
+      if (room.phase !== 'playing' && room.phase !== 'ended') return;
+      room.newGameVotes.add(socket.id);
+      io.to(room.code).emit('game:new-vote', { votes: room.newGameVotes.size });
+      if (room.newGameVotes.size >= room.players.size) {
+        await startNewGame(io, room);
+      }
     });
 
     socket.on('room:leave', () => leaveCurrentRoom(socket));
@@ -203,7 +231,23 @@ function resetRoomState(room) {
   room.slots = new Map();
   room.country = null;
   room.usedCountries = new Set();
+  room.team = null;
+  room.usedTeams = new Set();
   room.placed = new Map();
+  room.newGameVotes = new Set();
+}
+
+/** İki oyuncu da yeni oyuna geçmek istediğinde odayı sıfırlayıp yeniden başlat. */
+async function startNewGame(io, room) {
+  resetRoomState(room);
+  for (const player of room.players.values()) player.score = 0;
+  room.starter = 0;
+
+  if (room.mode === 'closest') {
+    await startClosestRound(io, room);
+  } else {
+    beginDice(io, room);
+  }
 }
 
 /** Sirasi gelen oyuncunun id'si (turn: 0/1 -> players sirasi). */
@@ -244,6 +288,7 @@ function resolveDice(io, room) {
   setTimeout(() => {
     if (room.mode === 'compare') startCompareRound(io, room, true);
     else if (room.mode === 'squad') startSquadRound(io, room, true);
+    else if (room.mode === 'superlig') startSuperligRound(io, room, true);
   }, 1400);
 }
 
@@ -605,4 +650,139 @@ async function squadPlace(io, room, sid, playerId, slotIdx) {
   });
 
   squadAdvanceAfterPlace(io, room, sid);
+}
+
+// ================= SUPERLIG (Süper Lig Gol) =================
+function startSuperligTurnTimer(io, room, delay = 0) {
+  clearTurnTimer(room);
+  const sid = currentTurnId(room);
+  room.turnTimer = setTimeout(() => {
+    room.turnTimer = null;
+    if (room.phase !== 'playing' || room.mode !== 'superlig' || currentTurnId(room) !== sid) return;
+    superligTimeout(io, room, sid);
+  }, delay + TURN_SECONDS * 1000);
+}
+
+/** Süre dolunca: boş bir slotu 0 gol ile doldurur (ceza), sıra ilerler. */
+function superligTimeout(io, room, sid) {
+  if (room.placed.get(sid)) return;
+  const myslots = room.slots.get(sid);
+  const idx = myslots.findIndex((s) => !s.filled);
+  const empty = { id: null, name: 'SÜRE DOLDU', goals: 0, portraitUrl: null, timeout: true };
+  if (idx >= 0) {
+    myslots[idx] = { pos: myslots[idx].pos, filled: true, player: empty };
+  }
+  room.placed.set(sid, true);
+  io.to(room.code).emit('superlig:placed', {
+    by: sid,
+    slotIdx: idx,
+    player: empty,
+    slots: publicSlots(room),
+    scores: scoreMap(room),
+    timeout: true,
+  });
+  superligAdvanceAfterPlace(io, room, sid);
+}
+
+function superligAdvanceAfterPlace(io, room, sid) {
+  const other = otherId(room, sid);
+  if (!room.placed.get(other)) {
+    room.turn ^= 1;
+    io.to(room.code).emit('superlig:turn', { turnId: currentTurnId(room), seconds: TURN_SECONDS });
+    startSuperligTurnTimer(io, room);
+    return;
+  }
+
+  const full = [...room.slots.values()].every((arr) => arr.every((s) => s.filled));
+  if (full) {
+    room.phase = 'ended';
+    io.to(room.code).emit('superlig:over', { scores: scoreMap(room) });
+  } else {
+    io.to(room.code).emit('superlig:round-done', { scores: scoreMap(room) });
+  }
+}
+
+async function startSuperligRound(io, room, firstRound = false) {
+  clearTurnTimer(room);
+  if (firstRound) {
+    room.slots = new Map(ids(room).map((id) => [id, SUPERLIG_FORMATION.map((f) => ({ pos: f.pos, filled: false, player: null }))]));
+    room.usedTeams = new Set();
+    room.round = 0;
+  } else {
+    room.starter ^= 1;
+  }
+
+  let team;
+  try {
+    const eligible = (await listSuperligTeams()).filter((t) => !room.usedTeams.has(t.id));
+    team = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomSuperligTeam();
+  } catch {
+    team = null;
+  }
+  if (!team) return io.to(room.code).emit('game:error', { message: 'Süper Lig takımı bulunamadı.' });
+
+  room.team = team;
+  room.usedTeams.add(team.id);
+  room.round += 1;
+  room.placed = new Map(ids(room).map((id) => [id, false]));
+  room.turn = room.starter;
+  room.phase = 'playing';
+
+  io.to(room.code).emit('superlig:round', {
+    team,
+    formation: SUPERLIG_FORMATION,
+    round: room.round,
+    turnId: currentTurnId(room),
+    slots: publicSlots(room),
+    seconds: TURN_SECONDS,
+    scores: scoreMap(room),
+    room: publicRoom(room),
+  });
+  startSuperligTurnTimer(io, room, SQUAD_REVEAL_MS);
+}
+
+async function superligPlace(io, room, sid, playerId, slotIdx) {
+  const id = Number(playerId);
+  if (!Number.isFinite(id)) return;
+  if (room.placed.get(sid)) return;
+  if (room.usedIds.has(id)) return io.to(sid).emit('game:error', { message: 'Bu oyuncu kullanıldı.' });
+
+  let doc;
+  try {
+    doc = await ensurePlayer(id);
+  } catch {
+    doc = null;
+  }
+  if (!doc) return io.to(sid).emit('game:error', { message: 'Oyuncu getirilemedi.' });
+
+  const clubRow = latestSuperligClub(doc);
+  if (!clubRow || String(clubRow.clubId) !== room.team.id || !isSuperligActive(doc, clubRow)) {
+    return io.to(sid).emit('game:error', { message: 'Bu oyuncu bu takımın aktif kadrosunda değil.' });
+  }
+
+  const goals = superligGoals(doc);
+  const slot = slotOf(doc.position?.name);
+  const myslots = room.slots.get(sid);
+
+  let idx = Number(slotIdx);
+  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || myslots[idx].pos !== slot) {
+    idx = myslots.findIndex((s) => !s.filled && s.pos === slot);
+  }
+  if (idx < 0) return io.to(sid).emit('game:error', { message: 'Bu mevki için boş yer yok.' });
+
+  myslots[idx] = { pos: myslots[idx].pos, filled: true, player: { id, name: doc.name, goals, portraitUrl: doc.portraitUrl } };
+  clearTurnTimer(room);
+  room.usedIds.add(id);
+  room.players.get(sid).score += goals;
+  room.placed.set(sid, true);
+
+  io.to(room.code).emit('superlig:placed', {
+    by: sid,
+    slotIdx: idx,
+    player: { id, name: doc.name, goals, portraitUrl: doc.portraitUrl },
+    slots: publicSlots(room),
+    scores: scoreMap(room),
+  });
+
+  superligAdvanceAfterPlace(io, room, sid);
 }

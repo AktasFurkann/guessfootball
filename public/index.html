@@ -67,6 +67,17 @@
             </span>
             <span class="game-card__go">OYNA ›</span>
           </button>
+
+          <button class="game-card" data-action="choose-game" data-mode="superlig">
+            <span class="game-card__badge">4</span>
+            <span class="game-card__body">
+              <span class="game-card__title">Süper Lig Gol</span>
+              <span class="game-card__desc">
+                Çıkan Süper Lig takımından oyuncularla kadro kur; en çok golü toplayan kazanır.
+              </span>
+            </span>
+            <span class="game-card__go">OYNA ›</span>
+          </button>
         </div>
       </div>
     </section>
@@ -211,7 +222,7 @@
         <div class="squad-top">
           <div class="squad-total scorecard--left" id="sq-card-0">
             <span class="squad-total__name" id="sq-name1">OYUNCU 1</span>
-            <span class="squad-total__num"><b id="sq-total1">0</b><small>maç</small></span>
+            <span class="squad-total__num"><b id="sq-total1">0</b><small id="sq-unit-1">maç</small></span>
           </div>
           <div class="squad-flag">
             <img id="sq-flag" alt="" />
@@ -219,7 +230,7 @@
           </div>
           <div class="squad-total scorecard--right" id="sq-card-1">
             <span class="squad-total__name" id="sq-name2">OYUNCU 2</span>
-            <span class="squad-total__num"><b id="sq-total2">0</b><small>maç</small></span>
+            <span class="squad-total__num"><b id="sq-total2">0</b><small id="sq-unit-2">maç</small></span>
           </div>
         </div>
 
@@ -305,8 +316,24 @@
       <div class="pause-card">
         <h3>Oyun Menüsü</h3>
         <button class="btn btn--primary" data-action="pause-resume">DEVAM ET</button>
+        <button class="btn" data-action="new-game">YENİ OYUN</button>
         <button class="btn" data-action="pause-settings">AYARLAR</button>
         <button class="btn btn--danger" data-action="pause-quit">OYUNDAN ÇIK</button>
+      </div>
+    </div>
+
+    <!-- ================= YENİ OYUN ONAYI (iki oyuncu da onaylamalı) ================= -->
+    <div class="pause-overlay" id="newgame-confirm" hidden>
+      <div class="pause-card">
+        <h3>Yeni Oyun?</h3>
+        <p>İki oyuncu da onaylarsa yeni oyun başlar.</p>
+        <button class="btn btn--primary" data-action="newgame-vote" data-side="0" id="newgame-vote-0">
+          <span class="newgame-vote-name" id="newgame-name-0">OYUNCU 1</span> — EVET
+        </button>
+        <button class="btn btn--primary" data-action="newgame-vote" data-side="1" id="newgame-vote-1">
+          <span class="newgame-vote-name" id="newgame-name-1">OYUNCU 2</span> — EVET
+        </button>
+        <button class="btn" data-action="newgame-cancel">VAZGEÇ</button>
       </div>
     </div>
 

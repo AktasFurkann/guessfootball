@@ -59,6 +59,13 @@ puan sifirlama) tarayicida `localStorage`'da tutulur.
   Otomatik tamamlama sadece o ülkenin ve boş mevkinin oyuncularını gösterir (en
   çok maça çıkanlar önce). Her oyuncunun milli maç sayısı altında görünür; her
   tur yeni bir ülke gelir, kadro dolunca en yüksek toplam milli maça ulaşan kazanır.
+- **Süper Lig Gol:** Milli Kadro'nun Süper Lig uyarlaması. Rastgele bir aktif
+  Süper Lig takımı gelir; iki taraf o takımın oyuncularıyla 2 Forvet, 2 Orta Saha,
+  2 Defans kurar (kaleci yok). Oyuncuların kulüp kariyeri golleri toplanır; kadro
+  dolunca en yüksek toplam gole ulaşan kazanır.
+
+Oyun bitince (kadro modlarında) iki oyuncunun da onaylaması gereken **Yeni Oyun**
+butonu çıkar; ayrıca tüm modlarda oyun içi menüden yeni oyun istenebilir.
 
 Online oynanış detayı:
 
