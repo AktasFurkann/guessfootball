@@ -756,7 +756,7 @@ async function superligPlace(io, room, sid, playerId, slotIdx) {
   if (!doc) return io.to(sid).emit('game:error', { message: 'Oyuncu getirilemedi.' });
 
   const clubRow = latestSuperligClub(doc);
-  if (!clubRow || String(clubRow.clubId) !== room.team.id || !isSuperligActive(doc, clubRow)) {
+  if (!clubRow || String(clubRow.clubId) !== room.team.id || !isSuperligActive(doc)) {
     return io.to(sid).emit('game:error', { message: 'Bu oyuncu bu takımın aktif kadrosunda değil.' });
   }
 

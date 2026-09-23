@@ -113,7 +113,7 @@ gameRouter.get('/superlig/player/:id', async (req, res, next) => {
     if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
 
     const clubRow = latestSuperligClub(player);
-    if (!clubRow || String(clubRow.clubId) !== team || !isSuperligActive(player, clubRow)) {
+    if (!clubRow || String(clubRow.clubId) !== team || !isSuperligActive(player)) {
       return res.status(400).json({ error: 'Bu oyuncu bu takımın aktif kadrosunda değil.' });
     }
 

@@ -69,7 +69,7 @@ async function build() {
       goals: d.careerTotals?.goals ?? 0,
       nt: seniorNationalTeam(d),
       slClub: slClubRow ? String(slClubRow.clubId) : null,
-      slActive: slClubRow ? isSuperligActive(d, slClubRow) : false,
+      slActive: slClubRow ? isSuperligActive(d) : false,
       norm,
       words: norm.split(' ').filter(Boolean),
     };
@@ -172,7 +172,7 @@ export function addDoc(doc) {
     goals: doc.careerTotals?.goals ?? 0,
     nt: best ? { country: best.name, caps: best.games || 0 } : null,
     slClub: slClubRow ? String(slClubRow.clubId) : null,
-    slActive: slClubRow ? isSuperligActive(doc, slClubRow) : false,
+    slActive: slClubRow ? isSuperligActive(doc) : false,
     norm,
     words: norm.split(' ').filter(Boolean),
   };
