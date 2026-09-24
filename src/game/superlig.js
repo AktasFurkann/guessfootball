@@ -8,21 +8,34 @@
 import { getIndex } from './searchIndex.js';
 import { teams } from '../db.js';
 import { SUPERLIG_TEAMS, SUPERLIG_TEAM_IDS } from './superligTeams.js';
+import { LONG_FORMATION, LONG_NEED } from './positions.js';
 
 // Diziliş: kaleci yok, 2-2-2 (forvet -> defans gösterim sırası frontend'de).
 export const FORMATION = [
-  { pos: 'Forvet', short: 'FOR' },
-  { pos: 'Forvet', short: 'FOR' },
-  { pos: 'Orta Saha', short: 'ORT' },
-  { pos: 'Orta Saha', short: 'ORT' },
-  { pos: 'Defans', short: 'DEF' },
-  { pos: 'Defans', short: 'DEF' },
+  { pos: 'Forvet', key: 'Forvet', short: 'FOR' },
+  { pos: 'Forvet', key: 'Forvet', short: 'FOR' },
+  { pos: 'Orta Saha', key: 'Orta Saha', short: 'ORT' },
+  { pos: 'Orta Saha', key: 'Orta Saha', short: 'ORT' },
+  { pos: 'Defans', key: 'Defans', short: 'DEF' },
+  { pos: 'Defans', key: 'Defans', short: 'DEF' },
 ];
 
 const NEED = { Forvet: 2, 'Orta Saha': 2, Defans: 2 };
 
-let eligible = null; // [{ id, name, crestUrl }]
+/** Oyun uzunluğuna göre dizilişi döndürür (kısa: 2-2-2, uzun: 1-4-4-2). */
+export function getFormation(length = 'short') {
+  return length === 'long' ? LONG_FORMATION : FORMATION;
+}
+
+const eligible = new Map(); // length -> [{ id, name, crestUrl }]
+const buildingEligible = new Map();
 let crests = null; // Map(id -> crestUrl)
+
+function needFor(length) {
+  return length === 'long'
+    ? { need: LONG_NEED, pick: (p) => p.longSlot }
+    : { need: NEED, pick: (p) => p.slot };
+}
 
 async function loadCrests() {
   if (crests) return crests;
@@ -33,47 +46,53 @@ async function loadCrests() {
   return crests;
 }
 
-async function buildEligible() {
+async function buildEligible(length) {
   const idx = await getIndex();
   const crestMap = await loadCrests();
+  const { need, pick } = needFor(length);
 
-  const byTeam = new Map(); // id -> {Forvet:n, Orta Saha:n, Defans:n}
+  const byTeam = new Map(); // id -> mevki sayıları
   for (const p of idx) {
     if (!p.slClub || !p.slActive || !SUPERLIG_TEAM_IDS.has(p.slClub)) continue;
-    if (!(p.slot in NEED)) continue;
+    const key = pick(p);
+    if (!key || !(key in need)) continue;
     let counts = byTeam.get(p.slClub);
-    if (!counts) byTeam.set(p.slClub, (counts = { Forvet: 0, 'Orta Saha': 0, Defans: 0 }));
-    counts[p.slot] += 1;
+    if (!counts) {
+      counts = {};
+      for (const k of Object.keys(need)) counts[k] = 0;
+      byTeam.set(p.slClub, counts);
+    }
+    counts[key] += 1;
   }
 
   const list = [];
   for (const t of SUPERLIG_TEAMS) {
     const counts = byTeam.get(t.id);
     if (!counts) continue;
-    if (!Object.entries(NEED).every(([cat, n]) => counts[cat] >= n)) continue;
+    if (!Object.entries(need).every(([cat, n]) => counts[cat] >= n)) continue;
     list.push({ id: t.id, name: t.name, crestUrl: crestMap.get(t.id) ?? null });
   }
   return list;
 }
 
-let buildingEligible = null;
-async function ensureEligible() {
-  if (eligible) return eligible;
-  if (!buildingEligible) buildingEligible = buildEligible();
-  eligible = await buildingEligible;
-  return eligible;
+async function ensureEligible(length = 'short') {
+  if (eligible.has(length)) return eligible.get(length);
+  if (!buildingEligible.has(length)) buildingEligible.set(length, buildEligible(length));
+  const list = await buildingEligible.get(length);
+  eligible.set(length, list);
+  return list;
 }
 
 /** Rastgele uygun Süper Lig takımı (logosuyla). */
-export async function randomSuperligTeam() {
-  const list = await ensureEligible();
+export async function randomSuperligTeam(length = 'short') {
+  const list = await ensureEligible(length);
   if (!list.length) return null;
   return list[Math.floor(Math.random() * list.length)];
 }
 
 /** Uygun tüm Süper Lig takımları (logo "çark" animasyonu için). */
-export async function listSuperligTeams() {
-  return ensureEligible();
+export async function listSuperligTeams(length = 'short') {
+  return ensureEligible(length);
 }
 
 /** Bir oyuncunun kulüp kariyerindeki toplam gol sayısı. */

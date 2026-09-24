@@ -2,15 +2,18 @@ import { Router } from 'express';
 import { players } from '../db.js';
 import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
-import { FORMATION, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
-import { FORMATION as SUPERLIG_FORMATION, randomSuperligTeam, listSuperligTeams, superligGoals } from '../game/superlig.js';
+import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
+import { getFormation as getSuperligFormation, randomSuperligTeam, listSuperligTeams, superligGoals } from '../game/superlig.js';
 import { latestSuperligClub, isSuperligActive } from '../game/superligTeams.js';
-import { FORMATION as MARKET_FORMATION, randomMarketTeam, listMarketTeams } from '../game/market.js';
+import { getFormation as getMarketFormation, randomMarketTeam, listMarketTeams } from '../game/market.js';
 import { marketClubOf, marketFee } from '../game/marketLogic.js';
 import { ensurePlayer } from '../game/ensurePlayer.js';
-import { slotOf } from '../game/positions.js';
+import { slotOf, longSlotOf } from '../game/positions.js';
 
 export const gameRouter = Router();
+
+/** `?length=long` yoksa varsayılan kısa oyun. */
+const lengthOf = (req) => (req.query.length === 'long' ? 'long' : 'short');
 
 /**
  * "En Yakin Tahmin" - yerel (ayni ekran) mod icin rastgele oyuncu.
@@ -57,13 +60,13 @@ gameRouter.get('/compare/random', async (req, res, next) => {
 });
 
 /** "Milli Kadro" - dizilis + rastgele ulke (bayragiyla). */
-gameRouter.get('/squad/formation', (_req, res) => {
-  res.json({ formation: FORMATION });
+gameRouter.get('/squad/formation', (req, res) => {
+  res.json({ formation: getSquadFormation(lengthOf(req)) });
 });
 
-gameRouter.get('/squad/country', async (_req, res, next) => {
+gameRouter.get('/squad/country', async (req, res, next) => {
   try {
-    const country = await randomCountry();
+    const country = await randomCountry(lengthOf(req));
     if (!country) return res.status(404).json({ error: 'Uygun ülke bulunamadı.' });
     res.json(country);
   } catch (error) {
@@ -72,22 +75,22 @@ gameRouter.get('/squad/country', async (_req, res, next) => {
 });
 
 /** Bayrak "cark" animasyonu icin uygun ulke+bayrak listesi. */
-gameRouter.get('/squad/countries', async (_req, res, next) => {
+gameRouter.get('/squad/countries', async (req, res, next) => {
   try {
-    res.json({ countries: await listCountries() });
+    res.json({ countries: await listCountries(lengthOf(req)) });
   } catch (error) {
     next(error);
   }
 });
 
 /** "Süper Lig Gol" - diziliş + rastgele aktif Süper Lig takımı (logosuyla). */
-gameRouter.get('/superlig/formation', (_req, res) => {
-  res.json({ formation: SUPERLIG_FORMATION });
+gameRouter.get('/superlig/formation', (req, res) => {
+  res.json({ formation: getSuperligFormation(lengthOf(req)) });
 });
 
-gameRouter.get('/superlig/team', async (_req, res, next) => {
+gameRouter.get('/superlig/team', async (req, res, next) => {
   try {
-    const team = await randomSuperligTeam();
+    const team = await randomSuperligTeam(lengthOf(req));
     if (!team) return res.status(404).json({ error: 'Uygun Süper Lig takımı bulunamadı.' });
     res.json(team);
   } catch (error) {
@@ -96,9 +99,9 @@ gameRouter.get('/superlig/team', async (_req, res, next) => {
 });
 
 /** Logo "çark" animasyonu için uygun Süper Lig takım listesi. */
-gameRouter.get('/superlig/teams', async (_req, res, next) => {
+gameRouter.get('/superlig/teams', async (req, res, next) => {
   try {
-    res.json({ teams: await listSuperligTeams() });
+    res.json({ teams: await listSuperligTeams(lengthOf(req)) });
   } catch (error) {
     next(error);
   }
@@ -124,6 +127,7 @@ gameRouter.get('/superlig/player/:id', async (req, res, next) => {
       name: player.name,
       portraitUrl: player.portraitUrl,
       slot: slotOf(player.position?.name),
+      key: longSlotOf(player.position?.name),
       goals: superligGoals(player),
     });
   } catch (error) {
@@ -132,13 +136,13 @@ gameRouter.get('/superlig/player/:id', async (req, res, next) => {
 });
 
 /** "Bonservis Avı" - diziliş + rastgele seçkin takım (logosuyla). */
-gameRouter.get('/market/formation', (_req, res) => {
-  res.json({ formation: MARKET_FORMATION });
+gameRouter.get('/market/formation', (req, res) => {
+  res.json({ formation: getMarketFormation(lengthOf(req)) });
 });
 
-gameRouter.get('/market/team', async (_req, res, next) => {
+gameRouter.get('/market/team', async (req, res, next) => {
   try {
-    const team = await randomMarketTeam();
+    const team = await randomMarketTeam(lengthOf(req));
     if (!team) return res.status(404).json({ error: 'Uygun takım bulunamadı.' });
     res.json(team);
   } catch (error) {
@@ -146,9 +150,9 @@ gameRouter.get('/market/team', async (_req, res, next) => {
   }
 });
 
-gameRouter.get('/market/teams', async (_req, res, next) => {
+gameRouter.get('/market/teams', async (req, res, next) => {
   try {
-    res.json({ teams: await listMarketTeams() });
+    res.json({ teams: await listMarketTeams(lengthOf(req)) });
   } catch (error) {
     next(error);
   }
@@ -173,6 +177,7 @@ gameRouter.get('/market/player/:id', async (req, res, next) => {
       name: player.name,
       portraitUrl: player.portraitUrl,
       slot: slotOf(player.position?.name),
+      key: longSlotOf(player.position?.name),
       fee: marketFee(player),
     });
   } catch (error) {
@@ -194,6 +199,7 @@ gameRouter.get('/squad/player/:id', async (req, res, next) => {
       name: player.name,
       portraitUrl: player.portraitUrl,
       slot: slotOf(player.position?.name), // FOR/ORT/DEF/KL bolgesi
+      key: longSlotOf(player.position?.name), // uzun oyun tam pozisyon
       caps: await nationalCaps(player, country),
     });
   } catch (error) {

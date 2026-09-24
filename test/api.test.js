@@ -305,10 +305,10 @@ async function run() {
   });
 
   console.log('--- bonservis avı ---');
-  await test('market/formation kalecisiz 6 slot doner', async () => {
+  await test('market/formation kalecili 6 slot doner', async () => {
     const { body } = await get('/api/game/market/formation');
     assert.equal(body.formation.length, 6);
-    assert.ok(body.formation.every((slot) => slot.pos !== 'Kaleci'), 'kaleci olmamali');
+    assert.equal(body.formation.filter((slot) => slot.pos === 'Kaleci').length, 1, 'tek kaleci olmali');
   });
 
   await test('market/teams liste doner', async () => {

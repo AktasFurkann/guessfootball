@@ -201,11 +201,16 @@ playersRouter.get('/search', async (req, res, next) => {
       typeof req.query.positions === 'string' && req.query.positions
         ? req.query.positions.split(',').map((s) => s.trim()).filter(Boolean)
         : null;
+    // Uzun oyun: tam pozisyon anahtarları (Santrafor/Sağ Bek/Sağ Kanat...).
+    const keys =
+      typeof req.query.keys === 'string' && req.query.keys
+        ? req.query.keys.split(',').map((s) => s.trim()).filter(Boolean)
+        : null;
     // Süper Lig Gol modu: aktif kulüp filtresi.
     const team = typeof req.query.team === 'string' && req.query.team ? req.query.team : null;
     // Bonservis Avı modu: seçkin takım filtresi.
     const marketTeam = typeof req.query.marketTeam === 'string' && req.query.marketTeam ? req.query.marketTeam : null;
-    const results = await searchPlayers(q, { limit, country, positions, team, marketTeam });
+    const results = await searchPlayers(q, { limit, country, positions, keys, team, marketTeam });
 
     // Canlı fallback (yalnızca ülke filtresi yokken): DB sonucu az ise
     // Transfermarkt'tan da arayıp DB'de olmayan (emekli vb.) oyuncuları ekle.

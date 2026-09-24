@@ -7,7 +7,7 @@
  */
 import { players, teams } from '../db.js';
 import { normalize } from './matcher.js';
-import { slotOf, orderOf } from './positions.js';
+import { slotOf, orderOf, longSlotOf } from './positions.js';
 import { latestSuperligClub, isSuperligActive } from './superligTeams.js';
 import { marketClubOf, marketFee } from './marketLogic.js';
 
@@ -65,6 +65,7 @@ async function build() {
       name: d.name,
       position: d.position?.name ?? null,
       slot: slotOf(d.position?.name), // FOR/ORT/DEF/KL bolgesi
+      longSlot: longSlotOf(d.position?.name), // uzun oyun tam pozisyon anahtari
       order: orderOf(d.position?.name), // hucumdan defansa siralama
       club: d.currentClub?.name ?? null,
       country: d.nationalities?.[0] ?? null,
@@ -104,16 +105,16 @@ export async function getFlag(country) {
 /**
  * Sorguya uyan oyuncular.
  * @param {string} query
- * @param {{limit?:number, country?:string, positions?:string[], team?:string, marketTeam?:string}} [opts]
+ * @param {{limit?:number, country?:string, positions?:string[], keys?:string[], team?:string, marketTeam?:string}} [opts]
  *   country: sadece o milli takimda senior oynamislar; team: sadece o aktif
  *   Süper Lig kulübünde oynayanlar; marketTeam: Bonservis Avı modu takımı;
- *   positions: mevki kategorileri.
+ *   positions: mevki bölgeleri (kısa oyun); keys: uzun oyun tam pozisyonları.
  */
 export async function search(query, opts = {}) {
   const idx = await ensureIndex();
-  const { limit = 8, country = null, positions = null, team = null, marketTeam = null } = opts;
+  const { limit = 8, country = null, positions = null, keys = null, team = null, marketTeam = null } = opts;
   const q = normalize(query);
-  if (!q && !country && !team && !marketTeam) return [];
+  if (!q && !country && !team && !marketTeam && !keys) return [];
 
   const scored = [];
   for (const p of idx) {
@@ -127,8 +128,10 @@ export async function search(query, opts = {}) {
     if (marketTeam && p.marketClub !== marketTeam) continue;
     if (marketTeam && !p.marketActive) continue;
     if (marketTeam && p.marketFee == null) continue;
-    // positions = slot bolgeleri (FOR/ORT/DEF/KL); ozel esleme (slot) ile suz.
+    // positions = slot bolgeleri (Forvet/Orta Saha/Defans/Kaleci); kisa oyun.
     if (positions && !positions.includes(p.slot)) continue;
+    // keys = uzun oyun tam pozisyonlari (Santrafor/Sağ Bek/Sağ Kanat...).
+    if (keys && !keys.includes(p.longSlot)) continue;
 
     let rank = 0;
     if (q) {
@@ -178,6 +181,7 @@ export function addDoc(doc) {
     name: doc.name,
     position: doc.position?.name ?? null,
     slot: slotOf(doc.position?.name),
+    longSlot: longSlotOf(doc.position?.name),
     order: orderOf(doc.position?.name),
     club: doc.currentClub?.name ?? null,
     country: doc.nationalities?.[0] ?? null,

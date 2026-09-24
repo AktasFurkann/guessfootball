@@ -83,6 +83,7 @@ function saveSettings() {
 const screens = {
   menu: document.getElementById('screen-menu'),
   select: document.getElementById('screen-select'),
+  length: document.getElementById('screen-length'),
   mode: document.getElementById('screen-mode'),
   online: document.getElementById('screen-online'),
   settings: document.getElementById('screen-settings'),
@@ -531,9 +532,9 @@ function voteLocalNewGame(side) {
 function startLocalNewGame() {
   closeNewGameConfirm();
   if (currentLocalMode === 'compare') startCompareGame();
-  else if (currentLocalMode === 'squad') startSquadGame();
-  else if (currentLocalMode === 'superlig') startSuperligGame();
-  else if (currentLocalMode === 'market') startMarketGame();
+  else if (currentLocalMode === 'squad') startSquadGame(squad.length);
+  else if (currentLocalMode === 'superlig') startSuperligGame(squad.length);
+  else if (currentLocalMode === 'market') startMarketGame(squad.length);
   else startClosestGame();
 }
 
@@ -551,11 +552,14 @@ document.addEventListener('click', (event) => {
       leaveOnlineIfAny();
       chooseGame(target.dataset.mode);
       break;
+    case 'choose-length':
+      chooseLength(target.dataset.length);
+      break;
     case 'mode-local':
       startLocalGame();
       break;
     case 'mode-online':
-      openOnline(pendingGameMode);
+      openOnline(pendingGameMode, pendingGameLength);
       break;
     case 'online-dice-roll':
       online.socket?.emit('dice:roll');
@@ -732,20 +736,35 @@ const MODE_TITLES = {
   superlig: 'Süper Lig Gol',
   market: 'Bonservis Avı',
 };
+// Kadro kuran modlar: uzun/kısa oyun seçimi sunulur.
+const DRAFT_MODES = new Set(['squad', 'superlig', 'market']);
 let pendingGameMode = 'closest';
+let pendingGameLength = 'short';
 let currentLocalMode = 'closest';
 
 function chooseGame(mode) {
   pendingGameMode = MODE_TITLES[mode] ? mode : 'closest';
+  pendingGameLength = 'short';
+  if (DRAFT_MODES.has(pendingGameMode)) {
+    $('#length-title').textContent = MODE_TITLES[pendingGameMode];
+    show('length');
+  } else {
+    $('#mode-title').textContent = MODE_TITLES[pendingGameMode];
+    show('mode');
+  }
+}
+
+function chooseLength(length) {
+  pendingGameLength = length === 'long' ? 'long' : 'short';
   $('#mode-title').textContent = MODE_TITLES[pendingGameMode];
   show('mode');
 }
 
 function startLocalGame() {
   if (pendingGameMode === 'compare') startCompareGame();
-  else if (pendingGameMode === 'squad') startSquadGame();
-  else if (pendingGameMode === 'superlig') startSuperligGame();
-  else if (pendingGameMode === 'market') startMarketGame();
+  else if (pendingGameMode === 'squad') startSquadGame(pendingGameLength);
+  else if (pendingGameMode === 'superlig') startSuperligGame(pendingGameLength);
+  else if (pendingGameMode === 'market') startMarketGame(pendingGameLength);
   else startClosestGame();
 }
 
@@ -753,6 +772,7 @@ function startLocalGame() {
 const online = {
   socket: null,
   mode: 'closest',
+  length: 'short',
   roomCode: null,
   youId: null,
   oppId: null,
@@ -952,8 +972,9 @@ function connectSocket() {
   return socket;
 }
 
-function openOnline(mode = 'closest') {
+function openOnline(mode = 'closest', length = 'short') {
   online.mode = ['closest', 'compare', 'squad', 'superlig', 'market'].includes(mode) ? mode : 'closest';
+  online.length = length === 'long' ? 'long' : 'short';
   connectSocket();
   online.active = false;
   $('#online-entry').hidden = false;
@@ -968,12 +989,13 @@ function openOnline(mode = 'closest') {
 
 function onlineCreate() {
   const name = $('#online-name').value.trim() || 'Oyuncu 1';
-  connectSocket().emit('room:create', { name, mode: online.mode }, (res) => {
+  connectSocket().emit('room:create', { name, mode: online.mode, length: online.length }, (res) => {
     if (!res?.ok) return ($('#online-hint').textContent = res?.error || 'Oda kurulamadı.');
     online.roomCode = res.code;
     online.youId = res.youId;
     online.isHost = true;
     if (res.mode) online.mode = res.mode;
+    if (res.length) online.length = res.length;
     showLobby(res.code);
   });
 }
@@ -988,6 +1010,7 @@ function onlineJoin() {
     online.youId = res.youId;
     online.isHost = false;
     online.mode = res.mode || 'closest';
+    online.length = res.length || 'short';
     showLobby(res.code);
   });
 }
@@ -1492,12 +1515,25 @@ async function compareSubmit() {
 
 // ================= MİLLİ KADRO MODU =================
 const POS_LABEL = { Kaleci: 'KL', Defans: 'DEF', 'Orta Saha': 'ORT', Forvet: 'FOR' };
+// Uzun oyun (1-4-4-2) tam pozisyon kısaltmaları.
+const LONG_LABEL = {
+  Kaleci: 'KL',
+  'Sağ Bek': 'SĞB',
+  'Sol Bek': 'SLB',
+  Stoper: 'STP',
+  'Sağ Kanat': 'SAĞ',
+  'Sol Kanat': 'SOL',
+  'Ofansif Orta Saha': 'OOS',
+  'Defansif Orta Saha': 'DOS',
+  Santrafor: 'FOR',
+};
+const slotLabelOf = (key) => LONG_LABEL[key] ?? POS_LABEL[key] ?? key ?? '';
 // Sahada gosterim sirasi (ust: forvet, alt: kaleci) ve her satirdaki mevki.
 const PITCH_ROWS = ['Forvet', 'Orta Saha', 'Defans', 'Kaleci'];
-const PITCH_ROWS_SUPERLIG = ['Forvet', 'Orta Saha', 'Defans'];
 
 const squad = {
   mode: 'squad', // 'squad' (Milli Kadro) | 'superlig' (Süper Lig Gol)
+  length: 'short', // 'short' | 'long'
   formation: [], // [{pos, short}]
   slots: [[], []], // her taraf: [{pos, filled, player}]
   entity: null, // { key, name, image } (ulke adi veya takim id'si)
@@ -1522,8 +1558,8 @@ function draftCfg() {
       entityName: 'takım',
       unit: '€M',
       searchKey: 'marketTeam',
-      formationUrl: '/api/game/market/formation',
-      poolUrl: '/api/game/market/teams',
+      formationUrl: `/api/game/market/formation?length=${squad.length}`,
+      poolUrl: `/api/game/market/teams?length=${squad.length}`,
       poolKey: 'teams',
       playerUrl: (id, key) => `/api/game/market/player/${id}?team=${encodeURIComponent(key)}`,
       objective: '🎯 Gelen takımdan en yüksek bonservisli kadroyu kur!',
@@ -1537,8 +1573,8 @@ function draftCfg() {
       entityName: 'takım',
       unit: 'gol',
       searchKey: 'team',
-      formationUrl: '/api/game/superlig/formation',
-      poolUrl: '/api/game/superlig/teams',
+      formationUrl: `/api/game/superlig/formation?length=${squad.length}`,
+      poolUrl: `/api/game/superlig/teams?length=${squad.length}`,
       poolKey: 'teams',
       playerUrl: (id, key) => `/api/game/superlig/player/${id}?team=${encodeURIComponent(key)}`,
       objective: '🎯 Süper Lig takımında en çok gol atmış kadroyu kur!',
@@ -1551,8 +1587,8 @@ function draftCfg() {
     entityName: 'ülke',
     unit: 'maç',
     searchKey: 'country',
-    formationUrl: '/api/game/squad/formation',
-    poolUrl: '/api/game/squad/countries',
+    formationUrl: `/api/game/squad/formation?length=${squad.length}`,
+    poolUrl: `/api/game/squad/countries?length=${squad.length}`,
     poolKey: 'countries',
     playerUrl: (id, key) => `/api/game/squad/player/${id}?country=${encodeURIComponent(key)}`,
     objective: '🎯 Milli takımda en çok maça çıkmış kadroyu kur!',
@@ -1594,12 +1630,27 @@ function spinEntity(finalEntity) {
   });
 }
 
-function remainingPositions(side) {
-  return [...new Set(squad.slots[side].filter((s) => !s.filled).map((s) => s.pos))];
+function remainingSlotKeys(side) {
+  return [...new Set(squad.slots[side].filter((s) => !s.filled).map((s) => s.key ?? s.pos))];
 }
 
-function setSquadMode(mode) {
+/** Otomatik tamamlama araması için mevki filtresi (kısa: bölge, uzun: tam pozisyon). */
+function squadSearchParams(side, q) {
+  const cfg = draftCfg();
+  const targetSlot = squad.target !== null ? squad.slots[side][squad.target] : null;
+  const keys = targetSlot ? [targetSlot.key ?? targetSlot.pos] : remainingSlotKeys(side);
+  const params = new URLSearchParams({ [cfg.searchKey]: squad.entity.key, limit: '60' });
+  if (keys.length) {
+    if (squad.length === 'long') params.set('keys', keys.join(','));
+    else params.set('positions', keys.join(','));
+  }
+  if (q) params.set('q', q);
+  return params;
+}
+
+function setSquadMode(mode, length = 'short') {
   squad.mode = mode;
+  squad.length = length === 'long' ? 'long' : 'short';
   const cfg = draftCfg();
   $('#sq-objective').textContent = cfg.objective;
   $('#sq-unit-1').textContent = cfg.unit;
@@ -1627,9 +1678,9 @@ function updateSquadTotals(a, b) {
   $('#sq-total2').textContent = squadTotalText(b);
 }
 
-async function startDraftGame(mode) {
+async function startDraftGame(mode, length = 'short') {
   currentLocalMode = mode;
-  setSquadMode(mode);
+  setSquadMode(mode, length);
   const cfg = draftCfg();
 
   // Ekrani hemen ac + "Hazırlanıyor…" goster (ilk yuklemede indeks kurulabilir).
@@ -1648,7 +1699,9 @@ async function startDraftGame(mode) {
     squad.reel = [];
   }
   $('#dice-btn').hidden = false;
-  squad.slots = [0, 1].map(() => squad.formation.map((f) => ({ pos: f.pos, filled: false, player: null })));
+  squad.slots = [0, 1].map(() =>
+    squad.formation.map((f) => ({ pos: f.pos, key: f.key ?? f.pos, filled: false, player: null })),
+  );
   squad.totals = [0, 0];
   squad.round = 0;
   squad.over = false;
@@ -1667,16 +1720,16 @@ async function startDraftGame(mode) {
   openDice(); // once zar: kim baslayacak
 }
 
-async function startSquadGame() {
-  await startDraftGame('squad');
+async function startSquadGame(length) {
+  await startDraftGame('squad', length);
 }
 
-async function startSuperligGame() {
-  await startDraftGame('superlig');
+async function startSuperligGame(length) {
+  await startDraftGame('superlig', length);
 }
 
-async function startMarketGame() {
-  await startDraftGame('market');
+async function startMarketGame(length) {
+  await startDraftGame('market', length);
 }
 
 // ---- zar ile baslayanin belirlenmesi ----
@@ -1745,7 +1798,8 @@ function squadRollDice() {
 function renderPitch(side) {
   const pitch = $(`#sq-pitch-${side}`);
   pitch.innerHTML = '';
-  const rows = squad.mode === 'squad' ? PITCH_ROWS : PITCH_ROWS_SUPERLIG;
+  // Dizilişte gerçekten var olan satırları göster (kaleci yoksa kaleci satırı çıkmaz).
+  const rows = PITCH_ROWS.filter((rp) => squad.formation.some((f) => f.pos === rp));
   for (const rowPos of rows) {
     const rowEl = document.createElement('div');
     rowEl.className = 'pitch-row';
@@ -1765,11 +1819,11 @@ function renderPitch(side) {
         el.innerHTML = slot.player.timeout
           ? `<div class="slot__circle">⏱</div><div class="slot__caps">0</div><div class="slot__name">SÜRE DOLDU</div>`
           : `
-            <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${slot.player.portraitUrl}" alt="">` : POS_LABEL[slot.pos]}</div>
+            <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${slot.player.portraitUrl}" alt="">` : slotLabelOf(slot.key ?? slot.pos)}</div>
             <div class="slot__caps">${valueText}</div>
             <div class="slot__name">${shortName(slot.player.name)}</div>`;
       } else {
-        el.innerHTML = `<div class="slot__circle">${POS_LABEL[slot.pos]}</div><div class="slot__caps"></div><div class="slot__name"></div>`;
+        el.innerHTML = `<div class="slot__circle">${slotLabelOf(slot.key ?? slot.pos)}</div><div class="slot__caps"></div><div class="slot__name"></div>`;
       }
       rowEl.appendChild(el);
     });
@@ -1858,8 +1912,9 @@ function setTarget(slotIdx) {
   squad.target = squad.target === slotIdx ? null : slotIdx; // toggle
   renderPitch(side); // is-target vurgusu
   const input = $(`#sq-input-${side}`);
-  const cat = squad.target !== null ? squad.slots[side][squad.target]?.pos : null;
-  input.placeholder = cat ? `${squad.entity.name} — ${POS_LABEL[cat] || cat}` : `${squad.entity.name} oyuncusu…`;
+  const targetSlot = squad.target !== null ? squad.slots[side][squad.target] : null;
+  const cat = targetSlot ? targetSlot.key ?? targetSlot.pos : null;
+  input.placeholder = cat ? `${squad.entity.name} — ${slotLabelOf(cat)}` : `${squad.entity.name} oyuncusu…`;
   // Slota tiklayinca HEMEN acma; sadece liste zaten acıksa tazele.
   const list = input.closest('.sq-input-wrap').querySelector('.suggest');
   if (!list.hidden) input.dispatchEvent(new Event('input'));
@@ -1917,12 +1972,7 @@ function attachSquadAutocomplete(input, side) {
   };
 
   const fetchList = async (q) => {
-    // Hedef varsa o bolge; yoksa TUM TAKIM (kalan tum mevkiler).
-    const positions =
-      squad.target !== null ? squad.slots[side][squad.target]?.pos || '' : remainingPositions(side).join(',');
-    const cfg = draftCfg();
-    const params = new URLSearchParams({ [cfg.searchKey]: squad.entity.key, positions, limit: '60' });
-    if (q) params.set('q', q);
+    const params = squadSearchParams(side, q);
     try {
       const res = await fetch(`/api/players/search?${params}`);
       const data = await res.json();
@@ -1971,10 +2021,7 @@ async function resolveCurrentPick(side) {
   const input = $(`#sq-input-${side}`);
   const text = input.value.trim();
   if (!text) return null;
-  const positions =
-    squad.target !== null ? squad.slots[side][squad.target]?.pos || '' : remainingPositions(side).join(',');
-  const cfg = draftCfg();
-  const params = new URLSearchParams({ [cfg.searchKey]: squad.entity.key, positions, q: text });
+  const params = squadSearchParams(side, text);
   try {
     const res = await fetch(`/api/players/search?${params}`);
     const first = (await res.json()).results?.find((r) => !squad.usedIds.has(r.id));
@@ -2016,13 +2063,14 @@ async function squadSend() {
     return;
   }
 
-  // Hedef slot bos ve secilen oyuncunun bolgesiyle uyumlu olmali.
+  // Hedef slot bos ve secilen oyuncunun mevkisiyle uyumlu olmali.
+  const playerKey = squad.length === 'long' ? st.key ?? st.slot : st.slot;
   const target = squad.slots[side][squad.target];
-  if (!target || target.filled || target.pos !== st.slot) {
-    // Uyumlu degilse: oyuncunun bolgesine ait bos slot var mi bul.
-    const alt = squad.slots[side].findIndex((s) => !s.filled && s.pos === st.slot);
+  if (!target || target.filled || (target.key ?? target.pos) !== playerKey) {
+    // Uyumlu degilse: oyuncunun mevkisine ait bos slot var mi bul.
+    const alt = squad.slots[side].findIndex((s) => !s.filled && (s.key ?? s.pos) === playerKey);
     if (alt < 0) {
-      toast(`${POS_LABEL[st.slot] || st.slot || 'Bu mevki'} için boş yer yok, başka oyuncu seç.`, 2600);
+      toast(`${slotLabelOf(playerKey) || 'Bu mevki'} için boş yer yok, başka oyuncu seç.`, 2600);
       setPrimarySquad('GÖNDER', 'squad-send');
       return;
     }
@@ -2363,6 +2411,7 @@ function applyOnlineSlots(slots) {
   const map = (arr) =>
     (arr || []).map((s) => ({
       pos: s.pos,
+      key: s.key ?? s.pos,
       filled: s.filled,
       player: s.player
         ? { ...s.player, value: s.player.caps ?? s.player.goals ?? s.player.fee ?? 0 }
@@ -2377,10 +2426,10 @@ function refreshUsedIdsFromSlots() {
     for (const s of arr) if (s.filled && s.player && s.player.id != null) squad.usedIds.add(s.player.id);
 }
 
-async function onOnlineSquadRound({ country, formation, round, turnId, slots, scores, room }) {
+async function onOnlineSquadRound({ country, formation, length, round, turnId, slots, scores, room }) {
   $('#online-dice').hidden = true;
   online.mode = 'squad';
-  setSquadMode('squad');
+  setSquadMode('squad', length);
   online.active = true;
   online.isHost = room.hostId === online.youId;
   online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
@@ -2389,6 +2438,7 @@ async function onOnlineSquadRound({ country, formation, round, turnId, slots, sc
   squad.formation = formation;
   squad.entity = draftCfg().normalize(country);
   squad.over = false;
+  squad.reel = []; // uzun/kısa değişiminde eski havuz kalmasın
   squad.pick = [null, null];
   squad.target = null;
   applyOnlineSlots(slots);
@@ -2509,10 +2559,10 @@ function onOnlineSquadPlaced({ by, player, slots, scores, timeout }) {
 }
 
 // ================= ONLINE — SÜPER LİG GOL =================
-async function onOnlineSuperligRound({ team, formation, round, turnId, slots, scores, room }) {
+async function onOnlineSuperligRound({ team, formation, length, round, turnId, slots, scores, room }) {
   $('#online-dice').hidden = true;
   online.mode = 'superlig';
-  setSquadMode('superlig');
+  setSquadMode('superlig', length);
   online.active = true;
   online.isHost = room.hostId === online.youId;
   online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
@@ -2521,6 +2571,7 @@ async function onOnlineSuperligRound({ team, formation, round, turnId, slots, sc
   squad.formation = formation;
   squad.entity = draftCfg().normalize(team);
   squad.over = false;
+  squad.reel = [];
   squad.pick = [null, null];
   squad.target = null;
   applyOnlineSlots(slots);
@@ -2637,10 +2688,10 @@ function onOnlineSuperligPlaced({ by, player, slots, scores, timeout }) {
 }
 
 // ================= ONLINE — BONSERVİS AVI =================
-async function onOnlineMarketRound({ team, formation, round, turnId, slots, scores, room }) {
+async function onOnlineMarketRound({ team, formation, length, round, turnId, slots, scores, room }) {
   $('#online-dice').hidden = true;
   online.mode = 'market';
-  setSquadMode('market');
+  setSquadMode('market', length);
   online.active = true;
   online.isHost = room.hostId === online.youId;
   online.oppId = room.players.find((p) => p.id !== online.youId)?.id ?? null;
@@ -2649,6 +2700,7 @@ async function onOnlineMarketRound({ team, formation, round, turnId, slots, scor
   squad.formation = formation;
   squad.entity = draftCfg().normalize(team);
   squad.over = false;
+  squad.reel = [];
   squad.pick = [null, null];
   squad.target = null;
   applyOnlineSlots(slots);

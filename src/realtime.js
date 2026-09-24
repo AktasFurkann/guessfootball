@@ -2,12 +2,12 @@ import { Server } from 'socket.io';
 import { GAME_ROWS, rowsMeta } from './game/rows.js';
 import { pickRandomGamePlayer, poolFilter } from './game/roundData.js';
 import { COMPARE_ROWS, compareValues } from './game/compare.js';
-import { FORMATION, randomCountry, listCountries, nationalCaps } from './game/squad.js';
-import { FORMATION as SUPERLIG_FORMATION, randomSuperligTeam, listSuperligTeams, superligGoals } from './game/superlig.js';
+import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from './game/squad.js';
+import { getFormation as getSuperligFormation, randomSuperligTeam, listSuperligTeams, superligGoals } from './game/superlig.js';
 import { latestSuperligClub, isSuperligActive } from './game/superligTeams.js';
-import { FORMATION as MARKET_FORMATION, randomMarketTeam, listMarketTeams } from './game/market.js';
+import { getFormation as getMarketFormation, randomMarketTeam, listMarketTeams } from './game/market.js';
 import { marketClubOf, marketFee } from './game/marketLogic.js';
-import { slotOf } from './game/positions.js';
+import { slotOf, longSlotOf } from './game/positions.js';
 import { ensurePlayer } from './game/ensurePlayer.js';
 import { players } from './db.js';
 
@@ -42,6 +42,7 @@ function publicRoom(room) {
     hostId: room.hostId,
     phase: room.phase,
     mode: room.mode,
+    length: room.length,
     players: [...room.players.entries()].map(([id, p]) => ({ id, name: p.name, score: p.score })),
   };
 }
@@ -54,11 +55,18 @@ const sanitizeName = (name, fallback) => String(name ?? '').trim().slice(0, 12) 
 const ids = (room) => [...room.players.keys()];
 const otherId = (room, id) => ids(room).find((x) => x !== id);
 
+/** Diziliş slotunun eşleme anahtarı (kısa: bölge, uzun: tam pozisyon). */
+const slotKeyOf = (slot) => slot.key ?? slot.pos;
+
+/** Oyuncunun dizilişte denk geldiği anahtar (oyun uzunluğuna göre). */
+const playerSlotKeyOf = (room, doc) =>
+  room.length === 'long' ? longSlotOf(doc?.position?.name) : slotOf(doc?.position?.name);
+
 export function attachRealtime(httpServer) {
   const io = new Server(httpServer);
 
   io.on('connection', (socket) => {
-    socket.on('room:create', ({ name, mode } = {}, ack) => {
+    socket.on('room:create', ({ name, mode, length } = {}, ack) => {
       leaveCurrentRoom(socket);
       const code = generateCode();
       const room = {
@@ -66,6 +74,7 @@ export function attachRealtime(httpServer) {
         hostId: socket.id,
         players: new Map(),
         mode: MODES.has(mode) ? mode : 'closest',
+        length: length === 'long' ? 'long' : 'short',
         phase: 'lobby',
         // ortak
         usedIds: new Set(),
@@ -99,7 +108,7 @@ export function attachRealtime(httpServer) {
       rooms.set(code, room);
       socket.data.roomCode = code;
       socket.join(code);
-      ack?.({ ok: true, code, youId: socket.id, mode: room.mode });
+      ack?.({ ok: true, code, youId: socket.id, mode: room.mode, length: room.length });
       io.to(code).emit('room:update', publicRoom(room));
     });
 
@@ -113,7 +122,7 @@ export function attachRealtime(httpServer) {
       room.players.set(socket.id, { name: sanitizeName(name, 'Oyuncu 2'), score: 0 });
       socket.data.roomCode = room.code;
       socket.join(room.code);
-      ack?.({ ok: true, code: room.code, youId: socket.id, mode: room.mode });
+      ack?.({ ok: true, code: room.code, youId: socket.id, mode: room.mode, length: room.length });
       io.to(room.code).emit('room:update', publicRoom(room));
     });
 
@@ -544,7 +553,7 @@ function squadTimeout(io, room, sid) {
   const idx = myslots.findIndex((s) => !s.filled);
   const empty = { id: null, name: 'SÜRE DOLDU', caps: 0, portraitUrl: null, timeout: true };
   if (idx >= 0) {
-    myslots[idx] = { pos: myslots[idx].pos, filled: true, player: empty };
+    myslots[idx] = { pos: myslots[idx].pos, key: myslots[idx].key ?? myslots[idx].pos, filled: true, player: empty };
   }
   room.placed.set(sid, true);
   io.to(room.code).emit('squad:placed', {
@@ -582,7 +591,12 @@ async function startSquadRound(io, room, firstRound = false) {
   clearTurnTimer(room);
   if (firstRound) {
     // ilk tur: kadrolari sifirla
-    room.slots = new Map(ids(room).map((id) => [id, FORMATION.map((f) => ({ pos: f.pos, filled: false, player: null }))]));
+    room.slots = new Map(
+      ids(room).map((id) => [
+        id,
+        getSquadFormation(room.length).map((f) => ({ pos: f.pos, key: f.key ?? f.pos, filled: false, player: null })),
+      ]),
+    );
     room.usedCountries = new Set();
     room.round = 0;
   } else {
@@ -591,8 +605,8 @@ async function startSquadRound(io, room, firstRound = false) {
 
   let country;
   try {
-    const eligible = (await listCountries()).filter((c) => !room.usedCountries.has(c.country));
-    country = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomCountry();
+    const eligible = (await listCountries(room.length)).filter((c) => !room.usedCountries.has(c.country));
+    country = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomCountry(room.length);
   } catch {
     country = null;
   }
@@ -607,7 +621,8 @@ async function startSquadRound(io, room, firstRound = false) {
 
   io.to(room.code).emit('squad:round', {
     country,
-    formation: FORMATION,
+    formation: getSquadFormation(room.length),
+    length: room.length,
     round: room.round,
     turnId: currentTurnId(room),
     slots: publicSlots(room),
@@ -622,7 +637,7 @@ const publicSlots = (room) =>
   Object.fromEntries(
     [...room.slots.entries()].map(([id, arr]) => [
       id,
-      arr.map((s) => ({ pos: s.pos, filled: s.filled, player: s.player })),
+      arr.map((s) => ({ pos: s.pos, key: s.key ?? s.pos, filled: s.filled, player: s.player })),
     ]),
   );
 
@@ -642,13 +657,13 @@ async function squadPlace(io, room, sid, playerId, slotIdx) {
 
   const caps = await nationalCaps(doc, room.country.country);
   if (caps < 1) return io.to(sid).emit('game:error', { message: 'Bu oyuncu bu ülke için uygun değil.' });
-  const slot = slotOf(doc.position?.name);
+  const key = playerSlotKeyOf(room, doc);
   const myslots = room.slots.get(sid);
 
   // Hedef slot (tiklanan) uygun mu; degilse ayni bolgede bos slot bul.
   let idx = Number(slotIdx);
-  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || myslots[idx].pos !== slot) {
-    idx = myslots.findIndex((s) => !s.filled && s.pos === slot);
+  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || slotKeyOf(myslots[idx]) !== key) {
+    idx = myslots.findIndex((s) => !s.filled && slotKeyOf(s) === key);
   }
   if (idx < 0) return io.to(sid).emit('game:error', { message: 'Bu mevki için boş yer yok.' });
 
@@ -687,7 +702,7 @@ function superligTimeout(io, room, sid) {
   const idx = myslots.findIndex((s) => !s.filled);
   const empty = { id: null, name: 'SÜRE DOLDU', goals: 0, portraitUrl: null, timeout: true };
   if (idx >= 0) {
-    myslots[idx] = { pos: myslots[idx].pos, filled: true, player: empty };
+    myslots[idx] = { pos: myslots[idx].pos, key: myslots[idx].key ?? myslots[idx].pos, filled: true, player: empty };
   }
   room.placed.set(sid, true);
   io.to(room.code).emit('superlig:placed', {
@@ -722,7 +737,12 @@ function superligAdvanceAfterPlace(io, room, sid) {
 async function startSuperligRound(io, room, firstRound = false) {
   clearTurnTimer(room);
   if (firstRound) {
-    room.slots = new Map(ids(room).map((id) => [id, SUPERLIG_FORMATION.map((f) => ({ pos: f.pos, filled: false, player: null }))]));
+    room.slots = new Map(
+      ids(room).map((id) => [
+        id,
+        getSuperligFormation(room.length).map((f) => ({ pos: f.pos, key: f.key ?? f.pos, filled: false, player: null })),
+      ]),
+    );
     room.usedTeams = new Set();
     room.round = 0;
   } else {
@@ -731,8 +751,8 @@ async function startSuperligRound(io, room, firstRound = false) {
 
   let team;
   try {
-    const eligible = (await listSuperligTeams()).filter((t) => !room.usedTeams.has(t.id));
-    team = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomSuperligTeam();
+    const eligible = (await listSuperligTeams(room.length)).filter((t) => !room.usedTeams.has(t.id));
+    team = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomSuperligTeam(room.length);
   } catch {
     team = null;
   }
@@ -747,7 +767,8 @@ async function startSuperligRound(io, room, firstRound = false) {
 
   io.to(room.code).emit('superlig:round', {
     team,
-    formation: SUPERLIG_FORMATION,
+    formation: getSuperligFormation(room.length),
+    length: room.length,
     round: room.round,
     turnId: currentTurnId(room),
     slots: publicSlots(room),
@@ -778,12 +799,12 @@ async function superligPlace(io, room, sid, playerId, slotIdx) {
   }
 
   const goals = superligGoals(doc);
-  const slot = slotOf(doc.position?.name);
+  const key = playerSlotKeyOf(room, doc);
   const myslots = room.slots.get(sid);
 
   let idx = Number(slotIdx);
-  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || myslots[idx].pos !== slot) {
-    idx = myslots.findIndex((s) => !s.filled && s.pos === slot);
+  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || slotKeyOf(myslots[idx]) !== key) {
+    idx = myslots.findIndex((s) => !s.filled && slotKeyOf(s) === key);
   }
   if (idx < 0) return io.to(sid).emit('game:error', { message: 'Bu mevki için boş yer yok.' });
 
@@ -821,7 +842,7 @@ function marketTimeout(io, room, sid) {
   const idx = myslots.findIndex((s) => !s.filled);
   const empty = { id: null, name: 'SÜRE DOLDU', fee: 0, portraitUrl: null, timeout: true };
   if (idx >= 0) {
-    myslots[idx] = { pos: myslots[idx].pos, filled: true, player: empty };
+    myslots[idx] = { pos: myslots[idx].pos, key: myslots[idx].key ?? myslots[idx].pos, filled: true, player: empty };
   }
   room.placed.set(sid, true);
   io.to(room.code).emit('market:placed', {
@@ -856,7 +877,12 @@ function marketAdvanceAfterPlace(io, room, sid) {
 async function startMarketRound(io, room, firstRound = false) {
   clearTurnTimer(room);
   if (firstRound) {
-    room.slots = new Map(ids(room).map((id) => [id, MARKET_FORMATION.map((f) => ({ pos: f.pos, filled: false, player: null }))]));
+    room.slots = new Map(
+      ids(room).map((id) => [
+        id,
+        getMarketFormation(room.length).map((f) => ({ pos: f.pos, key: f.key ?? f.pos, filled: false, player: null })),
+      ]),
+    );
     room.usedMarketTeams = new Set();
     room.round = 0;
   } else {
@@ -865,8 +891,8 @@ async function startMarketRound(io, room, firstRound = false) {
 
   let team;
   try {
-    const eligible = (await listMarketTeams()).filter((t) => !room.usedMarketTeams.has(t.id));
-    team = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomMarketTeam();
+    const eligible = (await listMarketTeams(room.length)).filter((t) => !room.usedMarketTeams.has(t.id));
+    team = eligible.length ? eligible[Math.floor(Math.random() * eligible.length)] : await randomMarketTeam(room.length);
   } catch {
     team = null;
   }
@@ -881,7 +907,8 @@ async function startMarketRound(io, room, firstRound = false) {
 
   io.to(room.code).emit('market:round', {
     team,
-    formation: MARKET_FORMATION,
+    formation: getMarketFormation(room.length),
+    length: room.length,
     round: room.round,
     turnId: currentTurnId(room),
     slots: publicSlots(room),
@@ -913,12 +940,12 @@ async function marketPlace(io, room, sid, playerId, slotIdx) {
   const fee = marketFee(doc);
   if (fee == null) return io.to(sid).emit('game:error', { message: 'Bu oyuncunun bonservis verisi yok.' });
 
-  const slot = slotOf(doc.position?.name);
+  const key = playerSlotKeyOf(room, doc);
   const myslots = room.slots.get(sid);
 
   let idx = Number(slotIdx);
-  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || myslots[idx].pos !== slot) {
-    idx = myslots.findIndex((s) => !s.filled && s.pos === slot);
+  if (!Number.isInteger(idx) || !myslots[idx] || myslots[idx].filled || slotKeyOf(myslots[idx]) !== key) {
+    idx = myslots.findIndex((s) => !s.filled && slotKeyOf(s) === key);
   }
   if (idx < 0) return io.to(sid).emit('game:error', { message: 'Bu mevki için boş yer yok.' });
 
