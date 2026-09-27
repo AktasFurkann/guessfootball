@@ -99,6 +99,8 @@ function show(name) {
   for (const el of Object.values(screens)) el.classList.remove('is-active');
   screens[name].classList.add('is-active');
   if (name === 'game' || name === 'squad') currentGameScreen = name;
+  screens.game.classList.toggle('is-solo', isSolo && name === 'game');
+  screens.squad.classList.toggle('is-solo', isSolo && name === 'squad');
 }
 
 // ---- yardimcilar ----
@@ -337,14 +339,23 @@ function submitRow() {
 
   const rowEl = document.querySelector(`.row[data-index="${state.activeRow}"]`);
   const inputs = rowEl.querySelectorAll('input');
-  const filled = [clampNumber(inputs[0].value), clampNumber(inputs[1].value)];
 
-  // Iki oyuncu da tahmin girmeden diger satira gecilmez.
-  if (filled[0] == null || filled[1] == null) {
-    const missing = filled[0] == null ? 0 : 1;
-    toast(`${state.names[missing]} tahminini girmeli.`, 2200);
-    inputs[missing].focus();
-    return;
+  if (isSolo) {
+    if (clampNumber(inputs[0].value) == null) {
+      toast('Tahminini gir.', 1800);
+      inputs[0].focus();
+      return;
+    }
+  } else {
+    const filled = [clampNumber(inputs[0].value), clampNumber(inputs[1].value)];
+
+    // Iki oyuncu da tahmin girmeden diger satira gecilmez.
+    if (filled[0] == null || filled[1] == null) {
+      const missing = filled[0] == null ? 0 : 1;
+      toast(`${state.names[missing]} tahminini girmeli.`, 2200);
+      inputs[missing].focus();
+      return;
+    }
   }
 
   revealRow();
@@ -378,6 +389,20 @@ function revealRow() {
   }
 
   answerEl.textContent = row.format(truth, state.current.answers);
+
+  if (isSolo) {
+    const guess = clampNumber(inputs[0].value);
+    const cell = cells[0];
+    const diffEl = cell.querySelector('.row__diff');
+    if (guess == null) {
+      diffEl.textContent = '—';
+    } else {
+      const diff = Math.abs(guess - truth);
+      diffEl.textContent = diff === 0 ? 'tam isabet! 🎯' : `fark ${formatDiff(diff, row.key)}`;
+      if (diff === 0) cell.classList.add('is-win');
+    }
+    return;
+  }
 
   const guesses = [clampNumber(inputs[0].value), clampNumber(inputs[1].value)];
   const diffs = guesses.map((g) => (g == null ? Infinity : Math.abs(g - truth)));
@@ -415,6 +440,10 @@ function flashLeader() {
 }
 
 function announceRound() {
+  if (isSolo) {
+    toast('Bu oyuncu bitti.');
+    return;
+  }
   const [a, b] = state.roundWins;
   let msg;
   if (a === b) {
@@ -493,6 +522,10 @@ function requestNewGame() {
     toast('Yeni oyun isteği gönderildi. Rakip onaylayınca başlar.');
     return;
   }
+  if (isSolo) {
+    startLocalNewGame();
+    return;
+  }
   openNewGameConfirm();
 }
 
@@ -557,6 +590,9 @@ document.addEventListener('click', (event) => {
       break;
     case 'mode-local':
       startLocalGame();
+      break;
+    case 'mode-solo':
+      startSoloGame();
       break;
     case 'mode-online':
       openOnline(pendingGameMode, pendingGameLength);
@@ -741,6 +777,7 @@ const DRAFT_MODES = new Set(['squad', 'superlig', 'market']);
 let pendingGameMode = 'closest';
 let pendingGameLength = 'short';
 let currentLocalMode = 'closest';
+let isSolo = false;
 
 function chooseGame(mode) {
   pendingGameMode = MODE_TITLES[mode] ? mode : 'closest';
@@ -761,6 +798,16 @@ function chooseLength(length) {
 }
 
 function startLocalGame() {
+  isSolo = false;
+  if (pendingGameMode === 'compare') startCompareGame();
+  else if (pendingGameMode === 'squad') startSquadGame(pendingGameLength);
+  else if (pendingGameMode === 'superlig') startSuperligGame(pendingGameLength);
+  else if (pendingGameMode === 'market') startMarketGame(pendingGameLength);
+  else startClosestGame();
+}
+
+function startSoloGame() {
+  isSolo = true;
   if (pendingGameMode === 'compare') startCompareGame();
   else if (pendingGameMode === 'squad') startSquadGame(pendingGameLength);
   else if (pendingGameMode === 'superlig') startSuperligGame(pendingGameLength);
@@ -973,6 +1020,7 @@ function connectSocket() {
 }
 
 function openOnline(mode = 'closest', length = 'short') {
+  isSolo = false;
   online.mode = ['closest', 'compare', 'squad', 'superlig', 'market'].includes(mode) ? mode : 'closest';
   online.length = length === 'long' ? 'long' : 'short';
   connectSocket();
@@ -1328,6 +1376,10 @@ function setCompareActiveRow(index) {
     if (i === index) {
       rowEl.classList.add('is-active');
       inputs.forEach((inp, side) => {
+        if (isSolo && side === 1) {
+          inp.disabled = true;
+          return;
+        }
         inp.disabled = false;
         inp.value = '';
         attachAutocomplete(inp, side);
@@ -1439,6 +1491,60 @@ async function resolvePick(side) {
 
 async function compareSubmit() {
   if (compare.revealed || !compare.center) return;
+
+  if (isSolo) {
+    const p0 = await resolvePick(0);
+    if (!p0) {
+      toast('Bir oyuncu ismi yaz.', 2200);
+      document
+        .querySelector(`#rows .row[data-index="${compare.activeRow}"] .row__cell[data-side="0"] input`)
+        ?.focus();
+      return;
+    }
+
+    setPrimary('AÇILIYOR…', 'compare-guess', true);
+    let s0;
+    try {
+      s0 = await fetchCompareStats(p0.id);
+    } catch (err) {
+      toast(`Hata: ${err.message}`);
+      setPrimary('GÖSTER', 'compare-guess');
+      return;
+    }
+
+    const row = compare.rows[compare.activeRow];
+    const key = row.key;
+    const target = compare.center.values[key];
+    const rowEl = document.querySelector(`#rows .row[data-index="${compare.activeRow}"]`);
+    const cells = rowEl.querySelectorAll('.row__cell');
+    const inputs = rowEl.querySelectorAll('input');
+
+    rowEl.classList.remove('is-active');
+    rowEl.classList.add('is-done');
+    rowEl.querySelector('[data-answer]').textContent = compareFormat(key, target);
+    for (const inp of inputs) inp.disabled = true;
+
+    const val = s0[key];
+    const cell = cells[0];
+    cell.querySelector('[data-name]').textContent = compareFormat(key, val);
+    const diffEl = cell.querySelector('.row__diff');
+    if (target == null || val == null) {
+      diffEl.textContent = '—';
+    } else {
+      const diff = Math.abs(val - target);
+      diffEl.textContent = diff === 0 ? 'tam isabet! 🎯' : compareDiffLabel(key, diff);
+      if (diff === 0) cell.classList.add('is-win');
+    }
+
+    compare.revealed = true;
+    if (compare.activeRow >= compare.rows.length - 1) {
+      toast('Oyuncu bitti.');
+      setPrimary('SONRAKİ OYUNCU ›', 'compare-next');
+    } else {
+      setCompareActiveRow(compare.activeRow + 1);
+    }
+    return;
+  }
 
   const [p0, p1] = await Promise.all([resolvePick(0), resolvePick(1)]);
   if (!p0 || !p1) {
@@ -1685,10 +1791,14 @@ async function startDraftGame(mode, length = 'short') {
 
   // Ekrani hemen ac + "Hazırlanıyor…" goster (ilk yuklemede indeks kurulabilir).
   show('squad');
-  $('#dice-title').textContent = 'Hazırlanıyor…';
-  $('#dice-result').textContent = 'İlk açılışta oyuncu veritabanı hazırlanıyor';
-  $('#dice-btn').hidden = true;
-  $('#sq-dice').hidden = false;
+  if (isSolo) {
+    $('#sq-dice').hidden = true;
+  } else {
+    $('#dice-title').textContent = 'Hazırlanıyor…';
+    $('#dice-result').textContent = 'İlk açılışta oyuncu veritabanı hazırlanıyor';
+    $('#dice-btn').hidden = true;
+    $('#sq-dice').hidden = false;
+  }
 
   const res = await fetch(cfg.formationUrl);
   squad.formation = (await res.json()).formation;
@@ -1698,7 +1808,7 @@ async function startDraftGame(mode, length = 'short') {
   } catch {
     squad.reel = [];
   }
-  $('#dice-btn').hidden = false;
+  if (!isSolo) $('#dice-btn').hidden = false;
   squad.slots = [0, 1].map(() =>
     squad.formation.map((f) => ({ pos: f.pos, key: f.key ?? f.pos, filled: false, player: null })),
   );
@@ -1707,9 +1817,14 @@ async function startDraftGame(mode, length = 'short') {
   squad.over = false;
   squad.usedIds = new Set();
   squad.usedEntities = new Set();
+  squad.starter = 0;
+  squad.turn = 0;
+  squad.placed = [false, false];
+  squad.pick = [null, null];
+  squad.target = null;
 
   $('#sq-name1').textContent = state.names[0];
-  $('#sq-name2').textContent = state.names[1];
+  $('#sq-name2').textContent = isSolo ? '' : state.names[1];
   updateSquadTotals(0, 0);
   $('#sq-total1').closest('.squad-total').classList.remove('is-winner', 'is-turn');
   $('#sq-total2').closest('.squad-total').classList.remove('is-winner', 'is-turn');
@@ -1717,7 +1832,11 @@ async function startDraftGame(mode, length = 'short') {
   renderPitch(0);
   renderPitch(1);
   show('squad');
-  openDice(); // once zar: kim baslayacak
+  if (isSolo) {
+    squadNextRound();
+  } else {
+    openDice(); // once zar: kim baslayacak
+  }
 }
 
 async function startSquadGame(length) {
@@ -1876,6 +1995,7 @@ async function squadNextRound() {
 
 /** Sirasi gelen oyuncunun girisini acar, digerini kilitler/soluklastirir. */
 function setTurnUI(side) {
+  if (isSolo) side = 0;
   squad.turn = side;
   [0, 1].forEach((s) => {
     const input = $(`#sq-input-${s}`);
@@ -2095,9 +2215,24 @@ async function squadSend() {
   renderPitch(side);
 
   updateSquadTotals(squad.totals[0], squad.totals[1]);
-  const tops = document.querySelectorAll('.squad-total');
-  tops.forEach((t) => t.classList.remove('is-winner'));
-  if (squad.totals[0] !== squad.totals[1]) tops[squad.totals[0] > squad.totals[1] ? 0 : 1].classList.add('is-winner');
+  if (!isSolo) {
+    const tops = document.querySelectorAll('.squad-total');
+    tops.forEach((t) => t.classList.remove('is-winner'));
+    if (squad.totals[0] !== squad.totals[1]) tops[squad.totals[0] > squad.totals[1] ? 0 : 1].classList.add('is-winner');
+  }
+
+  if (isSolo) {
+    $('#sq-turn').textContent = '';
+    const full = squad.slots[0].every((s) => s.filled);
+    if (full) {
+      squad.over = true;
+      toast(`Kadron tamam — Toplam: ${squadTotalText(squad.totals[0])} ${cfg.unit}`, 5000);
+      setPrimarySquad('YENİ OYUN', 'new-game');
+    } else {
+      setPrimarySquad(cfg.nextLabel, 'squad-next');
+    }
+    return;
+  }
 
   const other = 1 - side;
   if (!squad.placed[other]) {

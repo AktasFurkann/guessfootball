@@ -1130,3 +1130,32 @@ body {
 .toast[hidden] {
   display: none;
 }
+
+/* ================= TEK KİŞİLİK MOD ================= */
+/* Tahmin/kıyas tahtasında rakip sütunu ve skor kartları gizlenir. */
+.screen--game.is-solo .scorecard {
+  display: none;
+}
+.screen--game.is-solo .board__top .hero {
+  grid-column: 2;
+}
+.screen--game.is-solo .row__cell[data-side='1'] {
+  display: none;
+}
+
+/* Kadro modunda rakip tahtası, girişi ve skoru gizlenir. */
+.screen--squad.is-solo #sq-card-1 {
+  display: none;
+}
+.screen--squad.is-solo .pitches {
+  grid-template-columns: 1fr;
+}
+.screen--squad.is-solo #sq-pitch-1 {
+  display: none;
+}
+.screen--squad.is-solo .squad-controls {
+  grid-template-columns: 1fr auto;
+}
+.screen--squad.is-solo .sq-input-wrap[data-side='1'] {
+  display: none;
+}
