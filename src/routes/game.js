@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { players } from '../db.js';
-import { pickRandomGamePlayer, poolFilter } from '../game/roundData.js';
+import { pickRandomGamePlayer, gamePoolFilter } from '../game/roundData.js';
+import { GAME_POOLS } from '../game/pool.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
 import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
 import { getFormation as getSuperligFormation, randomSuperligTeam, listSuperligTeams, superligGoals } from '../game/superlig.js';
@@ -22,7 +23,7 @@ const lengthOf = (req) => (req.query.length === 'long' ? 'long' : 'short');
  */
 gameRouter.get('/random', async (req, res, next) => {
   try {
-    const pool = ['famous', 'stars', 'all'].includes(req.query.pool) ? req.query.pool : 'famous';
+    const pool = GAME_POOLS.has(req.query.pool) ? req.query.pool : 'famous';
     const player = await pickRandomGamePlayer({ pool });
     if (!player) {
       return res.status(404).json({
@@ -41,10 +42,10 @@ gameRouter.get('/random', async (req, res, next) => {
  */
 gameRouter.get('/compare/random', async (req, res, next) => {
   try {
-    const pool = ['famous', 'stars', 'all'].includes(req.query.pool) ? req.query.pool : 'famous';
-    const [player] = await players()
-      .aggregate([{ $match: poolFilter(pool) }, { $sample: { size: 1 } }])
-      .toArray();
+    const pool = GAME_POOLS.has(req.query.pool) ? req.query.pool : 'famous';
+    const filter = await gamePoolFilter(pool);
+    if (!filter) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
+    const [player] = await players().aggregate([{ $match: filter }, { $sample: { size: 1 } }]).toArray();
     if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
 
     res.json({

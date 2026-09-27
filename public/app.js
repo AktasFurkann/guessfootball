@@ -83,6 +83,7 @@ function saveSettings() {
 const screens = {
   menu: document.getElementById('screen-menu'),
   select: document.getElementById('screen-select'),
+  pool: document.getElementById('screen-pool'),
   length: document.getElementById('screen-length'),
   mode: document.getElementById('screen-mode'),
   online: document.getElementById('screen-online'),
@@ -105,6 +106,11 @@ function show(name) {
 
 // ---- yardimcilar ----
 const $ = (sel) => document.querySelector(sel);
+const imgUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('/') || url.startsWith('data:')) return url;
+  return `/api/img?url=${encodeURIComponent(url)}`;
+};
 const clampNumber = (raw) => {
   const cleaned = String(raw).replace(',', '.').replace(/[^0-9.]/g, '');
   if (cleaned === '') return null; // bos girdi: 0 degil, "tahmin yok"
@@ -317,7 +323,7 @@ async function nextRound() {
   setPrimary('YÜKLENİYOR…', 'reveal-row', true);
 
   try {
-    const res = await fetch('/api/game/random');
+    const res = await fetch(`/api/game/random?pool=${encodeURIComponent(currentPool)}`);
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
     state.current = await res.json();
   } catch (err) {
@@ -331,7 +337,7 @@ async function nextRound() {
 
   $('#hero-name').textContent = state.current.name;
   const photo = $('#hero-photo');
-  photo.src = state.current.portraitUrl || '';
+  photo.src = imgUrl(state.current.portraitUrl);
   photo.alt = state.current.name;
 
   renderRows();
@@ -468,8 +474,9 @@ function announceRound() {
 }
 
 // ---- oyunu baslat ----
-function startClosestGame() {
+function startClosestGame(pool = 'famous') {
   currentLocalMode = 'closest';
+  currentPool = ['legends', 'superlig', 'big5', 'all', 'famous', 'stars'].includes(pool) ? pool : 'famous';
   if (state.resetOnNewGame) {
     state.scores = [0, 0];
     state.round = 0;
@@ -576,11 +583,11 @@ function voteLocalNewGame(side) {
 
 function startLocalNewGame() {
   closeNewGameConfirm();
-  if (currentLocalMode === 'compare') startCompareGame();
+  if (currentLocalMode === 'compare') startCompareGame(currentPool);
   else if (currentLocalMode === 'squad') startSquadGame(squad.length);
   else if (currentLocalMode === 'superlig') startSuperligGame(squad.length);
   else if (currentLocalMode === 'market') startMarketGame(squad.length);
-  else startClosestGame();
+  else startClosestGame(currentPool);
 }
 
 // ---- olay yonlendirme ----
@@ -600,6 +607,9 @@ document.addEventListener('click', (event) => {
     case 'choose-length':
       chooseLength(target.dataset.length);
       break;
+    case 'choose-pool':
+      choosePool(target.dataset.pool);
+      break;
     case 'mode-local':
       startLocalGame();
       break;
@@ -607,7 +617,7 @@ document.addEventListener('click', (event) => {
       startSoloGame();
       break;
     case 'mode-online':
-      openOnline(pendingGameMode, pendingGameLength);
+      openOnline(pendingGameMode, pendingGameLength, pendingGamePool);
       break;
     case 'online-dice-roll':
       online.socket?.emit('dice:roll');
@@ -790,6 +800,8 @@ let pendingGameMode = 'closest';
 let pendingGameLength = 'short';
 let currentLocalMode = 'closest';
 let isSolo = false;
+let pendingGamePool = 'legends';
+let currentPool = 'famous';
 
 function chooseGame(mode) {
   pendingGameMode = MODE_TITLES[mode] ? mode : 'closest';
@@ -798,9 +810,15 @@ function chooseGame(mode) {
     $('#length-title').textContent = MODE_TITLES[pendingGameMode];
     show('length');
   } else {
-    $('#mode-title').textContent = MODE_TITLES[pendingGameMode];
-    show('mode');
+    $('#pool-title').textContent = MODE_TITLES[pendingGameMode];
+    show('pool');
   }
+}
+
+function choosePool(pool) {
+  pendingGamePool = ['legends', 'superlig', 'big5', 'all'].includes(pool) ? pool : 'legends';
+  $('#mode-title').textContent = MODE_TITLES[pendingGameMode];
+  show('mode');
 }
 
 function chooseLength(length) {
@@ -811,20 +829,20 @@ function chooseLength(length) {
 
 function startLocalGame() {
   isSolo = false;
-  if (pendingGameMode === 'compare') startCompareGame();
+  if (pendingGameMode === 'compare') startCompareGame(pendingGamePool);
   else if (pendingGameMode === 'squad') startSquadGame(pendingGameLength);
   else if (pendingGameMode === 'superlig') startSuperligGame(pendingGameLength);
   else if (pendingGameMode === 'market') startMarketGame(pendingGameLength);
-  else startClosestGame();
+  else startClosestGame(pendingGamePool);
 }
 
 function startSoloGame() {
   isSolo = true;
-  if (pendingGameMode === 'compare') startCompareGame();
+  if (pendingGameMode === 'compare') startCompareGame(pendingGamePool);
   else if (pendingGameMode === 'squad') startSquadGame(pendingGameLength);
   else if (pendingGameMode === 'superlig') startSuperligGame(pendingGameLength);
   else if (pendingGameMode === 'market') startMarketGame(pendingGameLength);
-  else startClosestGame();
+  else startClosestGame(pendingGamePool);
 }
 
 // ================= ONLINE MOD =================
@@ -832,6 +850,7 @@ const online = {
   socket: null,
   mode: 'closest',
   length: 'short',
+  pool: 'famous',
   roomCode: null,
   youId: null,
   oppId: null,
@@ -1031,10 +1050,11 @@ function connectSocket() {
   return socket;
 }
 
-function openOnline(mode = 'closest', length = 'short') {
+function openOnline(mode = 'closest', length = 'short', pool = 'famous') {
   isSolo = false;
   online.mode = ['closest', 'compare', 'squad', 'superlig', 'market'].includes(mode) ? mode : 'closest';
   online.length = length === 'long' ? 'long' : 'short';
+  online.pool = ['legends', 'superlig', 'big5', 'all', 'famous', 'stars'].includes(pool) ? pool : 'famous';
   connectSocket();
   online.active = false;
   $('#online-entry').hidden = false;
@@ -1049,7 +1069,7 @@ function openOnline(mode = 'closest', length = 'short') {
 
 function onlineCreate() {
   const name = $('#online-name').value.trim() || 'Oyuncu 1';
-  connectSocket().emit('room:create', { name, mode: online.mode, length: online.length }, (res) => {
+  connectSocket().emit('room:create', { name, mode: online.mode, length: online.length, pool: online.pool }, (res) => {
     if (!res?.ok) return ($('#online-hint').textContent = res?.error || 'Oda kurulamadı.');
     online.roomCode = res.code;
     online.youId = res.youId;
@@ -1139,7 +1159,7 @@ function onOnlineRound({ player, rows, room }) {
 
   $('#hero-name').textContent = player.name;
   const photo = $('#hero-photo');
-  photo.src = player.portraitUrl || '';
+  photo.src = imgUrl(player.portraitUrl);
   photo.alt = player.name;
 
   renderRows(online.rows);
@@ -1304,8 +1324,9 @@ async function fetchCompareStats(id) {
   return data.values;
 }
 
-async function startCompareGame() {
+async function startCompareGame(pool = 'famous') {
   currentLocalMode = 'compare';
+  currentPool = ['legends', 'superlig', 'big5', 'all', 'famous', 'stars'].includes(pool) ? pool : 'famous';
   if (state.resetOnNewGame) {
     state.scores = [0, 0];
     state.round = 0;
@@ -1319,7 +1340,7 @@ async function startCompareGame() {
 async function compareNextRound() {
   setPrimary('YÜKLENİYOR…', 'compare-guess', true);
   try {
-    const res = await fetch('/api/game/compare/random');
+    const res = await fetch(`/api/game/compare/random?pool=${encodeURIComponent(currentPool)}`);
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
     compare.center = await res.json();
   } catch (err) {
@@ -1339,7 +1360,7 @@ async function compareNextRound() {
 
   $('#hero-name').textContent = compare.center.name;
   const photo = $('#hero-photo');
-  photo.src = compare.center.portraitUrl || '';
+  photo.src = imgUrl(compare.center.portraitUrl);
   photo.alt = compare.center.name;
 
   renderCompareRows();
@@ -1723,7 +1744,7 @@ function spinEntity(finalEntity) {
     flag.classList.toggle('is-crest', squad.mode !== 'squad');
     const reel = squad.reel.length ? squad.reel : [finalEntity];
     if (reel.length < 2) {
-      flag.src = finalEntity.image || '';
+      flag.src = imgUrl(finalEntity.image);
       nameEl.textContent = finalEntity.name;
       return resolve();
     }
@@ -1731,7 +1752,7 @@ function spinEntity(finalEntity) {
     const start = Date.now();
     const tick = () => {
       const r = reel[Math.floor(Math.random() * reel.length)];
-      flag.src = r.image || '';
+      flag.src = imgUrl(r.image);
       nameEl.textContent = r.name;
       if (Date.now() - start < 2000) {
         // Hizli baslar, sona dogru yavaslar (daha "cark" hissi).
@@ -1739,7 +1760,7 @@ function spinEntity(finalEntity) {
         setTimeout(tick, 60 + t * t * 160);
       } else {
         flag.classList.remove('is-spinning');
-        flag.src = finalEntity.image || '';
+        flag.src = imgUrl(finalEntity.image);
         nameEl.textContent = finalEntity.name;
         resolve();
       }
@@ -1950,7 +1971,7 @@ function renderPitch(side) {
         el.innerHTML = slot.player.timeout
           ? `<div class="slot__circle">⏱</div><div class="slot__caps">0</div><div class="slot__name">SÜRE DOLDU</div>`
           : `
-            <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${slot.player.portraitUrl}" alt="">` : slotLabelOf(slot.key ?? slot.pos)}</div>
+            <div class="slot__circle">${slot.player.portraitUrl ? `<img src="${imgUrl(slot.player.portraitUrl)}" alt="">` : slotLabelOf(slot.key ?? slot.pos)}</div>
             <div class="slot__caps">${valueText}</div>
             <div class="slot__name">${shortName(slot.player.name)}</div>`;
       } else {
@@ -2310,7 +2331,7 @@ function onOnlineCompareRound({ player, rows, activeRow, turnId, room, scores })
 
   $('#hero-name').textContent = player.name;
   const photo = $('#hero-photo');
-  photo.src = player.portraitUrl || '';
+  photo.src = imgUrl(player.portraitUrl);
   photo.alt = player.name;
 
   renderOnlineCompareRows();

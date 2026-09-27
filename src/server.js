@@ -47,6 +47,43 @@ export function createApp() {
   app.use('/api/teams', teamsRouter);
   app.use('/api/game', gameRouter);
 
+  // Transfermarkt görselleri hotlink koruması yüzünden tarayıcıda kırılabiliyor;
+  // sunucu tarafında uygun başlıklarla çekip aynı origin'den sunuyoruz.
+  const IMAGE_HOSTS = new Set(['img.a.transfermarkt.technology', 'tmssl.akamaized.net']);
+  app.get('/api/img', async (req, res, next) => {
+    try {
+      const url = String(req.query.url || '');
+      let parsed;
+      try {
+        parsed = new URL(url);
+      } catch {
+        parsed = null;
+      }
+      if (!parsed || parsed.protocol !== 'https:' || !IMAGE_HOSTS.has(parsed.hostname)) {
+        return res.status(400).json({ error: 'Geçersiz görsel adresi.' });
+      }
+
+      const upstream = await fetch(url, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          Referer: 'https://www.transfermarkt.com.tr/',
+        },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!upstream.ok || !upstream.body) return res.status(502).end();
+
+      const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+      const body = Buffer.from(await upstream.arrayBuffer());
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Content-Length', body.length);
+      res.end(body);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // API disindaki bilinmeyen yollarda tek sayfalik arayuzu dondur.
   app.use('/api', (req, res) => {
     res.status(404).json({ error: `Bulunamadi: ${req.method} ${req.originalUrl}` });

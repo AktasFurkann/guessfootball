@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { GAME_ROWS, rowsMeta } from './game/rows.js';
-import { pickRandomGamePlayer, poolFilter } from './game/roundData.js';
+import { pickRandomGamePlayer, gamePoolFilter } from './game/roundData.js';
+import { GAME_POOLS } from './game/pool.js';
 import { COMPARE_ROWS, compareValues } from './game/compare.js';
 import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from './game/squad.js';
 import { getFormation as getSuperligFormation, randomSuperligTeam, listSuperligTeams, superligGoals } from './game/superlig.js';
@@ -66,7 +67,7 @@ export function attachRealtime(httpServer) {
   const io = new Server(httpServer);
 
   io.on('connection', (socket) => {
-    socket.on('room:create', ({ name, mode, length } = {}, ack) => {
+    socket.on('room:create', ({ name, mode, length, pool } = {}, ack) => {
       leaveCurrentRoom(socket);
       const code = generateCode();
       const room = {
@@ -75,6 +76,7 @@ export function attachRealtime(httpServer) {
         players: new Map(),
         mode: MODES.has(mode) ? mode : 'closest',
         length: length === 'long' ? 'long' : 'short',
+        pool: GAME_POOLS.has(pool) ? pool : 'famous',
         phase: 'lobby',
         // ortak
         usedIds: new Set(),
@@ -338,7 +340,7 @@ async function startClosestRound(io, room) {
   clearRowTimer(room);
   let picked;
   try {
-    picked = await pickRandomGamePlayer();
+    picked = await pickRandomGamePlayer({ pool: room.pool });
   } catch {
     picked = null;
   }
@@ -418,9 +420,9 @@ function startCompareTurnTimer(io, room) {
 
 async function startCompareRound(io, room, firstRound = false) {
   clearTurnTimer(room);
-  const [player] = await players()
-    .aggregate([{ $match: poolFilter('famous') }, { $sample: { size: 1 } }])
-    .toArray();
+  const filter = await gamePoolFilter(room.pool);
+  if (!filter) return io.to(room.code).emit('game:error', { message: 'Oyuncu bulunamadı.' });
+  const [player] = await players().aggregate([{ $match: filter }, { $sample: { size: 1 } }]).toArray();
   if (!player) return io.to(room.code).emit('game:error', { message: 'Oyuncu bulunamadı.' });
 
   if (!firstRound) room.starter ^= 1; // her yeni oyuncuda baslayan degisir
