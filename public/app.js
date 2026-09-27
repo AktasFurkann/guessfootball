@@ -180,6 +180,12 @@ function playTimesUp() {
   tone(523, 0, 0.16, { type: 'sawtooth', gain: 0.13 });
   tone(392, 0.17, 0.24, { type: 'sawtooth', gain: 0.13 });
 }
+/** Son 3 saniyeye girildiğinde çalan kısa "zırrr" zili. */
+function playBell() {
+  tone(988, 0, 0.16, { type: 'triangle', gain: 0.22 });
+  tone(1319, 0.14, 0.22, { type: 'triangle', gain: 0.22 });
+  tone(988, 0.3, 0.12, { type: 'triangle', gain: 0.16 });
+}
 
 const countdown = { id: null, remaining: 0, tick: 0, tickOn: false };
 
@@ -229,7 +235,13 @@ function startCountdown(seconds = TURN_SECONDS, { tick = false } = {}) {
     }
     setTurnTimer(countdown.remaining);
     if (!countdown.tickOn) return;
-    if (countdown.remaining <= 5) {
+    if (countdown.remaining === 3) playBell();
+    if (countdown.remaining <= 3) {
+      // Son 3 saniye: tik-tak iyice hızlansın.
+      tone(880, 0, 0.05, { type: 'square', gain: 0.09 });
+      tone(880, 0.22, 0.05, { type: 'square', gain: 0.09 });
+      tone(880, 0.44, 0.05, { type: 'square', gain: 0.09 });
+    } else if (countdown.remaining <= 5) {
       (countdown.tick % 2 === 0 ? playTock : playTick)();
     } else {
       playTick();
