@@ -360,6 +360,81 @@ body {
 .room-players li.is-empty::before {
   color: var(--muted);
 }
+.room-info {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---- bitis puani (tahmin / kiyas) ---- */
+.target-field {
+  margin: 20px 20px 0;
+}
+.field input[type='number'] {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  width: 120px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1320;
+  color: var(--accent);
+}
+.target-field small {
+  font-size: 0.8rem;
+}
+
+/* ---- sunucular (acik odalar) ---- */
+.server-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.server-list__empty {
+  padding: 18px;
+  border-radius: 12px;
+  background: #0f1320;
+  color: var(--muted);
+  text-align: center;
+}
+.server-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1d2233, #171b28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.server-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.server-card__title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.server-card__meta {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.server-card .btn {
+  flex: none;
+  font-size: 1.1rem;
+  padding: 10px 16px;
+}
 .row__cell.is-mine input {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(215, 255, 62, 0.25) inset;
@@ -430,6 +505,43 @@ body {
 .suggest li small {
   color: var(--muted);
   font-size: 0.72rem;
+}
+
+/* ================= MOD BİLGİ ÇUBUĞU ================= */
+/* Oyun ve kadro tahtasinin en ustunde: hangi mod, kac kisi, hangi havuz/uzunluk. */
+.mode-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: #0d1117;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: clamp(0.68rem, 2.6vw, 0.86rem);
+  line-height: 1;
+}
+.mode-bar span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.mode-bar__mode {
+  background: var(--accent);
+  color: var(--ink);
+}
+.mode-bar__players {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+}
+.mode-bar__detail {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: var(--muted);
 }
 
 /* ================= OYUN TAHTASI ================= */

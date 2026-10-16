@@ -13,7 +13,8 @@
     "test:online": "node test/realtime.test.js",
     "collect-ids": "node src/collectIds.js",
     "scrape-bulk": "node src/scrapeBulk.js",
-    "test:online-turn": "node test/realtime-turn.test.js"
+    "test:online-turn": "node test/realtime-turn.test.js",
+    "test:online-lobby": "node test/realtime-lobby.test.js"
   },
   "engines": {
     "node": ">=18"

@@ -8,11 +8,13 @@ import { connect, close, getDb } from './db.js';
 import { playersRouter } from './routes/players.js';
 import { teamsRouter } from './routes/teams.js';
 import { gameRouter } from './routes/game.js';
+import { imgRouter, prefetchImages } from './routes/img.js';
 import { attachRealtime } from './realtime.js';
 import { ensureIndex } from './game/searchIndex.js';
 import { listCountries } from './game/squad.js';
 import { listSuperligTeams } from './game/superlig.js';
 import { listMarketTeams } from './game/market.js';
+import { ensurePool } from './game/pool.js';
 
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -46,43 +48,7 @@ export function createApp() {
   app.use('/api/players', playersRouter);
   app.use('/api/teams', teamsRouter);
   app.use('/api/game', gameRouter);
-
-  // Transfermarkt görselleri hotlink koruması yüzünden tarayıcıda kırılabiliyor;
-  // sunucu tarafında uygun başlıklarla çekip aynı origin'den sunuyoruz.
-  const IMAGE_HOSTS = new Set(['img.a.transfermarkt.technology', 'tmssl.akamaized.net']);
-  app.get('/api/img', async (req, res, next) => {
-    try {
-      const url = String(req.query.url || '');
-      let parsed;
-      try {
-        parsed = new URL(url);
-      } catch {
-        parsed = null;
-      }
-      if (!parsed || parsed.protocol !== 'https:' || !IMAGE_HOSTS.has(parsed.hostname)) {
-        return res.status(400).json({ error: 'Geçersiz görsel adresi.' });
-      }
-
-      const upstream = await fetch(url, {
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          Referer: 'https://www.transfermarkt.com.tr/',
-        },
-        signal: AbortSignal.timeout(15_000),
-      });
-      if (!upstream.ok || !upstream.body) return res.status(502).end();
-
-      const contentType = upstream.headers.get('content-type') || 'image/jpeg';
-      const body = Buffer.from(await upstream.arrayBuffer());
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      res.setHeader('Content-Length', body.length);
-      res.end(body);
-    } catch (error) {
-      next(error);
-    }
-  });
+  app.use('/api/img', imgRouter);
 
   // API disindaki bilinmeyen yollarda tek sayfalik arayuzu dondur.
   app.use('/api', (req, res) => {
@@ -117,14 +83,24 @@ async function start() {
     console.log(`[server] http://localhost:${config.port} uzerinde dinleniyor`);
   });
 
-  // Arama indeksini ve ulke listesini ARKA PLANDA isit: ilk oyun (ozellikle
-  // Milli Kadro) 16k+ oyuncunun indeksini beklemesin, hizli baslasin.
+  // Arama indeksini, oyuncu havuzlarini ve bayrak/logo gorsellerini ARKA
+  // PLANDA isit: ilk oyun 16k+ oyuncunun taranmasini (~10-15 sn) beklemesin,
+  // bayrak carki da her bayragi Transfermarkt'tan tek tek cekmesin.
   const t0 = Date.now();
+  ensurePool()
+    .then(() => console.log(`[warm] Oyuncu havuzları hazır (${Date.now() - t0}ms)`))
+    .catch((err) => console.error('[warm] Havuz ısıtma hatası:', err.message));
   ensureIndex()
-    .then(() => listCountries())
-    .then(() => listSuperligTeams())
-    .then(() => listMarketTeams())
-    .then(() => console.log(`[warm] Arama indeksi hazır (${Date.now() - t0}ms)`))
+    .then(async () => {
+      const lists = [];
+      for (const length of ['short', 'long']) {
+        lists.push(await listCountries(length), await listSuperligTeams(length), await listMarketTeams(length));
+      }
+      console.log(`[warm] Arama indeksi hazır (${Date.now() - t0}ms)`);
+      const urls = lists.flat().map((item) => item.flag || item.crestUrl).filter(Boolean);
+      await prefetchImages(urls);
+      console.log(`[warm] ${new Set(urls).size} bayrak/logo önbellekte (${Date.now() - t0}ms)`);
+    })
     .catch((err) => console.error('[warm] Isıtma hatası:', err.message));
 
   const shutdown = async (signal) => {

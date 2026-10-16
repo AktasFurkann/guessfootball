@@ -233,6 +233,98 @@ async function run() {
     }
   });
 
+  console.log('--- oyuncu havuzlari ---');
+  await test('big5 havuzu yalnizca 5 buyuk ligde oynamis oyuncu verir', async () => {
+    const BIG5 = new Set(['İngiltere', 'İtalya', 'Fransa', 'İspanya', 'Almanya']);
+    for (let i = 0; i < 12; i += 1) {
+      const { status, body } = await get('/api/game/random?pool=big5');
+      assert.equal(status, 200);
+      const doc = playerDocs.find((player) => player._id === body.id);
+      assert.ok(doc, `secilen oyuncu fixture'da olmali: ${body.name}`);
+      assert.ok(
+        (doc.careerByClub || []).some((row) => !row.isNationalTeam && BIG5.has(row.countryName)),
+        `${doc.name} 5 buyuk ligde oynamis olmali`,
+      );
+    }
+  });
+
+  await test('efsane havuzu emekli ya da efsane agirliginda oyuncu verir', async () => {
+    // Emeklilik "su anki kulup" degil (toplu cekimde bos kaliyor), son mac
+    // tarihi uzerinden belirlenir. Hala oynayan biri ancak kariyeri zaten
+    // efsane agirligindaysa (bkz. pool.js LEGEND_MIN_*) havuza girer.
+    const TWO_YEARS_MS = 2 * 365.25 * 24 * 60 * 60 * 1000;
+    for (let i = 0; i < 12; i += 1) {
+      const { status, body } = await get('/api/game/random?pool=legends');
+      assert.equal(status, 200);
+      const doc = playerDocs.find((player) => player._id === body.id);
+      assert.ok(doc, `secilen oyuncu fixture'da olmali: ${body.name}`);
+
+      const last = Math.max(
+        ...(doc.careerByClub || []).map((row) => Date.parse(row.lastDate || '') || 0),
+      );
+      const retired = Date.now() - last > TWO_YEARS_MS;
+      const totals = doc.careerTotals ?? {};
+      const legendGrade =
+        (totals.games ?? 0) >= 400 ||
+        (totals.goals ?? 0) >= 160 ||
+        (doc.marketValue?.highest ?? 0) >= 40_000_000;
+
+      assert.ok(
+        retired || legendGrade,
+        `${doc.name} ne emekli ne efsane agirliginda (${totals.games} mac, ${totals.goals} gol)`,
+      );
+    }
+  });
+
+  await test('Türk efsaneleri havuzu yalnizca listedeki oyunculari verir', async () => {
+    const { TURKISH_LEGEND_IDS } = await import('../src/data/turkishLegends.js');
+    for (let i = 0; i < 12; i += 1) {
+      const { status, body } = await get('/api/game/random?pool=trlegends');
+      assert.equal(status, 200);
+      assert.ok(TURKISH_LEGEND_IDS.has(body.id), `${body.name} Türk efsaneleri listesinde olmali`);
+      assert.ok(body.portraitUrl, `${body.name} gorselsiz gelmemeli`);
+    }
+  });
+
+  await test('kiyas modu Türk efsaneleri havuzunu destekler', async () => {
+    const { TURKISH_LEGEND_IDS } = await import('../src/data/turkishLegends.js');
+    const { status, body } = await get('/api/game/compare/random?pool=trlegends');
+    assert.equal(status, 200);
+    assert.ok(TURKISH_LEGEND_IDS.has(body.id), `${body.name} listede olmali`);
+  });
+
+  await test('havuzlar gorselsiz oyuncu vermez', async () => {
+    for (const pool of ['legends', 'superlig', 'big5', 'all']) {
+      const { status, body } = await get(`/api/game/random?pool=${pool}`);
+      assert.equal(status, 200);
+      assert.ok(body.portraitUrl, `${pool}: ${body.name} gorselsiz`);
+    }
+  });
+
+  await test('bilinmeyen havuz varsayilana duser', async () => {
+    const { status, body } = await get('/api/game/random?pool=uyduruk');
+    assert.equal(status, 200);
+    assert.ok(body.id, 'oyuncu donmeli');
+  });
+
+  console.log('--- /api/img vekili ---');
+  await test('izin verilmeyen konak reddedilir', async () => {
+    const { status } = await get('/api/img?url=https%3A%2F%2Fexample.com%2Fa.png');
+    assert.equal(status, 400);
+  });
+
+  await test('gecersiz adres reddedilir', async () => {
+    const { status } = await get('/api/img?url=not-a-url');
+    assert.equal(status, 400);
+  });
+
+  await test('http (https olmayan) adres reddedilir', async () => {
+    const { status } = await get(
+      '/api/img?url=http%3A%2F%2Fimg.a.transfermarkt.technology%2Fportrait%2Fbig%2F1.jpg',
+    );
+    assert.equal(status, 400);
+  });
+
   console.log('--- otomatik tamamlama + kiyas ---');
   await test('isim aramasi sonuc doner (mes -> Messi)', async () => {
     const { status, body } = await get('/api/players/search?q=mes');

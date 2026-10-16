@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { GAME_ROWS, rowsMeta } from './game/rows.js';
-import { pickRandomGamePlayer, gamePoolFilter } from './game/roundData.js';
+import { pickRandomGamePlayer, pickPoolDoc } from './game/roundData.js';
 import { GAME_POOLS } from './game/pool.js';
 import { COMPARE_ROWS, compareValues } from './game/compare.js';
 import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from './game/squad.js';
@@ -10,7 +10,7 @@ import { getFormation as getMarketFormation, randomMarketTeam, listMarketTeams }
 import { marketClubOf, marketFee } from './game/marketLogic.js';
 import { slotOf, longSlotOf } from './game/positions.js';
 import { ensurePlayer } from './game/ensurePlayer.js';
-import { players } from './db.js';
+import { prefetchImages } from './routes/img.js';
 
 /**
  * Online oyun motoru - oda tabanli, iki oyunculu, sunucu-otoriter.
@@ -22,12 +22,33 @@ import { players } from './db.js';
  *  - superlig: "Süper Lig Gol" (zar + sirali, aktif Süper Lig takimindan kadro kur)
  * compare/squad turn-based: once zar (herkes kendi zarini atar), sonra sirayla;
  * bir oyuncu ismi bir oyunda tekrar kullanilamaz.
+ *
+ * closest/compare puanlamasi: satiri en yakin tahmin kazanir (+1), tam isabet
+ * +2 verir. Oyun, biri odanin bitis puanina (`target`, varsayilan 20) ulasinca
+ * biter.
  */
 
 const MAX_PLAYERS = 2;
 const MODES = new Set(['closest', 'compare', 'squad', 'superlig', 'market']);
 const TURN_SECONDS = 15;
+/** Satir puanlari: en yakin tahmin / tam isabet. */
+const WIN_POINTS = 1;
+const EXACT_POINTS = 2;
+/** closest/compare bitis puani (oda kurulurken host secer). */
+const DEFAULT_TARGET = 20;
+const MAX_TARGET = 999;
+/** Puanla biten modlar. */
+const SCORED_MODES = new Set(['closest', 'compare']);
+/** "Sunucular" listesini izleyen soketlerin Socket.IO odasi. */
+const BROWSER_ROOM = 'rooms:browser';
 const rooms = new Map();
+
+/** Istemciden gelen bitis puanini 1..MAX_TARGET araligina indirger. */
+function sanitizeTarget(raw) {
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_TARGET;
+  return Math.min(n, MAX_TARGET);
+}
 
 function generateCode() {
   let code;
@@ -44,8 +65,28 @@ function publicRoom(room) {
     phase: room.phase,
     mode: room.mode,
     length: room.length,
+    pool: room.pool,
+    target: room.target,
     players: [...room.players.entries()].map(([id, p]) => ({ id, name: p.name, score: p.score })),
   };
+}
+
+/** "Sunucular" ekrani icin katilinabilir odalarin ozeti. */
+function listOpenRooms() {
+  return [...rooms.values()]
+    .filter((room) => room.phase === 'lobby' && room.players.size < MAX_PLAYERS)
+    .map((room) => ({
+      code: room.code,
+      host: room.players.get(room.hostId)?.name ?? 'Oyuncu',
+      mode: room.mode,
+      length: room.length,
+      pool: room.pool,
+      target: room.target,
+      players: room.players.size,
+      maxPlayers: MAX_PLAYERS,
+      createdAt: room.createdAt,
+    }))
+    .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 const scoreMap = (room) =>
@@ -66,8 +107,20 @@ const playerSlotKeyOf = (room, doc) =>
 export function attachRealtime(httpServer) {
   const io = new Server(httpServer);
 
+  /** Oda listesi degisince "Sunucular" ekranindakileri guncelle. */
+  const broadcastRooms = () => io.to(BROWSER_ROOM).emit('rooms:list', { rooms: listOpenRooms() });
+
   io.on('connection', (socket) => {
-    socket.on('room:create', ({ name, mode, length, pool } = {}, ack) => {
+    // ---- sunucu (oda) listesi ----
+    socket.on('rooms:watch', (_payload, ack) => {
+      socket.join(BROWSER_ROOM);
+      const payload = { rooms: listOpenRooms() };
+      if (typeof ack === 'function') ack(payload);
+      else socket.emit('rooms:list', payload);
+    });
+    socket.on('rooms:unwatch', () => socket.leave(BROWSER_ROOM));
+
+    socket.on('room:create', ({ name, mode, length, pool, target } = {}, ack) => {
       leaveCurrentRoom(socket);
       const code = generateCode();
       const room = {
@@ -77,6 +130,8 @@ export function attachRealtime(httpServer) {
         mode: MODES.has(mode) ? mode : 'closest',
         length: length === 'long' ? 'long' : 'short',
         pool: GAME_POOLS.has(pool) ? pool : 'famous',
+        target: sanitizeTarget(target),
+        createdAt: Date.now(),
         phase: 'lobby',
         // ortak
         usedIds: new Set(),
@@ -84,6 +139,9 @@ export function attachRealtime(httpServer) {
         starter: 0,
         turn: null,
         round: 0,
+        // closest + compare: bir sonraki oyuncu onceden hazirlanir
+        nextPick: null,
+        gameOver: false,
         // closest
         current: null,
         activeRow: 0,
@@ -110,8 +168,19 @@ export function attachRealtime(httpServer) {
       rooms.set(code, room);
       socket.data.roomCode = code;
       socket.join(code);
-      ack?.({ ok: true, code, youId: socket.id, mode: room.mode, length: room.length });
+      ack?.({
+        ok: true,
+        code,
+        youId: socket.id,
+        mode: room.mode,
+        length: room.length,
+        pool: room.pool,
+        target: room.target,
+      });
       io.to(code).emit('room:update', publicRoom(room));
+      broadcastRooms();
+      // Rakip gelene kadar ilk oyuncuyu hazirla (baslat'a basinca bekleme olmasin).
+      if (SCORED_MODES.has(room.mode)) prepareNextPick(room);
     });
 
     socket.on('room:join', ({ code, name } = {}, ack) => {
@@ -124,15 +193,27 @@ export function attachRealtime(httpServer) {
       room.players.set(socket.id, { name: sanitizeName(name, 'Oyuncu 2'), score: 0 });
       socket.data.roomCode = room.code;
       socket.join(room.code);
-      ack?.({ ok: true, code: room.code, youId: socket.id, mode: room.mode, length: room.length });
+      ack?.({
+        ok: true,
+        code: room.code,
+        youId: socket.id,
+        mode: room.mode,
+        length: room.length,
+        pool: room.pool,
+        target: room.target,
+      });
       io.to(room.code).emit('room:update', publicRoom(room));
+      broadcastRooms();
     });
 
     socket.on('game:start', async () => {
       const room = rooms.get(socket.data.roomCode);
       if (!room || room.hostId !== socket.id) return;
       if (room.players.size < MAX_PLAYERS) return socket.emit('game:error', { message: 'Rakip bekleniyor.' });
+      if (room.phase !== 'lobby') return;
 
+      room.phase = 'starting'; // cift tiklamada iki kez baslamasin; listeden de duser
+      broadcastRooms();
       if (room.mode === 'closest') {
         await startClosestRound(io, room);
       } else {
@@ -152,7 +233,7 @@ export function attachRealtime(httpServer) {
     });
     socket.on('game:next', async () => {
       const room = rooms.get(socket.data.roomCode);
-      if (!room || room.hostId !== socket.id) return;
+      if (!room || room.hostId !== socket.id || room.gameOver) return;
       if (room.mode === 'closest') await startClosestRound(io, room);
     });
 
@@ -200,7 +281,7 @@ export function attachRealtime(httpServer) {
 
     socket.on('game:next-round', async () => {
       const room = rooms.get(socket.data.roomCode);
-      if (!room || room.hostId !== socket.id) return;
+      if (!room || room.hostId !== socket.id || room.gameOver) return;
       if (room.mode === 'compare') await startCompareRound(io, room);
       else if (room.mode === 'squad') await startSquadRound(io, room);
       else if (room.mode === 'superlig') await startSuperligRound(io, room);
@@ -230,12 +311,19 @@ export function attachRealtime(httpServer) {
     socket.leave(code);
     if (!room) return;
     room.players.delete(socket.id);
-    if (room.players.size === 0) return void rooms.delete(code);
+    if (room.players.size === 0) {
+      clearTurnTimer(room);
+      clearRowTimer(room);
+      rooms.delete(code);
+      return void broadcastRooms();
+    }
     if (room.hostId === socket.id) room.hostId = ids(room)[0];
     // Oyun ortasinda biri cikarsa lobiye don.
     resetRoomState(room);
+    for (const player of room.players.values()) player.score = 0;
     room.phase = 'lobby';
     io.to(code).emit('opponent:left', publicRoom(room));
+    broadcastRooms();
   }
 
   return io;
@@ -262,6 +350,8 @@ function resetRoomState(room) {
   room.usedMarketTeams = new Set();
   room.placed = new Map();
   room.newGameVotes = new Set();
+  room.nextPick = null;
+  room.gameOver = false;
 }
 
 /** İki oyuncu da yeni oyuna geçmek istediğinde odayı sıfırlayıp yeniden başlat. */
@@ -292,6 +382,58 @@ function clearRowTimer(room) {
     clearTimeout(room.rowTimer);
     room.rowTimer = null;
   }
+}
+
+// ================= SIRADAKI OYUNCU =================
+/** Moda gore havuzdan bir oyuncu secer (closest: cevaplariyla, compare: kiyas degerleriyle). */
+async function pickForRoom(room) {
+  if (room.mode === 'compare') {
+    const doc = await pickPoolDoc(room.pool);
+    return doc
+      ? { id: doc._id, name: doc.name, portraitUrl: doc.portraitUrl, values: compareValues(doc) }
+      : null;
+  }
+  return pickRandomGamePlayer({ pool: room.pool });
+}
+
+/**
+ * Bir sonraki oyuncuyu arka planda secer ve portresini gorsel onbellegine
+ * alir; tur gecisinde ne veritabani ne de Transfermarkt beklenir.
+ */
+function prepareNextPick(room) {
+  const promise = pickForRoom(room).catch(() => null);
+  room.nextPick = { mode: room.mode, pool: room.pool, promise };
+  promise.then((picked) => {
+    if (picked?.portraitUrl) prefetchImages([picked.portraitUrl]).catch(() => {});
+  });
+}
+
+/** Hazirlanmis oyuncuyu alir (yoksa/uyumsuzsa simdi secer) ve sonrakini hazirlar. */
+async function takeNextPick(room) {
+  const ready = room.nextPick;
+  room.nextPick = null;
+  let picked = null;
+  if (ready && ready.mode === room.mode && ready.pool === room.pool) picked = await ready.promise;
+  if (!picked) picked = await pickForRoom(room).catch(() => null);
+  prepareNextPick(room);
+  return picked;
+}
+
+/** Satir puani: tam isabet EXACT_POINTS, en yakin WIN_POINTS. */
+const rowPoints = (diff) => (diff === 0 ? EXACT_POINTS : WIN_POINTS);
+
+/** Bitis puanina ulasildiysa oyunu bitirir; bittiyse true. */
+function finishIfTargetReached(io, room) {
+  const scores = ids(room).map((id) => room.players.get(id).score);
+  if (!scores.some((score) => score >= room.target)) return false;
+  clearTurnTimer(room);
+  clearRowTimer(room);
+  room.phase = 'ended';
+  room.gameOver = true; // "sonraki oyuncu" artik yok; yalnizca yeni oyun
+  const best = Math.max(...scores);
+  const winners = ids(room).filter((id) => room.players.get(id).score === best);
+  io.to(room.code).emit('game:over', { scores: scoreMap(room), winners, target: room.target });
+  return true;
 }
 
 // ================= ZAR =================
@@ -338,13 +480,11 @@ function startClosestRowTimer(io, room) {
 
 async function startClosestRound(io, room) {
   clearRowTimer(room);
-  let picked;
-  try {
-    picked = await pickRandomGamePlayer({ pool: room.pool });
-  } catch {
-    picked = null;
+  const picked = await takeNextPick(room);
+  if (!picked) {
+    if (room.phase === 'starting') room.phase = 'lobby';
+    return io.to(room.code).emit('game:error', { message: 'Oyuncu getirilemedi.' });
   }
-  if (!picked) return io.to(room.code).emit('game:error', { message: 'Oyuncu getirilemedi.' });
   room.current = picked;
   room.activeRow = 0;
   room.guesses.clear();
@@ -366,6 +506,7 @@ function revealClosestRow(io, room) {
   const truth = row.value(room.current.answers);
   const guesses = Object.fromEntries(room.guesses);
   let winners = [];
+  const points = {};
   let truthText = 'veri yok';
   if (truth != null) {
     truthText = row.format(truth, room.current.answers);
@@ -376,7 +517,10 @@ function revealClosestRow(io, room) {
     const best = Math.min(...diffs.map((d) => d.diff));
     if (best !== Infinity) {
       winners = diffs.filter((d) => d.diff === best).map((d) => d.id);
-      for (const id of winners) room.players.get(id).score += 1;
+      for (const id of winners) {
+        points[id] = rowPoints(best);
+        room.players.get(id).score += points[id];
+      }
     }
   }
   io.to(room.code).emit('row:result', {
@@ -385,10 +529,12 @@ function revealClosestRow(io, room) {
     truthValue: truth,
     guesses,
     winners,
+    points,
     scores: scoreMap(room),
   });
   room.activeRow += 1;
   room.guesses.clear();
+  if (finishIfTargetReached(io, room)) return;
   if (room.activeRow < GAME_ROWS.length) {
     io.to(room.code).emit('row:active', { activeRow: room.activeRow, seconds: TURN_SECONDS });
     startClosestRowTimer(io, room);
@@ -420,13 +566,11 @@ function startCompareTurnTimer(io, room) {
 
 async function startCompareRound(io, room, firstRound = false) {
   clearTurnTimer(room);
-  const filter = await gamePoolFilter(room.pool);
-  if (!filter) return io.to(room.code).emit('game:error', { message: 'Oyuncu bulunamadı.' });
-  const [player] = await players().aggregate([{ $match: filter }, { $sample: { size: 1 } }]).toArray();
+  const player = await takeNextPick(room);
   if (!player) return io.to(room.code).emit('game:error', { message: 'Oyuncu bulunamadı.' });
 
   if (!firstRound) room.starter ^= 1; // her yeni oyuncuda baslayan degisir
-  room.current = { id: player._id, name: player.name, portraitUrl: player.portraitUrl, values: compareValues(player) };
+  room.current = player;
   room.activeRow = 0;
   room.rowGuesses = new Map();
   room.turn = room.starter;
@@ -493,6 +637,7 @@ function revealCompareRow(io, room) {
 
   const guessesOut = {};
   let winners = [];
+  const points = {};
   if (target != null) {
     const diffs = list.map((pid) => {
       const g = room.rowGuesses.get(pid);
@@ -503,7 +648,10 @@ function revealCompareRow(io, room) {
     const best = Math.min(...diffs.map((d) => d.diff));
     if (best !== Infinity) {
       winners = diffs.filter((d) => d.diff === best).map((d) => d.pid);
-      for (const pid of winners) room.players.get(pid).score += 1;
+      for (const pid of winners) {
+        points[pid] = rowPoints(best);
+        room.players.get(pid).score += points[pid];
+      }
     }
   } else {
     for (const pid of list) guessesOut[pid] = { name: room.rowGuesses.get(pid)?.name ?? '-', value: null };
@@ -516,11 +664,13 @@ function revealCompareRow(io, room) {
     truthValue: target,
     guesses: guessesOut,
     winners,
+    points,
     scores: scoreMap(room),
   });
 
   room.activeRow += 1;
   room.rowGuesses = new Map();
+  if (finishIfTargetReached(io, room)) return;
   if (room.activeRow < COMPARE_ROWS.length) {
     room.turn = room.starter ^ (room.activeRow % 2); // her satirda baslayan degisir
     io.to(room.code).emit('compare:active', {

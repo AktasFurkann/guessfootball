@@ -60,7 +60,15 @@ const state = {
   activeRow: 0, // su an oynanan satirin indexi
   rowRevealed: false, // aktif satirin sonucu acildi mi
   roundWins: [0, 0], // bu turda satir bazinda kazanimlar
+  target: 20, // tahmin/kiyas: bu puana ilk ulasan kazanir
+  gameOver: false, // bitis puanina ulasildi mi
 };
+
+// Satir puanlari (src/realtime.js ile ayni): en yakin tahmin / tam isabet.
+const WIN_POINTS = 1;
+const EXACT_POINTS = 2;
+const DEFAULT_TARGET = 20;
+const rowPoints = (diff) => (diff === 0 ? EXACT_POINTS : WIN_POINTS);
 
 // ---- kalici ayarlar ----
 function loadSettings() {
@@ -79,6 +87,26 @@ function saveSettings() {
   );
 }
 
+// Online takma ad her seferinde yeniden yazilmasin diye hatirlanir.
+const ONLINE_NAME_KEY = 'gf.onlineName';
+function loadOnlineName() {
+  try {
+    const saved = localStorage.getItem(ONLINE_NAME_KEY);
+    if (saved) return saved;
+  } catch {
+    /* depolama kapali olabilir */
+  }
+  // Ilk kez: ayarlardaki 1. oyuncu adi varsayilan degilse onu oner.
+  return state.names[0] && state.names[0] !== 'OYUNCU 1' ? state.names[0] : '';
+}
+function saveOnlineName(name) {
+  try {
+    if (name) localStorage.setItem(ONLINE_NAME_KEY, name);
+  } catch {
+    /* depolama kapali olabilir */
+  }
+}
+
 // ---- ekran gecisleri ----
 const screens = {
   menu: document.getElementById('screen-menu'),
@@ -87,6 +115,7 @@ const screens = {
   length: document.getElementById('screen-length'),
   mode: document.getElementById('screen-mode'),
   online: document.getElementById('screen-online'),
+  servers: document.getElementById('screen-servers'),
   settings: document.getElementById('screen-settings'),
   game: document.getElementById('screen-game'),
   squad: document.getElementById('screen-squad'),
@@ -102,6 +131,8 @@ function show(name) {
   if (name === 'game' || name === 'squad') currentGameScreen = name;
   screens.game.classList.toggle('is-solo', isSolo && name === 'game');
   screens.squad.classList.toggle('is-solo', isSolo && name === 'squad');
+  if (name === 'game' || name === 'squad') updateModeBanner();
+  if (name !== 'servers') stopWatchingRooms();
 }
 
 // ---- yardimcilar ----
@@ -111,6 +142,165 @@ const imgUrl = (url) => {
   if (url.startsWith('/') || url.startsWith('data:')) return url;
   return `/api/img?url=${encodeURIComponent(url)}`;
 };
+
+// Portresi olmayan / yuklenemeyen oyuncu icin sade silüet (bos kutu yerine).
+const PLACEHOLDER_IMG =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160"><rect width="120" height="160" fill="#c9d6e8"/>' +
+      '<circle cx="60" cy="58" r="28" fill="#8fa3bf"/><path d="M12 160c4-38 24-58 48-58s44 20 48 58z" fill="#8fa3bf"/></svg>',
+  );
+
+/** Tarayicinin onbellegine onceden alinmis (yuklenmis) gorsel adresleri. */
+const loadedImages = new Set();
+const preloading = new Map(); // src -> Promise
+
+/** Gorseli arka planda indirir; ekranda gosterildiginde aninda gelsin. */
+function preloadImage(url) {
+  const src = imgUrl(url);
+  if (!src) return Promise.resolve();
+  if (!preloading.has(src)) {
+    preloading.set(
+      src,
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          loadedImages.add(src);
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = src;
+      }),
+    );
+  }
+  return preloading.get(src);
+}
+
+/** Tahtanin ortasindaki portreyi ayarlar (portresi yoksa / yuklenemezse silüet). */
+function setHeroPhoto(url, alt) {
+  const photo = $('#hero-photo');
+  photo.alt = alt || '';
+  photo.onerror = () => {
+    photo.onerror = null;
+    photo.src = PLACEHOLDER_IMG;
+  };
+  photo.src = url ? imgUrl(url) : PLACEHOLDER_IMG;
+}
+
+// Kadro sahasindaki portreler yuklenemezse kirik resim yerine silüet.
+document.addEventListener(
+  'error',
+  (event) => {
+    const el = event.target;
+    if (el instanceof HTMLImageElement && el.closest('.slot__circle') && el.src !== PLACEHOLDER_IMG) {
+      el.src = PLACEHOLDER_IMG;
+    }
+  },
+  true,
+);
+
+// ---- yerel tahmin/kiyas: siradaki oyuncuyu onceden getir ----
+const ROUND_URLS = {
+  closest: (pool) => `/api/game/random?pool=${encodeURIComponent(pool)}`,
+  compare: (pool) => `/api/game/compare/random?pool=${encodeURIComponent(pool)}`,
+};
+const roundPrefetch = { closest: null, compare: null }; // kind -> { pool, promise }
+
+async function fetchRoundData(kind, pool) {
+  const res = await fetch(ROUND_URLS[kind](pool));
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+  return res.json();
+}
+
+/** Siradaki turun verisini ve portresini arka planda hazirlar. */
+function prefetchRound(kind, pool) {
+  const promise = fetchRoundData(kind, pool);
+  promise.then((data) => preloadImage(data.portraitUrl)).catch(() => {});
+  roundPrefetch[kind] = { pool, promise };
+}
+
+/** Hazir tur verisini alir (yoksa simdi ceker) ve bir sonrakini hazirlamaya baslar. */
+async function takeRound(kind, pool) {
+  const ready = roundPrefetch[kind];
+  roundPrefetch[kind] = null;
+  let data = null;
+  if (ready && ready.pool === pool) data = await ready.promise.catch(() => null);
+  if (!data) data = await fetchRoundData(kind, pool);
+  prefetchRound(kind, pool);
+  return data;
+}
+
+/** Kullanici tarafindan girilen metni HTML'e guvenle yazmak icin. */
+const escapeHtml = (value) =>
+  String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+
+// Tahmin/kiyas modlarinin oyuncu havuzlari (sunucudaki GAME_POOLS ile ayni ad).
+const POOL_TITLES = {
+  legends: 'Efsaneler',
+  superlig: 'Süper Lig',
+  big5: '5 Büyük Lig',
+  trlegends: 'Türk Futbolu Efsaneleri',
+  all: 'Hepsi',
+  // Ekranda secilmeyen, eski varsayilan esik havuzlari.
+  famous: 'Tanınan Oyuncular',
+  stars: 'Yıldızlar',
+};
+/** Havuz ekranindan secilebilen havuzlar. */
+const SELECTABLE_POOLS = ['legends', 'superlig', 'big5', 'trlegends', 'all'];
+const normalizePool = (pool, fallback = 'famous') =>
+  Object.hasOwn(POOL_TITLES, pool) ? pool : fallback;
+/** Bilinmeyen mod adlarini varsayilana indirger. */
+const normalizeMode = (mode) => (Object.hasOwn(MODE_TITLES, mode) ? mode : 'closest');
+
+const PLAYERS_TITLES = {
+  solo: 'Tek Kişilik',
+  local: 'İki Oyuncu · Aynı Ekran',
+  online: 'Online · İki Oyuncu',
+};
+const LENGTH_TITLES = { short: 'Kısa Oyun', long: 'Uzun Oyun' };
+
+/** Bitis puanini 1..999 araligina indirger (bos/gecersiz: varsayilan). */
+const normalizeTarget = (raw) => {
+  const n = Math.floor(Number(raw));
+  return Number.isFinite(n) && n >= 1 ? Math.min(n, 999) : DEFAULT_TARGET;
+};
+
+/** Moda gore kisa ayar ozeti: kadro modlarinda uzunluk, digerlerinde havuz + bitis puani. */
+function modeDetailText(mode, { length, pool, target, solo = false }) {
+  if (DRAFT_MODES.has(mode)) return LENGTH_TITLES[length] ?? '';
+  const parts = [POOL_TITLES[pool]];
+  if (!solo && target) parts.push(`${target} puanda biter`);
+  return parts.filter(Boolean).join(' · ');
+}
+
+/**
+ * Tahtalarin ustundeki bilgi cubugu: oynanan mod, kac kisiyle oynandigi ve
+ * moda gore ucuncu bilgi (kadro modlarinda oyun uzunlugu, tahmin/kiyas
+ * modlarinda oyuncu havuzu). Online'da oda ayarlari host'tan gelir.
+ */
+function updateModeBanner() {
+  const isOnline = online.active;
+  const mode = isOnline ? online.mode : currentLocalMode;
+  const players = isOnline ? PLAYERS_TITLES.online : isSolo ? PLAYERS_TITLES.solo : PLAYERS_TITLES.local;
+  const detail = modeDetailText(mode, {
+    length: isOnline ? online.length : squad.length,
+    pool: isOnline ? online.pool : currentPool,
+    target: isOnline ? online.target : state.target,
+    solo: !isOnline && isSolo,
+  });
+
+  for (const el of document.querySelectorAll('[data-mode-label]')) {
+    el.textContent = MODE_TITLES[mode] ?? '—';
+  }
+  for (const el of document.querySelectorAll('[data-mode-players]')) {
+    el.textContent = players;
+  }
+  for (const el of document.querySelectorAll('[data-mode-detail]')) {
+    el.textContent = detail ?? '';
+    el.hidden = !detail;
+  }
+}
+
 const clampNumber = (raw) => {
   const cleaned = String(raw).replace(',', '.').replace(/[^0-9.]/g, '');
   if (cleaned === '') return null; // bos girdi: 0 degil, "tahmin yok"
@@ -320,12 +510,11 @@ function setActiveRow(index) {
 
 // ---- yeni tur (yeni oyuncu) ----
 async function nextRound() {
+  if (state.gameOver) return;
   setPrimary('YÜKLENİYOR…', 'reveal-row', true);
 
   try {
-    const res = await fetch(`/api/game/random?pool=${encodeURIComponent(currentPool)}`);
-    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
-    state.current = await res.json();
+    state.current = await takeRound('closest', currentPool);
   } catch (err) {
     toast(`Oyuncu alınamadı: ${err.message}`);
     setPrimary('TEKRAR DENE', 'next');
@@ -336,9 +525,7 @@ async function nextRound() {
   state.roundWins = [0, 0];
 
   $('#hero-name').textContent = state.current.name;
-  const photo = $('#hero-photo');
-  photo.src = imgUrl(state.current.portraitUrl);
-  photo.alt = state.current.name;
+  setHeroPhoto(state.current.portraitUrl, state.current.name);
 
   renderRows();
   updateScoreboard();
@@ -377,6 +564,7 @@ function submitRow() {
   }
 
   revealRow();
+  if (checkLocalGameOver()) return;
 
   if (state.activeRow >= ROWS.length - 1) {
     announceRound();
@@ -432,11 +620,11 @@ function revealRow() {
     if (d === best) {
       cell.classList.add('is-win');
       state.roundWins[i] += 1;
-      state.scores[i] += 1;
+      state.scores[i] += rowPoints(d);
     } else {
       cell.classList.add('is-lose');
     }
-    diffEl.textContent = d === 0 ? 'tam isabet!' : `fark ${formatDiff(d, row.key)}`;
+    diffEl.textContent = d === 0 ? `tam isabet! +${EXACT_POINTS}` : `fark ${formatDiff(d, row.key)}`;
   });
 
   updateScoreboard();
@@ -473,14 +661,35 @@ function announceRound() {
   toast(msg);
 }
 
-// ---- oyunu baslat ----
-function startClosestGame(pool = 'famous') {
-  currentLocalMode = 'closest';
-  currentPool = ['legends', 'superlig', 'big5', 'all', 'famous', 'stars'].includes(pool) ? pool : 'famous';
-  if (state.resetOnNewGame) {
+/**
+ * Yerel tahmin/kiyas: biri bitis puanina ulastiysa oyunu bitirir.
+ * Bittiyse true doner (cagiran siradaki satira gecmez).
+ */
+function checkLocalGameOver() {
+  if (isSolo) return false;
+  const [a, b] = state.scores;
+  if (Math.max(a, b) < state.target) return false;
+  state.gameOver = true;
+  const verdict = a === b ? 'Berabere!' : `${state.names[a > b ? 0 : 1]} kazandı! 🏆`;
+  toast(`${state.target} puana ulaşıldı — ${verdict} (${a}–${b})`, 6000);
+  setPrimary('YENİ OYUN', 'new-game');
+  return true;
+}
+
+/** Yeni tahmin/kiyas oyunu: ayara gore (veya onceki oyun bittiyse) skorlari sifirlar. */
+function resetLocalScoresIfNeeded() {
+  if (state.resetOnNewGame || state.gameOver) {
     state.scores = [0, 0];
     state.round = 0;
   }
+  state.gameOver = false;
+}
+
+// ---- oyunu baslat ----
+function startClosestGame(pool = 'famous') {
+  currentLocalMode = 'closest';
+  currentPool = normalizePool(pool);
+  resetLocalScoresIfNeeded();
   updateScoreboard();
   show('game');
   nextRound();
@@ -626,6 +835,15 @@ document.addEventListener('click', (event) => {
     case 'open-settings':
       openSettings('menu');
       break;
+    case 'open-servers':
+      openServers(screens.online.classList.contains('is-active') ? 'online' : 'menu');
+      break;
+    case 'servers-back':
+      show(serversReturn === 'online' ? 'online' : 'menu');
+      break;
+    case 'servers-join':
+      joinRoom(target.dataset.code, $('#servers-name').value, { from: 'servers' });
+      break;
     case 'save-settings':
       saveSettingsFromForm();
       break;
@@ -706,10 +924,15 @@ document.addEventListener('click', (event) => {
     case 'online-start':
       online.socket?.emit('game:start');
       break;
-    case 'online-leave':
+    case 'online-leave': {
+      const back = online.lobbyReturn;
+      const inLobby = !!online.roomCode;
       leaveOnlineIfAny();
-      show('mode');
+      // Sunucular listesinden katildiysa oraya, degilse mod secimine don.
+      if (inLobby && back === 'servers') openServers('menu');
+      else show('mode');
       break;
+    }
     case 'online-guess':
       onlineGuess();
       break;
@@ -804,8 +1027,11 @@ let pendingGamePool = 'legends';
 let currentPool = 'famous';
 
 function chooseGame(mode) {
-  pendingGameMode = MODE_TITLES[mode] ? mode : 'closest';
+  pendingGameMode = normalizeMode(mode);
   pendingGameLength = 'short';
+  // Bitis puani yalnizca puanla biten modlarda; her yeni secimde varsayilan 20.
+  $('#target-score').value = DEFAULT_TARGET;
+  $('#target-field').hidden = DRAFT_MODES.has(pendingGameMode);
   if (DRAFT_MODES.has(pendingGameMode)) {
     $('#length-title').textContent = MODE_TITLES[pendingGameMode];
     show('length');
@@ -816,10 +1042,15 @@ function chooseGame(mode) {
 }
 
 function choosePool(pool) {
-  pendingGamePool = ['legends', 'superlig', 'big5', 'all'].includes(pool) ? pool : 'legends';
+  pendingGamePool = SELECTABLE_POOLS.includes(pool) ? pool : 'legends';
   $('#mode-title').textContent = MODE_TITLES[pendingGameMode];
+  // Kullanici oyun bicimini secerken ilk oyuncu hazirlansin.
+  if (ROUND_URLS[pendingGameMode]) prefetchRound(pendingGameMode, pendingGamePool);
   show('mode');
 }
+
+/** Mod ekranindaki bitis puani alanini okur. */
+const readPendingTarget = () => normalizeTarget($('#target-score').value);
 
 function chooseLength(length) {
   pendingGameLength = length === 'long' ? 'long' : 'short';
@@ -829,6 +1060,8 @@ function chooseLength(length) {
 
 function startLocalGame() {
   isSolo = false;
+  online.active = false;
+  state.target = readPendingTarget();
   if (pendingGameMode === 'compare') startCompareGame(pendingGamePool);
   else if (pendingGameMode === 'squad') startSquadGame(pendingGameLength);
   else if (pendingGameMode === 'superlig') startSuperligGame(pendingGameLength);
@@ -838,6 +1071,8 @@ function startLocalGame() {
 
 function startSoloGame() {
   isSolo = true;
+  online.active = false;
+  state.target = readPendingTarget();
   if (pendingGameMode === 'compare') startCompareGame(pendingGamePool);
   else if (pendingGameMode === 'squad') startSquadGame(pendingGameLength);
   else if (pendingGameMode === 'superlig') startSuperligGame(pendingGameLength);
@@ -851,6 +1086,9 @@ const online = {
   mode: 'closest',
   length: 'short',
   pool: 'famous',
+  target: DEFAULT_TARGET,
+  lobbyReturn: 'mode', // lobiden geri: 'mode' (oda kurduysa) | 'servers'
+  watchingRooms: false,
   roomCode: null,
   youId: null,
   oppId: null,
@@ -875,6 +1113,14 @@ function connectSocket() {
   online.socket = socket;
 
   socket.on('room:update', renderLobby);
+  socket.on('rooms:list', ({ rooms }) => {
+    if (online.watchingRooms) renderServers(rooms);
+  });
+  // Baglanti koparsa sunucu listesine yeniden abone ol.
+  socket.on('connect', () => {
+    if (online.watchingRooms) socket.emit('rooms:watch', null, ({ rooms }) => renderServers(rooms));
+  });
+  socket.on('game:over', onOnlineGameOver);
   socket.on('opponent:left', (room) => {
     stopCountdown();
     toast('Rakip odadan ayrıldı.');
@@ -1052,45 +1298,73 @@ function connectSocket() {
 
 function openOnline(mode = 'closest', length = 'short', pool = 'famous') {
   isSolo = false;
-  online.mode = ['closest', 'compare', 'squad', 'superlig', 'market'].includes(mode) ? mode : 'closest';
+  online.mode = normalizeMode(mode);
   online.length = length === 'long' ? 'long' : 'short';
-  online.pool = ['legends', 'superlig', 'big5', 'all', 'famous', 'stars'].includes(pool) ? pool : 'famous';
+  online.pool = normalizePool(pool);
+  online.target = readPendingTarget();
+  online.lobbyReturn = 'mode';
   connectSocket();
   online.active = false;
   $('#online-entry').hidden = false;
   $('#online-lobby').hidden = true;
   $('#online-hint').textContent = '';
   $('#online-dice').hidden = true;
-  $('#online-name').value = state.names[0];
+  $('#online-name').value = loadOnlineName();
   const title = $('#screen-online h2');
   if (title) title.textContent = `Online — ${MODE_TITLES[online.mode] || 'Oyna'}`;
   show('online');
 }
 
+/** Odanin modunu/ayarlarini sunucu yanitindan yerel duruma alir. */
+function applyRoomSettings(res) {
+  online.mode = normalizeMode(res.mode);
+  online.length = res.length === 'long' ? 'long' : 'short';
+  online.pool = normalizePool(res.pool);
+  online.target = normalizeTarget(res.target);
+}
+
 function onlineCreate() {
   const name = $('#online-name').value.trim() || 'Oyuncu 1';
-  connectSocket().emit('room:create', { name, mode: online.mode, length: online.length, pool: online.pool }, (res) => {
+  saveOnlineName($('#online-name').value.trim());
+  const payload = { name, mode: online.mode, length: online.length, pool: online.pool, target: online.target };
+  connectSocket().emit('room:create', payload, (res) => {
     if (!res?.ok) return ($('#online-hint').textContent = res?.error || 'Oda kurulamadı.');
     online.roomCode = res.code;
     online.youId = res.youId;
     online.isHost = true;
-    if (res.mode) online.mode = res.mode;
-    if (res.length) online.length = res.length;
+    applyRoomSettings(res);
     showLobby(res.code);
   });
 }
 
 function onlineJoin() {
-  const name = $('#online-name').value.trim() || 'Oyuncu 2';
   const code = $('#online-code').value.trim();
   if (!/^\d{4}$/.test(code)) return ($('#online-hint').textContent = '4 haneli kodu gir.');
+  joinRoom(code, $('#online-name').value, { from: 'online' });
+}
+
+/**
+ * Bir odaya katilir (kodla ya da Sunucular listesinden). Oda hangi modu
+ * oynuyorsa o mod benimsenir; oyun secimi yapmadan dogrudan katilinabilir.
+ */
+function joinRoom(code, rawName, { from = 'online' } = {}) {
+  const typed = String(rawName ?? '').trim();
+  const name = typed || 'Oyuncu 2';
+  const hint = from === 'servers' ? $('#servers-hint') : $('#online-hint');
+  saveOnlineName(typed);
+  isSolo = false;
   connectSocket().emit('room:join', { code, name }, (res) => {
-    if (!res?.ok) return ($('#online-hint').textContent = res?.error || 'Katılınamadı.');
+    if (!res?.ok) {
+      hint.textContent = res?.error || 'Katılınamadı.';
+      return;
+    }
     online.roomCode = res.code;
     online.youId = res.youId;
     online.isHost = false;
-    online.mode = res.mode || 'closest';
-    online.length = res.length || 'short';
+    online.lobbyReturn = from === 'servers' ? 'servers' : 'mode';
+    applyRoomSettings(res);
+    const title = $('#screen-online h2');
+    if (title) title.textContent = `Online — ${MODE_TITLES[online.mode] || 'Oyna'}`;
     showLobby(res.code);
   });
 }
@@ -1099,7 +1373,66 @@ function showLobby(code) {
   $('#online-entry').hidden = true;
   $('#online-lobby').hidden = false;
   $('#room-code-value').textContent = code;
+  $('#room-info').textContent = [
+    MODE_TITLES[online.mode],
+    modeDetailText(online.mode, { length: online.length, pool: online.pool, target: online.target }),
+  ]
+    .filter(Boolean)
+    .join(' · ');
   show('online');
+}
+
+// ================= SUNUCULAR (acik odalar) =================
+let serversReturn = 'menu';
+
+/** Acik odalar listesini acar ve canli guncellemelere abone olur. */
+function openServers(returnTo = 'menu') {
+  serversReturn = returnTo;
+  if (online.roomCode) leaveOnlineIfAny();
+  const typed = $('#online-name').value.trim();
+  $('#servers-name').value = typed || loadOnlineName();
+  $('#servers-hint').textContent = 'Biri “ODA KUR” dediğinde odası burada görünür.';
+  renderServers(null);
+  show('servers');
+  online.watchingRooms = true;
+  connectSocket().emit('rooms:watch', null, ({ rooms }) => {
+    if (online.watchingRooms) renderServers(rooms);
+  });
+}
+
+function stopWatchingRooms() {
+  if (!online.watchingRooms) return;
+  online.watchingRooms = false;
+  online.socket?.emit('rooms:unwatch');
+}
+
+/** rooms: null -> yukleniyor; [] -> bos liste. */
+function renderServers(rooms) {
+  const list = $('#server-list');
+  if (!rooms) {
+    list.innerHTML = '<li class="server-list__empty">Odalar yükleniyor…</li>';
+    return;
+  }
+  if (!rooms.length) {
+    list.innerHTML =
+      '<li class="server-list__empty">Şu an açık oda yok. Arkadaşın “OYNA › Online › ODA KUR” ile oda kurunca burada görünür.</li>';
+    return;
+  }
+  list.innerHTML = rooms
+    .map((room) => {
+      const mode = normalizeMode(room.mode);
+      const detail = modeDetailText(mode, { length: room.length, pool: room.pool, target: room.target });
+      return `
+        <li class="server-card">
+          <span class="game-card__badge">${room.players}/${room.maxPlayers}</span>
+          <span class="server-card__body">
+            <span class="server-card__title">${escapeHtml(room.host)} · ${escapeHtml(MODE_TITLES[mode])}</span>
+            <span class="server-card__meta">${escapeHtml(detail)} · Kod ${escapeHtml(room.code)}</span>
+          </span>
+          <button class="btn btn--primary" data-action="servers-join" data-code="${escapeHtml(room.code)}">KATIL</button>
+        </li>`;
+    })
+    .join('');
 }
 
 /** Lobideki oyuncu listesini ve host/baslat durumunu gunceller. */
@@ -1158,9 +1491,7 @@ function onOnlineRound({ player, rows, room }) {
   $('#score-value2').textContent = opp?.score ?? 0;
 
   $('#hero-name').textContent = player.name;
-  const photo = $('#hero-photo');
-  photo.src = imgUrl(player.portraitUrl);
-  photo.alt = player.name;
+  setHeroPhoto(player.portraitUrl, player.name);
 
   renderRows(online.rows);
   for (const card of document.querySelectorAll('.scorecard')) card.classList.remove('is-winner');
@@ -1228,7 +1559,7 @@ function onOnlineProgress({ submitted }) {
   }
 }
 
-function onOnlineResult({ rowIndex, truthText, truthValue, guesses, winners, scores }) {
+function onOnlineResult({ rowIndex, truthText, truthValue, guesses, winners, points = {}, scores }) {
   stopCountdown();
   const rowEl = document.querySelector(`.row[data-index="${rowIndex}"]`);
   const inputs = rowEl.querySelectorAll('input');
@@ -1253,7 +1584,9 @@ function onOnlineResult({ rowIndex, truthText, truthValue, guesses, winners, sco
 
     if (truthValue == null || guess == null) diffEl.textContent = '—';
     else diffEl.textContent =
-      Math.abs(guess - truthValue) === 0 ? 'tam isabet!' : `fark ${formatDiff(Math.abs(guess - truthValue), key)}`;
+      Math.abs(guess - truthValue) === 0
+        ? `tam isabet! +${points[id] ?? EXACT_POINTS}`
+        : `fark ${formatDiff(Math.abs(guess - truthValue), key)}`;
   });
 
   $('#score-value1').textContent = scores[online.youId] ?? 0;
@@ -1267,6 +1600,16 @@ function flashOnlineLeader(scores) {
   const cards = document.querySelectorAll('.scorecard');
   cards.forEach((c) => c.classList.remove('is-winner'));
   if (you !== opp) cards[you > opp ? 0 : 1].classList.add('is-winner');
+}
+
+/** Biri odanin bitis puanina ulasti: oyun biter, yalnizca yeni oyun acilabilir. */
+function onOnlineGameOver({ scores, target }) {
+  stopCountdown();
+  const you = scores[online.youId] ?? 0;
+  const opp = scores[online.oppId] ?? 0;
+  const verdict = you > opp ? 'Kazandın! 🏆' : you < opp ? 'Rakip kazandı.' : 'Berabere!';
+  toast(`${target} puana ulaşıldı — ${verdict} (${you}–${opp})`, 6000);
+  setPrimary('YENİ OYUN', 'new-game');
 }
 
 function onOnlineRoundEnd({ scores }) {
@@ -1326,11 +1669,8 @@ async function fetchCompareStats(id) {
 
 async function startCompareGame(pool = 'famous') {
   currentLocalMode = 'compare';
-  currentPool = ['legends', 'superlig', 'big5', 'all', 'famous', 'stars'].includes(pool) ? pool : 'famous';
-  if (state.resetOnNewGame) {
-    state.scores = [0, 0];
-    state.round = 0;
-  }
+  currentPool = normalizePool(pool);
+  resetLocalScoresIfNeeded();
   compare.round = 0;
   compare.statsCache.clear();
   show('game');
@@ -1338,11 +1678,10 @@ async function startCompareGame(pool = 'famous') {
 }
 
 async function compareNextRound() {
+  if (state.gameOver) return;
   setPrimary('YÜKLENİYOR…', 'compare-guess', true);
   try {
-    const res = await fetch(`/api/game/compare/random?pool=${encodeURIComponent(currentPool)}`);
-    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
-    compare.center = await res.json();
+    compare.center = await takeRound('compare', currentPool);
   } catch (err) {
     toast(`Oyuncu alınamadı: ${err.message}`);
     setPrimary('TEKRAR DENE', 'compare-next');
@@ -1359,9 +1698,7 @@ async function compareNextRound() {
   $('#score-value2').textContent = state.scores[1];
 
   $('#hero-name').textContent = compare.center.name;
-  const photo = $('#hero-photo');
-  photo.src = imgUrl(compare.center.portraitUrl);
-  photo.alt = compare.center.name;
+  setHeroPhoto(compare.center.portraitUrl, compare.center.name);
 
   renderCompareRows();
   for (const card of document.querySelectorAll('.scorecard')) card.classList.remove('is-winner');
@@ -1624,8 +1961,8 @@ async function compareSubmit() {
     const diffEl = cell.querySelector('.row__diff');
     if (best !== Infinity && diffs[side] === best) {
       cell.classList.add('is-win');
-      state.scores[side] += 1;
-      diffEl.textContent = diffs[side] === 0 ? 'tam isabet!' : compareDiffLabel(key, diffs[side]);
+      state.scores[side] += rowPoints(diffs[side]);
+      diffEl.textContent = diffs[side] === 0 ? `tam isabet! +${EXACT_POINTS}` : compareDiffLabel(key, diffs[side]);
     } else if (best !== Infinity) {
       cell.classList.add('is-lose');
       diffEl.textContent = compareDiffLabel(key, diffs[side]);
@@ -1641,6 +1978,7 @@ async function compareSubmit() {
   if (state.scores[0] !== state.scores[1]) cards[state.scores[0] > state.scores[1] ? 0 : 1].classList.add('is-winner');
 
   compare.revealed = true;
+  if (checkLocalGameOver()) return;
 
   if (compare.activeRow >= compare.rows.length - 1) {
     const [a, b] = state.scores;
@@ -1737,7 +2075,14 @@ function draftCfg() {
 }
 
 /** Bayrak/logo "cark"ini ~2 sn dondurur, sonra gercek varlikta durur. */
+/** Cark/havuz bayraklarini ve logolarini arka planda indirir. */
+function preloadReel() {
+  for (const entity of squad.reel) preloadImage(entity.image);
+}
+
 function spinEntity(finalEntity) {
+  // Durulacak bayragi hemen indirmeye basla; cark donerken hazir olsun.
+  const finalReady = preloadImage(finalEntity.image);
   return new Promise((resolve) => {
     const flag = $('#sq-flag');
     const nameEl = $('#sq-country');
@@ -1750,8 +2095,17 @@ function spinEntity(finalEntity) {
     }
     flag.classList.add('is-spinning');
     const start = Date.now();
+    const land = () => {
+      flag.classList.remove('is-spinning');
+      flag.src = imgUrl(finalEntity.image);
+      nameEl.textContent = finalEntity.name;
+      resolve();
+    };
     const tick = () => {
-      const r = reel[Math.floor(Math.random() * reel.length)];
+      // Carkta yalnizca inmis gorselleri goster (bos kare yanip sonmesin).
+      const ready = reel.filter((e) => loadedImages.has(imgUrl(e.image)));
+      const pool = ready.length >= 2 ? ready : reel;
+      const r = pool[Math.floor(Math.random() * pool.length)];
       flag.src = imgUrl(r.image);
       nameEl.textContent = r.name;
       if (Date.now() - start < 2000) {
@@ -1759,10 +2113,8 @@ function spinEntity(finalEntity) {
         const t = (Date.now() - start) / 2000;
         setTimeout(tick, 60 + t * t * 160);
       } else {
-        flag.classList.remove('is-spinning');
-        flag.src = imgUrl(finalEntity.image);
-        nameEl.textContent = finalEntity.name;
-        resolve();
+        // Son bayrak henuz inmediyse en fazla ~1.5 sn daha bekle.
+        Promise.race([finalReady, new Promise((r) => setTimeout(r, 1500))]).then(land);
       }
     };
     tick();
@@ -1825,7 +2177,9 @@ async function startDraftGame(mode, length = 'short') {
   // Ekrani hemen ac + "Hazırlanıyor…" goster (ilk yuklemede indeks kurulabilir).
   show('squad');
   if (isSolo) {
+    // Zar yok; yuklenme geri bildirimini gonder butonunda veriyoruz.
     $('#sq-dice').hidden = true;
+    setPrimarySquad('HAZIRLANIYOR…', 'squad-send', true);
   } else {
     $('#dice-title').textContent = 'Hazırlanıyor…';
     $('#dice-result').textContent = 'İlk açılışta oyuncu veritabanı hazırlanıyor';
@@ -1833,14 +2187,24 @@ async function startDraftGame(mode, length = 'short') {
     $('#sq-dice').hidden = false;
   }
 
-  const res = await fetch(cfg.formationUrl);
-  squad.formation = (await res.json()).formation;
+  // Dizilis olmadan tahta kurulamaz; hata halinde olu ekranda kalmayalim.
+  try {
+    const res = await fetch(cfg.formationUrl);
+    squad.formation = (await res.json()).formation;
+    if (!Array.isArray(squad.formation) || !squad.formation.length) throw new Error('bos dizilis');
+  } catch {
+    toast('Diziliş alınamadı, bağlantını kontrol edip tekrar dene.', 4000);
+    $('#sq-dice').hidden = true;
+    show('select');
+    return;
+  }
   try {
     const pool = await (await fetch(cfg.poolUrl)).json();
     squad.reel = (pool[cfg.poolKey] || []).map(cfg.normalize);
   } catch {
     squad.reel = [];
   }
+  preloadReel(); // zar atilirken bayraklar/logolar insin
   if (!isSolo) $('#dice-btn').hidden = false;
   squad.slots = [0, 1].map(() =>
     squad.formation.map((f) => ({ pos: f.pos, key: f.key ?? f.pos, filled: false, player: null })),
@@ -2054,7 +2418,7 @@ function setTurnUI(side) {
   list.innerHTML = '';
   list.hidden = true;
 
-  $('#sq-turn').textContent = `Sıra: ${state.names[side]}`;
+  $('#sq-turn').textContent = isSolo ? '' : `Sıra: ${state.names[side]}`;
   setPrimarySquad('GÖNDER', 'squad-send');
   // Otomatik odak/acilis YOK: kullanici girise tiklayinca oneri cikar.
 }
@@ -2330,9 +2694,7 @@ function onOnlineCompareRound({ player, rows, activeRow, turnId, room, scores })
   $('#score-value2').textContent = scores[online.oppId] ?? 0;
 
   $('#hero-name').textContent = player.name;
-  const photo = $('#hero-photo');
-  photo.src = imgUrl(player.portraitUrl);
-  photo.alt = player.name;
+  setHeroPhoto(player.portraitUrl, player.name);
 
   renderOnlineCompareRows();
   for (const card of document.querySelectorAll('.scorecard')) card.classList.remove('is-winner');
@@ -2521,7 +2883,7 @@ async function onlineCompareGuess() {
   setPrimary('RAKİP BEKLENİYOR…', 'online-compare-guess', true);
 }
 
-function onOnlineCompareResult({ rowIndex, key, truthText, truthValue, guesses, winners, scores }) {
+function onOnlineCompareResult({ rowIndex, key, truthText, truthValue, guesses, winners, points = {}, scores }) {
   stopCountdown();
   const rowEl = document.querySelector(`#rows .row[data-index="${rowIndex}"]`);
   if (!rowEl) return;
@@ -2544,7 +2906,9 @@ function onOnlineCompareResult({ rowIndex, key, truthText, truthValue, guesses, 
     if (truthValue == null || g.value == null) diffEl.textContent = '—';
     else
       diffEl.textContent =
-        Math.abs(g.value - truthValue) === 0 ? 'tam isabet!' : compareDiffLabel(key, Math.abs(g.value - truthValue));
+        Math.abs(g.value - truthValue) === 0
+          ? `tam isabet! +${points[id] ?? EXACT_POINTS}`
+          : compareDiffLabel(key, Math.abs(g.value - truthValue));
   });
 
   $('#score-value1').textContent = scores[online.youId] ?? 0;
@@ -2572,6 +2936,7 @@ async function onlineEnsureReel() {
   } catch {
     squad.reel = [];
   }
+  preloadReel();
 }
 
 /** Sunucudan gelen (id->slots) yapiyi ekran taraflarina (0=sen,1=rakip) esler. */

@@ -68,6 +68,11 @@ puan sifirlama) tarayicida `localStorage`'da tutulur.
   kadroyu kur. Oyuncunun en yüksek piyasa değeri milyon € cinsinden, tek ondalığa
   kesilmiş olarak yazılır; en yüksek toplam değere ulaşan kazanır.
 
+En Yakın Tahmin ve Kariyer Kıyası'nda oyuncu havuzu seçilir (Efsaneler, Süper Lig,
+5 Büyük Lig, Türk Futbolu Efsaneleri, Hepsi). Satırı en yakın tahmin **1**, tam
+isabet **2** puan alır; oyun, başlarken seçilen bitiş puanına (varsayılan 20) ilk
+ulaşan oyuncuyla biter.
+
 Oyun bitince (kadro modlarında) iki oyuncunun da onaylaması gereken **Yeni Oyun**
 butonu çıkar; ayrıca tüm modlarda oyun içi menüden yeni oyun istenebilir.
 
@@ -78,8 +83,12 @@ Online oynanış detayı:
   futbolcuyu seçer, iki ekranı Socket.IO ile senkronlar; her oyuncu yalnızca
   kendi tarafını doldurur, ikisi de gönderince satır açılır ve en yakın kazanır.
   Doğru cevaplar sunucuda tutulur (istemciye sızmaz), kazananı sunucu hesaplar.
+- **Sunucular:** Ana menüdeki **Sunucular** butonu açık odaları (kuran kişi, mod,
+  havuz/uzunluk, bitiş puanı) canlı listeler; oyun seçmeden tek tıkla katılınır.
+  Takma ad tarayıcıda hatırlanır.
 
-Online motorun uçtan uca testi: `npm run test:online` (sunucu ayakta olmalı).
+Online motorun uçtan uca testleri: `npm run test:online`, `npm run test:online-turn`,
+`npm run test:online-lobby` (sunucu ayakta olmalı).
 
 ## Online yayın (deploy)
 

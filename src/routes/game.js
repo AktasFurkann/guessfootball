@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { players } from '../db.js';
-import { pickRandomGamePlayer, gamePoolFilter } from '../game/roundData.js';
+import { pickRandomGamePlayer, pickPoolDoc } from '../game/roundData.js';
 import { GAME_POOLS } from '../game/pool.js';
 import { COMPARE_ROWS, compareValues } from '../game/compare.js';
 import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
@@ -43,9 +42,7 @@ gameRouter.get('/random', async (req, res, next) => {
 gameRouter.get('/compare/random', async (req, res, next) => {
   try {
     const pool = GAME_POOLS.has(req.query.pool) ? req.query.pool : 'famous';
-    const filter = await gamePoolFilter(pool);
-    if (!filter) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
-    const [player] = await players().aggregate([{ $match: filter }, { $sample: { size: 1 } }]).toArray();
+    const player = await pickPoolDoc(pool);
     if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
 
     res.json({

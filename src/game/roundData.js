@@ -1,20 +1,16 @@
 import { players } from '../db.js';
-import { poolIds, isLegacyPool } from './pool.js';
+import { poolIds, isLegacyPool, thresholdFilter, randomPoolId } from './pool.js';
 
 /**
- * Oyuncu havuzu suzgeci. Veritabaninda 7000+ oyuncu var ama cogu taninmiyor;
- * oyunun keyifli olmasi icin varsayilan olarak "taninir" oyuncular secilir.
- * (Zirve piyasa degeri esigi veya cok mac oynamis olma; ikincisi eski/Turk
- * efsanelerini de yakalar.)
+ * Esik bazli ("taninir oyuncu") havuz suzgeci. Veritabaninda 7000+ oyuncu var
+ * ama cogu taninmiyor; oyunun keyifli olmasi icin varsayilan olarak zirve
+ * piyasa degeri veya cok mac oynamis olma esigi uygulanir. Esik degerleri
+ * pool.js'teki POOL_THRESHOLDS'te tek yerde tutulur.
  *
- * @param {'famous'|'stars'|'all'} pool
+ * @param {'famous'|'stars'} pool
  */
 export function poolFilter(pool = 'famous') {
-  if (pool === 'all') return {};
-  if (pool === 'stars') {
-    return { $or: [{ 'marketValue.highest': { $gte: 40_000_000 } }, { 'careerTotals.games': { $gte: 450 } }] };
-  }
-  return { $or: [{ 'marketValue.highest': { $gte: 20_000_000 } }, { 'careerTotals.games': { $gte: 350 } }] };
+  return thresholdFilter(pool === 'stars' ? 'stars' : 'famous');
 }
 
 /**
@@ -28,18 +24,28 @@ export async function gamePoolFilter(pool = 'famous') {
 }
 
 /**
+ * Havuzdan rastgele bir oyuncu dokumani. Anlamsal havuzlarda ID bellekte
+ * secilir (bkz. randomPoolId); eski esik havuzlarinda $sample kullanilir.
+ */
+export async function pickPoolDoc(pool = 'famous') {
+  if (isLegacyPool(pool)) {
+    const [doc] = await players().aggregate([{ $match: poolFilter(pool) }, { $sample: { size: 1 } }]).toArray();
+    return doc ?? null;
+  }
+  const id = await randomPoolId(pool);
+  if (id == null) return null;
+  return players().findOne({ _id: id });
+}
+
+/**
  * Oyun icin rastgele bir oyuncu secer ve satirlarin dogru degerlerini hazirlar.
  * Hem REST ucu (/api/game/random) hem online oda motoru bunu kullanir.
  *
- * @param {{pool?: 'famous'|'stars'|'all'}} [options]
+ * @param {{pool?: 'famous'|'stars'|'legends'|'superlig'|'big5'|'trlegends'|'all'}} [options]
  * @returns {Promise<null | {id:number, name:string, portraitUrl:string, answers:object}>}
  */
 export async function pickRandomGamePlayer({ pool = 'famous' } = {}) {
-  const filter = await gamePoolFilter(pool);
-  if (!filter) return null;
-
-  const [player] = await players().aggregate([{ $match: filter }, { $sample: { size: 1 } }]).toArray();
-
+  const player = await pickPoolDoc(pool);
   if (!player) return null;
 
   const birthYear = player.dateOfBirth ? Number(player.dateOfBirth.slice(0, 4)) : null;

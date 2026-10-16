@@ -20,6 +20,7 @@
         <p class="menu__tagline">Futbolcu Bilgi Düellosu</p>
         <nav class="menu__nav">
           <button class="btn btn--primary" data-action="open-play">OYNA</button>
+          <button class="btn" data-action="open-servers">SUNUCULAR</button>
           <button class="btn" data-action="open-settings">AYARLAR</button>
           <button class="btn btn--ghost" data-action="quit">OYUNDAN ÇIK</button>
         </nav>
@@ -125,6 +126,14 @@
             </span>
             <span class="game-card__go">SEÇ ›</span>
           </button>
+          <button class="game-card" data-action="choose-pool" data-pool="trlegends">
+            <span class="game-card__badge">🏆</span>
+            <span class="game-card__body">
+              <span class="game-card__title">Türk Futbolu Efsaneleri</span>
+              <span class="game-card__desc">Metin Oktay, Hagi, Alex, Nihat, Tümer, Hasan Şaş… yerli ve yabancı efsaneler.</span>
+            </span>
+            <span class="game-card__go">SEÇ ›</span>
+          </button>
           <button class="game-card" data-action="choose-pool" data-pool="all">
             <span class="game-card__badge">🎲</span>
             <span class="game-card__body">
@@ -172,6 +181,12 @@
           <button class="icon-btn" data-action="open-play" aria-label="Geri">‹</button>
           <h2 id="mode-title">Oyun</h2>
         </header>
+        <!-- Puanla biten modlarda (tahmin / kiyas) bitis puani -->
+        <label class="field target-field" id="target-field" hidden>
+          <span>Kaç puanda bitsin?</span>
+          <input type="number" id="target-score" inputmode="numeric" min="1" max="999" value="20" />
+          <small>En yakın tahmin 1, tam isabet 2 puan. İlk ulaşan kazanır.</small>
+        </label>
         <div class="game-list">
           <button class="game-card" data-action="mode-local">
             <span class="game-card__badge">👥</span>
@@ -222,6 +237,7 @@
             <input type="text" id="online-code" inputmode="numeric" maxlength="4" placeholder="4 haneli kod" />
           </label>
           <button class="btn" data-action="online-join">ODAYA KATIL</button>
+          <button class="btn btn--ghost" data-action="open-servers">AÇIK ODALAR</button>
           <p class="settings__hint" id="online-hint"></p>
         </div>
 
@@ -232,12 +248,33 @@
             <b id="room-code-value">----</b>
             <small>Arkadaşına bu kodu ver</small>
           </div>
+          <p class="room-info" id="room-info"></p>
           <ul class="room-players" id="room-players"></ul>
           <button class="btn btn--primary" id="online-start" data-action="online-start" hidden>
             BAŞLAT
           </button>
           <p class="settings__hint" id="lobby-hint">Rakip bekleniyor…</p>
           <button class="btn btn--ghost" data-action="online-leave">ODADAN AYRIL</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SUNUCULAR (acik odalar) ================= -->
+    <section class="screen screen--settings" id="screen-servers">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="servers-back" aria-label="Geri">‹</button>
+          <h2>Sunucular</h2>
+        </header>
+        <div class="settings">
+          <label class="field">
+            <span>Takma adın</span>
+            <input type="text" id="servers-name" maxlength="12" placeholder="örn. FURKAN" />
+          </label>
+          <ul class="server-list" id="server-list">
+            <li class="server-list__empty">Odalar yükleniyor…</li>
+          </ul>
+          <p class="settings__hint" id="servers-hint">Biri “ODA KUR” dediğinde odası burada görünür.</p>
         </div>
       </div>
     </section>
@@ -271,6 +308,13 @@
     <!-- ================= OYUN TAHTASI ================= -->
     <section class="screen screen--game" id="screen-game">
       <div class="board">
+        <!-- Oynanan mod / oyuncu sayisi / havuz-uzunluk bilgisi -->
+        <div class="mode-bar">
+          <span class="mode-bar__mode" data-mode-label>—</span>
+          <span class="mode-bar__players" data-mode-players>—</span>
+          <span class="mode-bar__detail" data-mode-detail hidden></span>
+        </div>
+
         <!-- Skor ve oyuncu basligi -->
         <div class="board__top">
           <div class="scorecard scorecard--left">
@@ -310,6 +354,13 @@
     <!-- ================= MİLLİ KADRO ================= -->
     <section class="screen screen--squad" id="screen-squad">
       <div class="squad-board">
+        <!-- Oynanan mod / oyuncu sayisi / havuz-uzunluk bilgisi -->
+        <div class="mode-bar">
+          <span class="mode-bar__mode" data-mode-label>—</span>
+          <span class="mode-bar__players" data-mode-players>—</span>
+          <span class="mode-bar__detail" data-mode-detail hidden></span>
+        </div>
+
         <div class="squad-top">
           <div class="squad-total scorecard--left" id="sq-card-0">
             <span class="squad-total__name" id="sq-name1">OYUNCU 1</span>
