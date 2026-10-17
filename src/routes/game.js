@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { pickRandomGamePlayer, pickPoolDoc } from '../game/roundData.js';
 import { GAME_POOLS } from '../game/pool.js';
-import { COMPARE_ROWS, compareValues } from '../game/compare.js';
+import { compareRowsFor, compareValues } from '../game/compare.js';
 import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from '../game/squad.js';
 import { getFormation as getSuperligFormation, randomSuperligTeam, listSuperligTeams, superligGoals } from '../game/superlig.js';
 import { latestSuperligClub, isSuperligActive } from '../game/superligTeams.js';
@@ -45,12 +45,14 @@ gameRouter.get('/compare/random', async (req, res, next) => {
     const player = await pickPoolDoc(pool);
     if (!player) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
 
+    const values = compareValues(player);
     res.json({
       id: player._id,
       name: player.name,
       portraitUrl: player.portraitUrl,
-      rows: COMPARE_ROWS,
-      values: compareValues(player),
+      // Verisi olmayan satirlar yedek satirlarla degisir (bkz. compareRowsFor).
+      rows: compareRowsFor(values),
+      values,
     });
   } catch (error) {
     next(error);

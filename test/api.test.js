@@ -233,6 +233,66 @@ async function run() {
     }
   });
 
+  await test('oyun oyuncusu kendi satir listesiyle doner, bos ana satir kalmaz', async () => {
+    const { ROWS_BY_KEY } = await import('../src/game/rows.js');
+    for (let i = 0; i < 15; i += 1) {
+      const { body } = await get('/api/game/random?pool=all');
+      assert.equal(body.rows.length, 5, '5 satir');
+      assert.equal(new Set(body.rows.map((r) => r.key)).size, 5, 'satirlar tekrarlanmaz');
+      for (const meta of body.rows) {
+        const row = ROWS_BY_KEY.get(meta.key);
+        assert.ok(row, `bilinen satir: ${meta.key}`);
+        assert.ok(!('value' in meta), 'cevap ust bilgiye sizmamali');
+        assert.notEqual(row.value(body.answers), null, `${body.name}: ${meta.key} satirinin verisi olmali`);
+      }
+    }
+  });
+
+  console.log('--- veri yok -> yedek satir ---');
+  await test('degeri/boyu olmayan oyuncuda satirlar yedekle degisir', async () => {
+    const { rowsFor } = await import('../src/game/rows.js');
+    const answers = {
+      careerGoals: 100,
+      marketValue: null, // 2004 oncesi emekli
+      clubCount: 3,
+      heightCm: null, // Transfermarkt'ta boy yok
+      birthYear: 1950,
+      careerGames: 400,
+      ntCaps: 0, // milli maci yok -> atlanir
+      careerAssists: 50,
+      seasons: 15,
+      ntGoals: 0,
+    };
+    assert.deepEqual(
+      rowsFor(answers).map((r) => r.key),
+      ['careerGoals', 'careerGames', 'clubCount', 'careerAssists', 'birthYear'],
+    );
+  });
+
+  await test('verisi tam oyuncuda ana satirlar degismez', async () => {
+    const { rowsFor, GAME_ROWS } = await import('../src/game/rows.js');
+    const answers = { careerGoals: 1, marketValue: 1, clubCount: 1, heightCm: 180, birthYear: 1990, careerGames: 5 };
+    assert.deepEqual(rowsFor(answers).map((r) => r.key), GAME_ROWS.map((r) => r.key));
+  });
+
+  await test('uygun yedek yoksa ana satir kalir', async () => {
+    const { rowsFor } = await import('../src/game/rows.js');
+    const keys = rowsFor({ careerGoals: 1, marketValue: null, clubCount: 1, heightCm: 180, birthYear: 1990 }).map((r) => r.key);
+    assert.equal(keys[1], 'marketValue');
+  });
+
+  await test('kiyas: ortadaki oyuncuda eksik satir yedekle degisir', async () => {
+    const { compareRowsFor } = await import('../src/game/compare.js');
+    const values = {
+      clubGoals: 100, ntGoals: 10, marketValue: null, heightCm: 180, birthYear: null,
+      careerGames: 400, ntCaps: 50, careerAssists: 30, clubCount: 4,
+    };
+    assert.deepEqual(
+      compareRowsFor(values).map((r) => r.key),
+      ['clubGoals', 'ntGoals', 'careerGames', 'heightCm', 'ntCaps'],
+    );
+  });
+
   console.log('--- oyuncu havuzlari ---');
   await test('big5 havuzu yalnizca 5 buyuk ligde oynamis oyuncu verir', async () => {
     const BIG5 = new Set(['İngiltere', 'İtalya', 'Fransa', 'İspanya', 'Almanya']);

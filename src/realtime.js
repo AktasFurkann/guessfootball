@@ -1,8 +1,8 @@
 import { Server } from 'socket.io';
-import { GAME_ROWS, rowsMeta } from './game/rows.js';
+import { ROWS_BY_KEY } from './game/rows.js';
 import { pickRandomGamePlayer, pickPoolDoc } from './game/roundData.js';
 import { GAME_POOLS } from './game/pool.js';
-import { COMPARE_ROWS, compareValues } from './game/compare.js';
+import { compareRowsFor, compareValues } from './game/compare.js';
 import { getFormation as getSquadFormation, randomCountry, listCountries, nationalCaps } from './game/squad.js';
 import { getFormation as getSuperligFormation, randomSuperligTeam, listSuperligTeams, superligGoals } from './game/superlig.js';
 import { latestSuperligClub, isSuperligActive } from './game/superligTeams.js';
@@ -389,9 +389,9 @@ function clearRowTimer(room) {
 async function pickForRoom(room) {
   if (room.mode === 'compare') {
     const doc = await pickPoolDoc(room.pool);
-    return doc
-      ? { id: doc._id, name: doc.name, portraitUrl: doc.portraitUrl, values: compareValues(doc) }
-      : null;
+    if (!doc) return null;
+    const values = compareValues(doc);
+    return { id: doc._id, name: doc.name, portraitUrl: doc.portraitUrl, values, rows: compareRowsFor(values) };
   }
   return pickRandomGamePlayer({ pool: room.pool });
 }
@@ -491,7 +491,7 @@ async function startClosestRound(io, room) {
   room.phase = 'playing';
   io.to(room.code).emit('game:round', {
     player: { name: picked.name, portraitUrl: picked.portraitUrl },
-    rows: rowsMeta,
+    rows: picked.rows,
     activeRow: 0,
     seconds: TURN_SECONDS,
     room: publicRoom(room),
@@ -502,7 +502,8 @@ async function startClosestRound(io, room) {
 
 function revealClosestRow(io, room) {
   clearRowTimer(room);
-  const row = GAME_ROWS[room.activeRow];
+  // Oyuncuya ozel satir (verisi olmayan ana satir yedekle degismis olabilir).
+  const row = ROWS_BY_KEY.get(room.current.rows[room.activeRow].key);
   const truth = row.value(room.current.answers);
   const guesses = Object.fromEntries(room.guesses);
   let winners = [];
@@ -535,7 +536,7 @@ function revealClosestRow(io, room) {
   room.activeRow += 1;
   room.guesses.clear();
   if (finishIfTargetReached(io, room)) return;
-  if (room.activeRow < GAME_ROWS.length) {
+  if (room.activeRow < room.current.rows.length) {
     io.to(room.code).emit('row:active', { activeRow: room.activeRow, seconds: TURN_SECONDS });
     startClosestRowTimer(io, room);
   } else {
@@ -578,7 +579,7 @@ async function startCompareRound(io, room, firstRound = false) {
 
   io.to(room.code).emit('compare:round', {
     player: { name: player.name, portraitUrl: player.portraitUrl },
-    rows: COMPARE_ROWS,
+    rows: player.rows,
     activeRow: 0,
     turnId: currentTurnId(room),
     starterId: currentTurnId(room),
@@ -631,7 +632,7 @@ function compareRowFormat(key, v) {
 
 function revealCompareRow(io, room) {
   clearTurnTimer(room);
-  const row = COMPARE_ROWS[room.activeRow];
+  const row = room.current.rows[room.activeRow];
   const target = compareRowValue(room.current.values, row.key);
   const list = ids(room);
 
@@ -671,7 +672,7 @@ function revealCompareRow(io, room) {
   room.activeRow += 1;
   room.rowGuesses = new Map();
   if (finishIfTargetReached(io, room)) return;
-  if (room.activeRow < COMPARE_ROWS.length) {
+  if (room.activeRow < room.current.rows.length) {
     room.turn = room.starter ^ (room.activeRow % 2); // her satirda baslayan degisir
     io.to(room.code).emit('compare:active', {
       activeRow: room.activeRow,

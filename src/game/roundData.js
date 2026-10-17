@@ -1,5 +1,6 @@
 import { players } from '../db.js';
 import { poolIds, isLegacyPool, thresholdFilter, randomPoolId } from './pool.js';
+import { rowsFor, toRowsMeta, seniorNationalStats } from './rows.js';
 
 /**
  * Esik bazli ("taninir oyuncu") havuz suzgeci. Veritabaninda 7000+ oyuncu var
@@ -42,27 +43,39 @@ export async function pickPoolDoc(pool = 'famous') {
  * Hem REST ucu (/api/game/random) hem online oda motoru bunu kullanir.
  *
  * @param {{pool?: 'famous'|'stars'|'legends'|'superlig'|'big5'|'trlegends'|'all'}} [options]
- * @returns {Promise<null | {id:number, name:string, portraitUrl:string, answers:object}>}
+ * @returns {Promise<null | {id:number, name:string, portraitUrl:string, answers:object, rows:object[]}>}
  */
 export async function pickRandomGamePlayer({ pool = 'famous' } = {}) {
   const player = await pickPoolDoc(pool);
   if (!player) return null;
 
   const birthYear = player.dateOfBirth ? Number(player.dateOfBirth.slice(0, 4)) : null;
+  const national = seniorNationalStats(player);
+
+  // Bos alanlar null; verisi olmayan ana satir yedek bir satirla degisir (rowsFor).
+  const answers = {
+    careerGoals: player.careerTotals?.goals ?? null,
+    // Emeklilerde guncel deger 0 oldugu icin ulastigi ZIRVE deger kullanilir.
+    marketValue: player.marketValue?.highest ?? null,
+    clubCount: player.careerTotals?.clubs ?? null,
+    heightCm: player.heightCm || null,
+    birthYear,
+    dateOfBirth: player.dateOfBirth ?? null,
+    // yedek satirlar
+    careerGames: player.careerTotals?.games ?? null,
+    careerAssists: player.careerTotals?.assists ?? null,
+    seasons: player.careerTotals?.seasons ?? null,
+    ntCaps: national.caps,
+    ntGoals: national.goals,
+  };
+  const rows = rowsFor(answers);
 
   return {
     id: player._id,
     name: player.name,
     portraitUrl: player.portraitUrl,
-    // Bos alanlar null; ilgili satir puanlanmaz.
-    answers: {
-      careerGoals: player.careerTotals?.goals ?? null,
-      // Emeklilerde guncel deger 0 oldugu icin ulastigi ZIRVE deger kullanilir.
-      marketValue: player.marketValue?.highest ?? null,
-      clubCount: player.careerTotals?.clubs ?? null,
-      heightCm: player.heightCm || null,
-      birthYear,
-      dateOfBirth: player.dateOfBirth ?? null,
-    },
+    answers,
+    /** Bu oyuncuda oynanacak satirlarin ust bilgisi (sirasiyla). */
+    rows: toRowsMeta(rows),
   };
 }

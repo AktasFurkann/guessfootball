@@ -51,12 +51,30 @@ const ROWS = [
   },
 ];
 
+// Yedek satirlar (src/game/rows.js EXTRA_ROWS ile ayni). Verisi olmayan ana
+// satirin yerine sunucu bunlardan birini secer; satir listesi oyuncuya ozeldir.
+const EXTRA_ROWS = [
+  { key: 'careerGames', label: 'KARİYER MAÇI', hint: 'maç sayısı', value: (a) => a.careerGames, format: (v) => `${v} maç` },
+  { key: 'ntCaps', label: 'MİLLİ MAÇ', hint: 'maç sayısı', value: (a) => a.ntCaps, format: (v) => `${v} maç` },
+  { key: 'careerAssists', label: 'KARİYER ASİSTİ', hint: 'asist sayısı', value: (a) => a.careerAssists, format: (v) => `${v}` },
+  { key: 'seasons', label: 'KARİYER SEZONU', hint: 'kaç sezon?', value: (a) => a.seasons, format: (v) => `${v} sezon` },
+  { key: 'ntGoals', label: 'MİLLİ GOL', hint: 'gol sayısı', value: (a) => a.ntGoals, format: (v) => `${v}` },
+];
+const ROW_BY_KEY = new Map([...ROWS, ...EXTRA_ROWS].map((row) => [row.key, row]));
+
+/** Sunucunun bu oyuncu icin sectigi satirlar (bilinmeyen anahtar: varsayilan satir). */
+const rowsOf = (data) =>
+  Array.isArray(data?.rows) && data.rows.length
+    ? data.rows.map((meta, i) => ROW_BY_KEY.get(meta.key) ?? ROWS[i] ?? ROWS[0])
+    : ROWS;
+
 const state = {
   names: ['OYUNCU 1', 'OYUNCU 2'],
   resetOnNewGame: true,
   scores: [0, 0],
   round: 0,
-  current: null, // {name, portraitUrl, answers}
+  current: null, // {name, portraitUrl, answers, rows}
+  rows: ROWS, // bu oyuncuda oynanan satirlar (yedek satirlar dahil)
   activeRow: 0, // su an oynanan satirin indexi
   rowRevealed: false, // aktif satirin sonucu acildi mi
   roundWins: [0, 0], // bu turda satir bazinda kazanimlar
@@ -502,7 +520,7 @@ function setActiveRow(index) {
     }
   });
 
-  $('#round-tag').textContent = `Satır ${index + 1}/${ROWS.length}`;
+  $('#round-tag').textContent = `Satır ${index + 1}/${state.rows.length}`;
   setPrimary('GÖSTER', 'reveal-row');
   // Aktif satirin ilk girisine odaklan.
   document.querySelector(`.row[data-index="${index}"] input`)?.focus();
@@ -527,7 +545,8 @@ async function nextRound() {
   $('#hero-name').textContent = state.current.name;
   setHeroPhoto(state.current.portraitUrl, state.current.name);
 
-  renderRows();
+  state.rows = rowsOf(state.current);
+  renderRows(state.rows);
   updateScoreboard();
   for (const card of document.querySelectorAll('.scorecard')) card.classList.remove('is-winner');
 
@@ -566,7 +585,7 @@ function submitRow() {
   revealRow();
   if (checkLocalGameOver()) return;
 
-  if (state.activeRow >= ROWS.length - 1) {
+  if (state.activeRow >= state.rows.length - 1) {
     announceRound();
     setPrimary('SONRAKİ OYUNCU ›', 'next');
   } else {
@@ -576,7 +595,7 @@ function submitRow() {
 
 // ---- aktif satiri ac ve puanla ----
 function revealRow() {
-  const row = ROWS[state.activeRow];
+  const row = state.rows[state.activeRow];
   const rowEl = document.querySelector(`.row[data-index="${state.activeRow}"]`);
   const inputs = rowEl.querySelectorAll('input');
   const cells = rowEl.querySelectorAll('.row__cell');
