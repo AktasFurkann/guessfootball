@@ -177,6 +177,55 @@ async function run() {
     );
   });
 
+  const { gameStatus } = await import('../src/matches/source.js');
+  const tmGame = ({ kickoffAgoMin, home = null, away = null, endType, period, gameStatus: gs, minute }) => ({
+    baseDetails: { date: { dateTimeUTC: new Date(Date.now() - kickoffAgoMin * 60000).toISOString() } },
+    score: { home, away, additionType: 'none', ...(endType ? { details: { gameEndType: endType } } : {}) },
+    liveDetails: period ? { period, gameStatus: gs, gameMinute: minute, overtimeMinute: 0 } : null,
+  });
+
+  await test('canli mac ("Playing") iptal degil canli sayilir', () => {
+    // Transfermarkt'in 20 Ekim'de Fenerbahçe-Slavia icin dondurdugu bicim.
+    const s = gameStatus(tmGame({ kickoffAgoMin: 12, home: 1, away: 0, endType: 'Playing', period: 'FIRST_HALF', gameStatus: 'Playing', minute: 11 }));
+    assert.equal(s.status, 'live');
+    assert.equal(s.minute, 11);
+    assert.deepEqual(s.score, { home: 1, away: 0 });
+  });
+
+  await test('uzun suren canli mac (uzatma) erken bitmis sayilmaz', () => {
+    const s = gameStatus(tmGame({ kickoffAgoMin: 160, home: 1, away: 1, endType: 'Playing', period: 'EXTRA_TIME', gameStatus: 'Playing', minute: 112 }));
+    assert.equal(s.status, 'live');
+  });
+
+  await test('mac durumlari: bitti / iptal / ertelendi / baslamadi', () => {
+    assert.equal(gameStatus(tmGame({ kickoffAgoMin: 110, home: 2, away: 1, endType: 'RegularlyTerminated' })).status, 'finished');
+    assert.equal(gameStatus(tmGame({ kickoffAgoMin: 110, home: 2, away: 1, period: 'FULL_TIME', gameStatus: 'Played' })).status, 'finished');
+    assert.equal(gameStatus(tmGame({ kickoffAgoMin: 60, home: 0, away: 0, endType: 'Abandoned' })).status, 'void');
+    assert.equal(gameStatus(tmGame({ kickoffAgoMin: 400 })).status, 'void');
+    assert.equal(gameStatus(tmGame({ kickoffAgoMin: -60 })).status, 'scheduled');
+    assert.equal(gameStatus(tmGame({ kickoffAgoMin: 30, endType: 'BilinmeyenDeger' })).status, 'live', 'bilinmeyen bitis tipi iptal sayilmaz');
+  });
+
+  await test('yanlis iptal edilen mac ve tahmini onarimla yeniden acilir', async () => {
+    await db.matches().insertOne(match(50, -HOUR, { status: 'void', score: { home: 1, away: 0 } }));
+    await call('POST', '/api/auth/register', { body: { username: 'Onarim', password: 'sifre123' } });
+    const user = await db.users().findOne({ usernameKey: 'onarim' });
+    await db.predictions().insertOne({
+      userId: user._id, matchId: 50, date: today, pick: '1', score: null,
+      settled: true, result: { void: true, coins: 0 }, createdAt: new Date(),
+    });
+    assert.equal(await service.reopenRecentVoid(), 1);
+    assert.equal((await db.matches().findOne({ _id: 50 })).status, 'live');
+    const p = await db.predictions().findOne({ matchId: 50 });
+    assert.equal(p.settled, false);
+    assert.equal(p.result, undefined);
+    // Mac bitince dogru sonuclanir.
+    await db.matches().updateOne({ _id: 50 }, { $set: { status: 'finished' } });
+    const before = (await db.users().findOne({ _id: user._id })).coins;
+    await service.settleFinished([50]);
+    assert.equal((await db.users().findOne({ _id: user._id })).coins, before + 50);
+  });
+
   await test('iptal mac para vermez', () => {
     const r = service.evaluatePrediction({ pick: '1' }, { status: 'void', score: null });
     assert.equal(r.void, true);

@@ -82,6 +82,11 @@ export async function fetchClubs(clubIds) {
   return clubCache;
 }
 
+const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
+/** Iptal/tatil/hukmen sonuclari ifade eden bitis tipleri (ornek: "Abandoned", "Cancelled"). */
+const CANCELLED_END = /abandon|cancel|annul|postpon|suspend|forfeit|abgebrochen|abgesagt|verlegt/i;
+
 /**
  * Bir tmapi mac kaydinin durumunu cikarir.
  * Transfermarkt uzatma/penalti sonrasi skoru (penaltilar dahil) verir; 90
@@ -96,13 +101,20 @@ export function gameStatus(game, now = Date.now()) {
   const hasScore = score.home != null && score.away != null;
   const afterExtra = ['after_extra_time', 'after_shootout'].includes(score.additionType);
 
+  // Transfermarkt `gameEndType`i mac surerken de doldurur ("Playing"); yalnizca
+  // acik bir iptal/tatil ifadesi iptal sayilir, bilinmeyen deger iptal DEGILDIR.
+  const playing = endType === 'Playing' || live?.gameStatus === 'Playing';
+  const finishedFlag = endType === 'RegularlyTerminated' || live?.period === 'FULL_TIME' || live?.gameStatus === 'Played';
+  const cancelled = !!endType && CANCELLED_END.test(endType);
+  const elapsed = Number.isFinite(kickoff) ? now - kickoff : -1;
+
   let status = 'scheduled';
-  if (endType && endType !== 'RegularlyTerminated') status = 'void'; // tatil / iptal
-  else if (endType === 'RegularlyTerminated' || live?.period === 'FULL_TIME') status = hasScore ? 'finished' : 'void';
-  else if (Number.isFinite(kickoff) && now >= kickoff) {
-    const elapsed = now - kickoff;
-    if (hasScore && elapsed > 150 * 60 * 1000) status = 'finished'; // kapsami zayif maclar
-    else if (!hasScore && elapsed > 6 * 60 * 60 * 1000) status = 'void'; // ertelenmis
+  if (cancelled) status = 'void';
+  else if (finishedFlag && hasScore) status = 'finished';
+  else if (playing && elapsed < 5 * HOUR) status = 'live';
+  else if (elapsed >= 0) {
+    if (hasScore && elapsed > 150 * MINUTE) status = 'finished'; // kapsami zayif maclar
+    else if (!hasScore && elapsed > 6 * HOUR) status = 'void'; // ertelenmis / hic oynanmamis
     else status = 'live';
   }
 

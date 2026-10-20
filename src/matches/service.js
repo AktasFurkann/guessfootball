@@ -242,6 +242,26 @@ export async function predictionsFor(userId, matchIds) {
   return Object.fromEntries(list.map((p) => [p.matchId, p]));
 }
 
+/**
+ * Son 2 gunde "iptal" isaretlenmis maclari yeniden acar ve tahminlerini
+ * sonuclanmamis hale getirir; bir sonraki yenileme durumlarini bastan hesaplar.
+ * Gercekten iptal olan mac yine iptal bulunur (0 para), yani tekrar calismasi
+ * guvenlidir. Eski bir hatada canli maclar ("Playing") iptal sayilmisti.
+ */
+export async function reopenRecentVoid(now = Date.now()) {
+  const recent = await matches()
+    .find({ status: 'void', kickoff: { $gte: new Date(now - 2 * DAY_MS), $lte: new Date(now) } }, { projection: { _id: 1 } })
+    .toArray();
+  if (!recent.length) return 0;
+  const ids = recent.map((m) => m._id);
+  await matches().updateMany({ _id: { $in: ids } }, { $set: { status: 'live' } });
+  await predictions().updateMany(
+    { matchId: { $in: ids }, settled: true, 'result.void': true },
+    { $set: { settled: false }, $unset: { result: '', settledAt: '' } },
+  );
+  return ids.length;
+}
+
 let timers = [];
 
 /** Sunucu ayaktayken: bugun/yarin listesini ve canli skorlari duzenli tazeler. */
@@ -250,6 +270,9 @@ export function startMatchScheduler() {
   const run = (fn) => fn().catch((error) => console.warn('[matches]', error.message));
   // Acilista bugun, sonra dun (sonuclar) ve yarin: ilk acan kullanici beklemesin.
   run(async () => {
+    const reopened = await reopenRecentVoid();
+    if (reopened) console.log(`[matches] ${reopened} iptal görünen maç yeniden kontrol ediliyor`);
+    await refreshActive({ force: true }).catch(() => {});
     for (const offset of [0, -1, 1]) await syncDayOnce(dateTR(offset)).catch(() => {});
   });
   timers = [
