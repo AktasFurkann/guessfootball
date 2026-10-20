@@ -31,6 +31,9 @@ export const COMPETITION_ORDER = [...FEATURED_COMPETITIONS.keys()];
 /** Gencler / kadinlar milli takimlari ("Türkiye U21", "Türkiye (K)") listeye girmez. */
 const isSeniorNationalName = (name) => !/\bU\s?\d{2}\b|\(K\)|\(W\)|Women|Kadın|Olimp/i.test(name || '');
 
+/** Gun sayfasindaki mac baglantilari: `/spielbericht/index/spielbericht/ID` ve canli `/ticker/begegnung/live/ID`. */
+const GAME_LINK = /(?:spielbericht\/index\/spielbericht|ticker\/begegnung\/live)\/(\d+)/g;
+
 const SITES = ['https://www.transfermarkt.com.tr', 'https://www.transfermarkt.com'];
 
 /** Gunun mac kimlikleri (site sayfasindan). Erisilemezse hata firlatir. */
@@ -39,7 +42,8 @@ export async function fetchDayGameIds(date) {
   for (const site of SITES) {
     try {
       const html = await requestText(`${site}/live/index?datum=${date}`, { label: `live ${date}` });
-      const ids = [...new Set([...html.matchAll(/spielbericht\/index\/spielbericht\/(\d+)/g)].map((m) => m[1]))];
+      // Baslamamis/bitmis maclar mac raporuna, o an oynananlar canli anlatima baglanir.
+      const ids = [...new Set([...html.matchAll(GAME_LINK)].map((m) => m[1]))];
       if (ids.length) return ids;
     } catch (error) {
       lastError = error;

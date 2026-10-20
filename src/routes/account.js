@@ -22,6 +22,7 @@ import {
   PICK_COINS,
   EXACT_COINS,
 } from '../matches/service.js';
+import { getMatchDetail } from '../matches/detail.js';
 
 /** Hesap, profil ve mac tahmini uclari. */
 export const accountRouter = Router();
@@ -141,6 +142,18 @@ accountRouter.get(
         prediction: mine[m._id] ?? null,
       })),
     });
+  }),
+);
+
+/** Mac detayi: olaylar, istatistikler, kadrolar, anlatim (+ giris yaptiysa kendi tahmini). */
+accountRouter.get(
+  '/matches/:id/detail',
+  optionalAuth,
+  handle(async (req, res) => {
+    const detail = await getMatchDetail(req.params.id);
+    if (!detail) return res.status(404).json({ error: 'Maç bulunamadı.' });
+    const mine = req.user ? (await predictionsFor(req.user._id, [detail.id]))[detail.id] ?? null : null;
+    res.json({ ...detail, prediction: mine });
   }),
 );
 

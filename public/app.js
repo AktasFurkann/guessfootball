@@ -140,6 +140,7 @@ const screens = {
   auth: document.getElementById('screen-auth'),
   profile: document.getElementById('screen-profile'),
   predict: document.getElementById('screen-predict'),
+  match: document.getElementById('screen-match'),
   settings: document.getElementById('screen-settings'),
   game: document.getElementById('screen-game'),
   squad: document.getElementById('screen-squad'),

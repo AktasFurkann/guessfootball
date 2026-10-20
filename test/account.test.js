@@ -158,6 +158,11 @@ async function run() {
     assert.equal(body.matches.find((m) => m.id === 1).prediction.pick, '1');
   });
 
+  await test('listede olmayan macin detayi 404 (Transfermarkt vekili gibi kullanilamaz)', async () => {
+    assert.equal((await call('GET', '/api/matches/999999/detail')).status, 404);
+    assert.equal((await call('GET', '/api/matches/abc/detail')).status, 404);
+  });
+
   console.log('--- sonuclandirma ---');
   await test('kesin skor 50 + 1000, yanlis tahmin 0 para; tekrar calismak cift odemez', async () => {
     await db.matches().updateOne({ _id: 1 }, { $set: { status: 'finished', score: { home: 2, away: 1 } } });

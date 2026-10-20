@@ -331,7 +331,7 @@ function renderPredictionHistory(history) {
         .map((i) => {
           const final = i.finalScore ? `${i.finalScore.home}-${i.finalScore.away}` : 'vs';
           const guess = `${PICK_TEXT[i.pick] ?? i.pick}${i.score ? ` (${i.score.home}-${i.score.away})` : ''}`;
-          return `<li class="history-row">
+          return `<li class="history-row is-link" data-action="open-match" data-match-id="${i.matchId}" title="Maç detayı">
               <span class="history-row__match">${escapeHtml(i.home)} <b>${escapeHtml(final)}</b> ${escapeHtml(i.away)}</span>
               <span class="history-row__guess">Tahmin: ${escapeHtml(guess)}</span>
               ${predictionBadge(i)}
@@ -426,12 +426,23 @@ function openPredict() {
   show('predict');
   renderAccountUi();
   loadPredict();
+  startPredictTimer();
+}
+
+/** Ekran aciksa dakikada bir canli skor/durum tazele. */
+function startPredictTimer() {
   clearInterval(predictState.timer);
-  // Ekran aciksa dakikada bir canli skor/durum tazele.
   predictState.timer = setInterval(() => {
     if (!screens.predict.classList.contains('is-active')) return clearInterval(predictState.timer);
     loadPredict({ quiet: true });
   }, 60 * 1000);
+}
+
+/** Mac detayindan geri: ayni gun, girilmis taslaklar korunur. */
+function resumePredict() {
+  show('predict');
+  loadPredict({ quiet: true });
+  startPredictTimer();
 }
 
 function dayLabel(offset) {
@@ -535,7 +546,10 @@ function renderMatch(m) {
 
   return `
     <div class="${classes}" data-match="${m.id}">
-      <div class="match-card__meta">${statusText(m)}</div>
+      <div class="match-card__meta">
+        ${statusText(m)}
+        <button class="link-btn" data-action="open-match" data-match-id="${m.id}">Maç detayı ›</button>
+      </div>
       <div class="match-card__teams">
         <span class="team team--home">${crest(m.home.crestUrl)}<b>${escapeHtml(m.home.name ?? '?')}</b></span>
         <span class="match-card__score">${escapeHtml(center)}</span>
@@ -652,6 +666,223 @@ async function savePick(button) {
   }
 }
 
+// ================= MAC DETAYI =================
+const matchState = { id: null, returnTo: 'predict', tab: 'summary', data: null, timer: null };
+
+const MATCH_TABS = [
+  ['summary', 'Özet'],
+  ['stats', 'İstatistik'],
+  ['lineups', 'Kadrolar'],
+  ['ticker', 'Anlatım'],
+];
+
+function openMatch(id, returnTo) {
+  matchState.id = Number(id);
+  matchState.returnTo = returnTo;
+  matchState.tab = 'summary';
+  matchState.data = null;
+  $('#match-title').textContent = 'Maç Detayı';
+  $('#match-body').innerHTML = '<p class="server-list__empty">Maç bilgileri yükleniyor…</p>';
+  show('match');
+  loadMatch();
+  clearInterval(matchState.timer);
+  // Canli macta 30 sn'de bir tazele (sunucu da 25 sn onbellekler).
+  matchState.timer = setInterval(() => {
+    if (!screens.match.classList.contains('is-active')) return clearInterval(matchState.timer);
+    if (matchState.data?.status === 'live' || matchState.data?.status === 'scheduled') loadMatch({ quiet: true });
+  }, 30 * 1000);
+}
+
+async function loadMatch({ quiet = false } = {}) {
+  const id = matchState.id;
+  try {
+    const data = await api(`/api/matches/${id}/detail`);
+    if (id !== matchState.id) return;
+    matchState.data = data;
+    renderMatchDetail();
+  } catch (error) {
+    if (!quiet) $('#match-body').innerHTML = `<p class="server-list__empty">Maç bilgileri alınamadı: ${escapeHtml(error.message)}</p>`;
+  }
+}
+
+function closeMatch() {
+  clearInterval(matchState.timer);
+  if (matchState.returnTo === 'profile') show('profile');
+  else resumePredict();
+}
+
+function renderMatchDetail() {
+  const d = matchState.data;
+  const tabs = MATCH_TABS.map(
+    ([key, label]) =>
+      `<button class="tab ${matchState.tab === key ? 'is-active' : ''}" data-action="match-tab" data-tab="${key}">${label}</button>`,
+  ).join('');
+  const body = { summary: matchSummary, stats: matchStats, lineups: matchLineups, ticker: matchTicker }[matchState.tab](d);
+  const stale = d.stale
+    ? '<p class="profile-note">Transfermarkt şu an yanıt vermiyor; son alınan bilgiler gösteriliyor.</p>'
+    : '';
+  $('#match-body').innerHTML = `
+    ${matchHeader(d)}
+    <div class="tabs tabs--4" role="tablist">${tabs}</div>
+    <div class="match-tab">${body}</div>
+    ${stale}`;
+}
+
+function matchHeader(d) {
+  const center = d.score ? `${d.score.home} - ${d.score.away}` : 'vs';
+  const mine = d.prediction
+    ? `<p class="match-card__mine">Tahminin: <b>${escapeHtml(pickLabel(d, d.prediction.pick))}</b>${
+        d.prediction.score ? ` · ${d.prediction.score.home}-${d.prediction.score.away}` : ''
+      } ${predictionBadge({ settled: d.prediction.settled, result: d.prediction.result })}</p>`
+    : '';
+  const open = d.status === 'scheduled' && Date.now() < new Date(d.kickoff).getTime();
+  return `
+    <div class="match-hero">
+      <div class="match-hero__comp">${
+        d.competition?.logoUrl ? `<img src="${escapeHtml(imgUrl(d.competition.logoUrl))}" alt="" />` : ''
+      }${escapeHtml(d.competition?.name ?? '')}</div>
+      <div class="match-hero__status">${statusText({ ...d, open })}</div>
+      <div class="match-hero__teams">
+        <div class="match-hero__team">${crest(d.home.crestUrl)}<b>${escapeHtml(d.home.name ?? '?')}</b></div>
+        <div class="match-hero__score">${escapeHtml(center)}</div>
+        <div class="match-hero__team">${crest(d.away.crestUrl)}<b>${escapeHtml(d.away.name ?? '?')}</b></div>
+      </div>
+      ${mine}
+    </div>`;
+}
+
+const minuteText = (e) => `${e.minute ?? ''}${e.addedTime ? `+${e.addedTime}` : ''}'`;
+const CARD_ICON = { yellow: '🟨', secondYellow: '🟨🟥', red: '🟥' };
+
+function eventHtml(e) {
+  if (e.type === 'goal') {
+    return `<span class="ev-icon">⚽</span><span class="ev-text"><b>${escapeHtml(e.player ?? '?')}</b>${
+      e.assist ? `<small>asist: ${escapeHtml(e.assist)}</small>` : ''
+    }</span>`;
+  }
+  if (e.type === 'card') {
+    return `<span class="ev-icon">${CARD_ICON[e.card] ?? '🟨'}</span><span class="ev-text"><b>${escapeHtml(e.player ?? '?')}</b></span>`;
+  }
+  return `<span class="ev-icon">🔁</span><span class="ev-text"><b class="ev-in">↑ ${escapeHtml(e.in ?? '?')}</b><small class="ev-out">↓ ${escapeHtml(
+    e.out ?? '?',
+  )}</small></span>`;
+}
+
+function matchSummary(d) {
+  if (!d.events.length) {
+    return `<p class="profile-note">${
+      d.status === 'scheduled'
+        ? 'Maç henüz başlamadı. Goller, kartlar ve değişiklikler burada görünecek.'
+        : 'Bu maç için olay bilgisi yok.'
+    }</p>`;
+  }
+  const rows = d.events
+    .map(
+      (e) => `
+      <li class="ev-row">
+        <div class="ev-side ev-side--home">${e.side === 'home' ? eventHtml(e) : ''}</div>
+        <div class="ev-minute">${escapeHtml(minuteText(e))}</div>
+        <div class="ev-side ev-side--away">${e.side === 'away' ? eventHtml(e) : ''}</div>
+      </li>`,
+    )
+    .join('');
+  return `<ul class="ev-list">${rows}</ul>`;
+}
+
+const STAT_ROWS = [
+  ['possession', 'Topa sahip olma', (v) => `%${Math.round(v)}`],
+  ['shots', 'Şut'],
+  ['shotsOnTarget', 'İsabetli şut'],
+  ['shotsOffTarget', 'İsabetsiz şut'],
+  ['shotsBlocked', 'Engellenen şut'],
+  ['corners', 'Korner'],
+  ['passes', 'Pas'],
+  ['accuratePasses', 'İsabetli pas'],
+  ['fouls', 'Faul'],
+  ['offsides', 'Ofsayt'],
+  ['tackles', 'Top kapma'],
+  ['saves', 'Kurtarış'],
+  ['yellowCards', 'Sarı kart'],
+  ['redCards', 'Kırmızı kart'],
+  ['throwIns', 'Taç'],
+];
+
+function matchStats(d) {
+  const h = d.home.stats;
+  const a = d.away.stats;
+  if (!h || !a) {
+    return '<p class="profile-note">Bu maç için istatistik yok (maç başlamamış ya da Transfermarkt bu maçı ayrıntılı izlemiyor).</p>';
+  }
+  const rows = STAT_ROWS.filter(([key]) => h[key] != null || a[key] != null)
+    .map(([key, label, fmt = (v) => v]) => {
+      const hv = h[key] ?? 0;
+      const av = a[key] ?? 0;
+      const total = hv + av;
+      const hp = total ? (hv / total) * 100 : 50;
+      return `
+        <li class="stat-row ${total ? '' : 'is-empty'}">
+          <div class="stat-row__values">
+            <b class="${hv > av ? 'is-lead' : ''}">${escapeHtml(fmt(hv))}</b>
+            <span>${label}</span>
+            <b class="${av > hv ? 'is-lead' : ''}">${escapeHtml(fmt(av))}</b>
+          </div>
+          <div class="stat-row__bar">
+            <i class="stat-row__home" style="width:${hp.toFixed(1)}%"></i><i class="stat-row__away" style="width:${(100 - hp).toFixed(1)}%"></i>
+          </div>
+        </li>`;
+    })
+    .join('');
+  return `
+    <div class="stat-legend"><span>${escapeHtml(d.home.name ?? '')}</span><span>${escapeHtml(d.away.name ?? '')}</span></div>
+    <ul class="stat-list">${rows}</ul>`;
+}
+
+function lineupColumn(team) {
+  const l = team.lineup;
+  const item = (p) =>
+    `<li><span class="lu-no">${p.shirt ?? ''}</span><span class="lu-name">${escapeHtml(p.name)}${
+      p.captain ? ' <em>(K)</em>' : ''
+    }</span>${p.position ? `<small>${escapeHtml(p.position)}</small>` : ''}</li>`;
+  return `
+    <div class="lineup">
+      <h4>${crest(team.crestUrl)}<span>${escapeHtml(team.name ?? '')}</span>${l.formation ? `<small>${escapeHtml(l.formation)}</small>` : ''}</h4>
+      <ul>${l.players.map(item).join('') || '<li class="is-empty">—</li>'}</ul>
+      ${l.substitutes.length ? `<h5>Yedekler</h5><ul class="lineup__subs">${l.substitutes.map(item).join('')}</ul>` : ''}
+    </div>`;
+}
+
+function matchLineups(d) {
+  if (!d.home.lineup.players.length && !d.away.lineup.players.length) {
+    return '<p class="profile-note">Kadrolar henüz açıklanmadı (genelde maçtan yaklaşık 1 saat önce gelir).</p>';
+  }
+  return `<div class="lineups">${lineupColumn(d.home)}${lineupColumn(d.away)}</div>`;
+}
+
+const TICKER_ICON = {
+  goal: '⚽',
+  yellowCard: '🟨',
+  redCard: '🟥',
+  substitution: '🔁',
+  cornerKick: '⛳',
+  whistle: '📣',
+  finalWhistle: '📣',
+};
+
+function matchTicker(d) {
+  if (!d.ticker.length) return '<p class="profile-note">Bu maç için dakika dakika anlatım yok.</p>';
+  const rows = d.ticker
+    .map(
+      (t) =>
+        `<li class="ticker__row ticker__row--${escapeHtml(t.type)}"><span class="ticker__min">${escapeHtml(
+          t.minute,
+        )}</span><span class="ticker__icon">${TICKER_ICON[t.type] ?? '•'}</span><span>${escapeHtml(t.text)}</span></li>`,
+    )
+    .join('');
+  return `
+    <p class="profile-note">Anlatım Transfermarkt'tan İngilizce gelir; en yeni üstte.</p>
+    <ul class="ticker">${rows}</ul>`;
+}
+
 // ================= OLAYLAR =================
 document.addEventListener('click', (event) => {
   const target = event.target.closest('[data-action]');
@@ -696,6 +927,16 @@ document.addEventListener('click', (event) => {
       loadPredict();
       break;
     }
+    case 'open-match':
+      openMatch(target.dataset.matchId, screens.profile.classList.contains('is-active') ? 'profile' : 'predict');
+      break;
+    case 'match-back':
+      closeMatch();
+      break;
+    case 'match-tab':
+      matchState.tab = target.dataset.tab;
+      if (matchState.data) renderMatchDetail();
+      break;
     case 'predict-pick':
       onPick(target);
       break;
