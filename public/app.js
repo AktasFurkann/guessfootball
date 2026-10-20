@@ -108,6 +108,8 @@ function saveSettings() {
 // Online takma ad her seferinde yeniden yazilmasin diye hatirlanir.
 const ONLINE_NAME_KEY = 'gf.onlineName';
 function loadOnlineName() {
+  // Giris yapan oyuncunun online adi hesap adidir (bkz. account.js).
+  if (typeof currentAccount === 'function' && currentAccount()) return currentAccount().username;
   try {
     const saved = localStorage.getItem(ONLINE_NAME_KEY);
     if (saved) return saved;
@@ -134,6 +136,10 @@ const screens = {
   mode: document.getElementById('screen-mode'),
   online: document.getElementById('screen-online'),
   servers: document.getElementById('screen-servers'),
+  // hesap / profil / mac tahmini (public/account.js)
+  auth: document.getElementById('screen-auth'),
+  profile: document.getElementById('screen-profile'),
+  predict: document.getElementById('screen-predict'),
   settings: document.getElementById('screen-settings'),
   game: document.getElementById('screen-game'),
   squad: document.getElementById('screen-squad'),
@@ -1128,7 +1134,10 @@ const online = {
 /** Socket baglantisini (bir kez) kurar ve olaylari baglar. */
 function connectSocket() {
   if (online.socket) return online.socket;
-  const socket = io();
+  // Giris yapildiysa oturum anahtari her (yeniden) baglantida gonderilir; sunucu
+  // odadaki adi hesap adindan alir ve oyun sonucunu profile yazar.
+  const socket = io({ auth: (cb) => cb({ token: typeof authToken === 'function' ? authToken() : null }) });
+  if (typeof onSocketCreated === 'function') onSocketCreated(socket);
   online.socket = socket;
 
   socket.on('room:update', renderLobby);
@@ -1329,6 +1338,7 @@ function openOnline(mode = 'closest', length = 'short', pool = 'famous') {
   $('#online-hint').textContent = '';
   $('#online-dice').hidden = true;
   $('#online-name').value = loadOnlineName();
+  if (typeof syncNameInputs === 'function') syncNameInputs();
   const title = $('#screen-online h2');
   if (title) title.textContent = `Online — ${MODE_TITLES[online.mode] || 'Oyna'}`;
   show('online');
@@ -1410,6 +1420,7 @@ function openServers(returnTo = 'menu') {
   if (online.roomCode) leaveOnlineIfAny();
   const typed = $('#online-name').value.trim();
   $('#servers-name').value = typed || loadOnlineName();
+  if (typeof syncNameInputs === 'function') syncNameInputs();
   $('#servers-hint').textContent = 'Biri “ODA KUR” dediğinde odası burada görünür.';
   renderServers(null);
   show('servers');
@@ -1464,6 +1475,12 @@ function renderLobby(room) {
   for (const p of room.players) {
     const li = document.createElement('li');
     li.textContent = p.name + (p.id === online.youId ? ' (sen)' : '');
+    // Hesabi olan oyuncunun profiline lobiden bakilabilir.
+    if (p.registered) {
+      li.dataset.action = 'view-profile';
+      li.dataset.username = p.name;
+      li.classList.add('is-link');
+    }
     if (p.id === room.hostId) li.classList.add('is-host');
     list.appendChild(li);
   }
@@ -2643,6 +2660,7 @@ async function squadSend() {
     if (full) {
       squad.over = true;
       toast(`Kadron tamam — Toplam: ${squadTotalText(squad.totals[0])} ${cfg.unit}`, 5000);
+      if (typeof reportSoloGame === 'function') reportSoloGame(squad.mode, squad.length, squad.totals[0]);
       setPrimarySquad('YENİ OYUN', 'new-game');
     } else {
       setPrimarySquad(cfg.nextLabel, 'squad-next');

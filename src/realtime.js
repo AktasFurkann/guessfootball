@@ -11,6 +11,8 @@ import { marketClubOf, marketFee } from './game/marketLogic.js';
 import { slotOf, longSlotOf } from './game/positions.js';
 import { ensurePlayer } from './game/ensurePlayer.js';
 import { prefetchImages } from './routes/img.js';
+import { userFromToken } from './auth/accounts.js';
+import { recordOnlineGame } from './stats/profile.js';
 
 /**
  * Online oyun motoru - oda tabanli, iki oyunculu, sunucu-otoriter.
@@ -67,7 +69,7 @@ function publicRoom(room) {
     length: room.length,
     pool: room.pool,
     target: room.target,
-    players: [...room.players.entries()].map(([id, p]) => ({ id, name: p.name, score: p.score })),
+    players: [...room.players.entries()].map(([id, p]) => ({ id, name: p.name, score: p.score, registered: !!p.userId })),
   };
 }
 
@@ -94,6 +96,29 @@ const scoreMap = (room) =>
 
 const sanitizeName = (name, fallback) => String(name ?? '').trim().slice(0, 12) || fallback;
 
+/** Odadaki oyuncu kaydi: giris yaptiysa adi hesap adidir (degistirilemez). */
+function playerEntry(socket, name, fallback) {
+  const user = socket.data.user;
+  return user
+    ? { name: user.username, score: 0, userId: user._id }
+    : { name: sanitizeName(name, fallback), score: 0, userId: null };
+}
+
+/**
+ * Biten oyunu profillere yazar (bir kez). Misafirler de rakip olarak kaydedilir.
+ * Hata oyunu bozmasin diye yutulur.
+ */
+function recordResult(room) {
+  if (room.recorded || room.players.size !== MAX_PLAYERS) return;
+  room.recorded = true;
+  recordOnlineGame({
+    mode: room.mode,
+    length: room.length,
+    pool: SCORED_MODES.has(room.mode) ? room.pool : null,
+    players: [...room.players.values()].map((p) => ({ userId: p.userId ?? null, username: p.name, score: p.score })),
+  }).catch((error) => console.warn('[realtime] Sonuç kaydedilemedi:', error.message));
+}
+
 const ids = (room) => [...room.players.keys()];
 const otherId = (room, id) => ids(room).find((x) => x !== id);
 
@@ -106,6 +131,17 @@ const playerSlotKeyOf = (room, doc) =>
 
 export function attachRealtime(httpServer) {
   const io = new Server(httpServer);
+
+  // Giris yapmis oyuncu: baglanirken oturum anahtari gonderir. Gecersiz/eksik
+  // anahtar baglantiyi engellemez, oyuncu misafir olarak oynar.
+  io.use(async (socket, next) => {
+    try {
+      socket.data.user = await userFromToken(socket.handshake.auth?.token);
+    } catch {
+      socket.data.user = null;
+    }
+    next();
+  });
 
   /** Oda listesi degisince "Sunucular" ekranindakileri guncelle. */
   const broadcastRooms = () => io.to(BROWSER_ROOM).emit('rooms:list', { rooms: listOpenRooms() });
@@ -164,7 +200,7 @@ export function attachRealtime(httpServer) {
         turnTimer: null,
         rowTimer: null,
       };
-      room.players.set(socket.id, { name: sanitizeName(name, 'Oyuncu 1'), score: 0 });
+      room.players.set(socket.id, playerEntry(socket, name, 'Oyuncu 1'));
       rooms.set(code, room);
       socket.data.roomCode = code;
       socket.join(code);
@@ -188,9 +224,13 @@ export function attachRealtime(httpServer) {
       if (!room) return ack?.({ ok: false, error: 'Böyle bir oda yok.' });
       if (room.phase !== 'lobby') return ack?.({ ok: false, error: 'Oyun çoktan başlamış.' });
       if (room.players.size >= MAX_PLAYERS) return ack?.({ ok: false, error: 'Oda dolu.' });
+      const me = socket.data.user;
+      if (me && [...room.players.values()].some((p) => p.userId && String(p.userId) === String(me._id))) {
+        return ack?.({ ok: false, error: 'Bu hesap zaten bu odada.' });
+      }
 
       leaveCurrentRoom(socket);
-      room.players.set(socket.id, { name: sanitizeName(name, 'Oyuncu 2'), score: 0 });
+      room.players.set(socket.id, playerEntry(socket, name, 'Oyuncu 2'));
       socket.data.roomCode = room.code;
       socket.join(room.code);
       ack?.({
@@ -352,6 +392,7 @@ function resetRoomState(room) {
   room.newGameVotes = new Set();
   room.nextPick = null;
   room.gameOver = false;
+  room.recorded = false;
 }
 
 /** İki oyuncu da yeni oyuna geçmek istediğinde odayı sıfırlayıp yeniden başlat. */
@@ -433,6 +474,7 @@ function finishIfTargetReached(io, room) {
   const best = Math.max(...scores);
   const winners = ids(room).filter((id) => room.players.get(id).score === best);
   io.to(room.code).emit('game:over', { scores: scoreMap(room), winners, target: room.target });
+  recordResult(room);
   return true;
 }
 
@@ -735,6 +777,7 @@ function squadAdvanceAfterPlace(io, room, sid) {
   if (full) {
     room.phase = 'ended';
     io.to(room.code).emit('squad:over', { scores: scoreMap(room) });
+    recordResult(room);
   } else {
     io.to(room.code).emit('squad:round-done', { scores: scoreMap(room) });
   }
@@ -882,6 +925,7 @@ function superligAdvanceAfterPlace(io, room, sid) {
   if (full) {
     room.phase = 'ended';
     io.to(room.code).emit('superlig:over', { scores: scoreMap(room) });
+    recordResult(room);
   } else {
     io.to(room.code).emit('superlig:round-done', { scores: scoreMap(room) });
   }
@@ -1022,6 +1066,7 @@ function marketAdvanceAfterPlace(io, room, sid) {
   if (full) {
     room.phase = 'ended';
     io.to(room.code).emit('market:over', { scores: scoreMap(room) });
+    recordResult(room);
   } else {
     io.to(room.code).emit('market:round-done', { scores: scoreMap(room) });
   }

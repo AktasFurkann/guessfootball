@@ -9,6 +9,8 @@ import { playersRouter } from './routes/players.js';
 import { teamsRouter } from './routes/teams.js';
 import { gameRouter } from './routes/game.js';
 import { imgRouter, prefetchImages } from './routes/img.js';
+import { accountRouter } from './routes/account.js';
+import { startMatchScheduler } from './matches/service.js';
 import { attachRealtime } from './realtime.js';
 import { ensureIndex } from './game/searchIndex.js';
 import { listCountries } from './game/squad.js';
@@ -49,6 +51,7 @@ export function createApp() {
   app.use('/api/teams', teamsRouter);
   app.use('/api/game', gameRouter);
   app.use('/api/img', imgRouter);
+  app.use('/api', accountRouter);
 
   // API disindaki bilinmeyen yollarda tek sayfalik arayuzu dondur.
   app.use('/api', (req, res) => {
@@ -77,6 +80,7 @@ async function start() {
   const app = createApp();
   const server = createServer(app);
   attachRealtime(server); // Socket.IO'yu ayni HTTP sunucusuna bagla
+  startMatchScheduler(); // gunun maclari + canli skor + tahmin sonuclandirma
 
   // 0.0.0.0: bulut barindirmada disaridan erisim icin gerekli.
   server.listen(config.port, '0.0.0.0', () => {

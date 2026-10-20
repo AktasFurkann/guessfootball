@@ -40,6 +40,19 @@ async function ensureIndexes(database) {
       { key: { name: 1 } },
       { key: { isNationalTeam: 1 } },
     ]),
+    database.collection(COLLECTIONS.users).createIndexes([{ key: { usernameKey: 1 }, unique: true }]),
+    database.collection(COLLECTIONS.sessions).createIndexes([
+      { key: { userId: 1 } },
+      // Suresi dolan oturumlari MongoDB kendisi siler.
+      { key: { expiresAt: 1 }, expireAfterSeconds: 0 },
+    ]),
+    database.collection(COLLECTIONS.matches).createIndexes([{ key: { date: 1 } }, { key: { status: 1, kickoff: 1 } }]),
+    database.collection(COLLECTIONS.predictions).createIndexes([
+      { key: { userId: 1, matchId: 1 }, unique: true },
+      { key: { matchId: 1, settled: 1 } },
+      { key: { userId: 1, date: -1 } },
+    ]),
+    database.collection(COLLECTIONS.gameResults).createIndexes([{ key: { 'players.userId': 1, at: -1 } }]),
   ]);
   console.log('[db] Indeksler hazır.');
 }
@@ -51,6 +64,11 @@ export function getDb() {
 
 export const players = () => getDb().collection(COLLECTIONS.players);
 export const teams = () => getDb().collection(COLLECTIONS.teams);
+export const users = () => getDb().collection(COLLECTIONS.users);
+export const sessions = () => getDb().collection(COLLECTIONS.sessions);
+export const matches = () => getDb().collection(COLLECTIONS.matches);
+export const predictions = () => getDb().collection(COLLECTIONS.predictions);
+export const gameResults = () => getDb().collection(COLLECTIONS.gameResults);
 
 export async function close() {
   if (client) {

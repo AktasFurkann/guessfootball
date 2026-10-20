@@ -1271,3 +1271,520 @@ body {
 .screen--squad.is-solo .sq-input-wrap[data-side='1'] {
   display: none;
 }
+
+/* ================= HESAP / PROFIL / TAHMIN ================= */
+.btn--accent {
+  background: linear-gradient(180deg, #c5ec2a, #9fc515);
+  color: var(--ink);
+  border-color: transparent;
+  box-shadow: 0 8px 24px rgba(215, 255, 62, 0.25);
+}
+.btn--small {
+  font-size: 1.05rem;
+  padding: 8px 14px;
+}
+.settings__hint--muted {
+  color: var(--muted);
+}
+.settings__hint--error {
+  color: var(--right);
+}
+.field input[type='password'] {
+  font-size: 1.1rem;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1320;
+  color: var(--white);
+}
+.field input[readonly] {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* menu: giris yapan hesap */
+.user-chip {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  margin: -18px auto 22px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-2);
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+.user-chip__coins,
+.coin-badge {
+  color: var(--accent);
+  font-weight: 700;
+}
+.coin-badge {
+  margin-left: auto;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem;
+  white-space: nowrap;
+}
+
+/* giris / kayit sekmeleri */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #0f1320;
+}
+.tab {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.tab.is-active {
+  background: var(--board-blue);
+  color: var(--white);
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* profil */
+.user-search {
+  position: relative;
+}
+.user-search input {
+  width: 100%;
+  font-size: 1rem;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1320;
+  color: var(--white);
+}
+.user-search .suggest {
+  left: 0;
+  right: 0;
+}
+.user-search .suggest li {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+#profile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.profile-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1d2233, #171b28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.profile-card small {
+  color: var(--muted);
+}
+.profile-card__name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.9rem;
+  letter-spacing: 0.02em;
+}
+.profile-card__name small {
+  font-size: 1rem;
+}
+.profile-card__coins {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.profile-section h3 {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+}
+.profile-section h4 {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.profile-section--h2h {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(215, 255, 62, 0.35);
+  background: rgba(215, 255, 62, 0.05);
+}
+.profile-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: #0f1320;
+  text-align: center;
+}
+.stat-tile b {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.stat-tile span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.is-good b,
+b.is-good,
+.result-badge.is-good {
+  color: var(--win);
+}
+.is-bad b,
+b.is-bad,
+.result-badge.is-bad {
+  color: var(--right);
+}
+.is-gold b {
+  color: var(--left);
+}
+.h2h {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.h2h__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 10px;
+  background: #0f1320;
+}
+.h2h__side b {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+.h2h__side span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.mode-lines,
+.recent-games,
+.leaderboard,
+.history-day ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mode-lines li,
+.recent-games li,
+.leaderboard li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: #0f1320;
+  font-size: 0.9rem;
+}
+.mode-lines li span,
+.recent-games li span {
+  color: var(--muted);
+  min-width: 0;
+}
+.leaderboard {
+  counter-reset: rank;
+}
+.leaderboard li {
+  cursor: pointer;
+}
+.leaderboard li::before {
+  counter-increment: rank;
+  content: counter(rank) '.';
+  color: var(--muted);
+  width: 1.6em;
+}
+.leaderboard li span {
+  flex: 1;
+}
+.leaderboard li.is-me {
+  outline: 1px solid var(--accent);
+}
+.history-day h4 {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.history-day h4 small {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.history-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: #0f1320;
+  font-size: 0.88rem;
+}
+.history-row__guess {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.result-badge {
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.room-players li.is-link {
+  cursor: pointer;
+  text-decoration: underline dotted rgba(255, 255, 255, 0.4);
+}
+
+/* mac tahmini */
+.day-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.03em;
+}
+.predict-rules {
+  margin: -6px 0 0;
+  text-align: center;
+  color: var(--accent);
+  font-size: 0.88rem;
+}
+.predict-login {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(63, 91, 246, 0.15);
+  border: 1px solid rgba(63, 91, 246, 0.5);
+}
+.predict-login .btn {
+  font-size: 1.05rem;
+  padding: 8px 14px;
+}
+#predict-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.comp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.comp-group__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+}
+.comp-group__title img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px;
+}
+.match-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1d2233, #171b28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.match-card.is-live {
+  border-color: rgba(255, 90, 90, 0.6);
+}
+.match-card__meta {
+  text-align: center;
+  font-size: 0.85rem;
+}
+.match-time {
+  color: var(--muted);
+  font-weight: 600;
+}
+.live-badge,
+.ms-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+.live-badge {
+  background: var(--right);
+  color: var(--white);
+}
+.ms-badge {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+}
+.match-card__teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 0.95rem;
+}
+.team b {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.team--away {
+  justify-content: flex-end;
+  text-align: right;
+}
+.team img,
+.crest-blank {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.match-card__score {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  min-width: 56px;
+  text-align: center;
+}
+.match-card__predict {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.pick-group {
+  display: flex;
+  gap: 6px;
+}
+.pick {
+  width: 44px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0f1320;
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pick.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.score-inputs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+.score-inputs input {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0f1320;
+  color: var(--white);
+}
+.match-card__mine {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.match-card__mine b {
+  color: var(--white);
+}
+.match-card__hint {
+  margin: -4px 0 0;
+  text-align: center;
+  color: var(--right);
+  font-size: 0.82rem;
+}
+.match-card__hint:empty {
+  display: none;
+}
+@media (max-width: 480px) {
+  .team {
+    font-size: 0.82rem;
+  }
+  .history-row {
+    grid-template-columns: 1fr auto;
+  }
+  .history-row__guess {
+    grid-column: 1;
+  }
+}

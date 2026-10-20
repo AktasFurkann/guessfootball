@@ -18,9 +18,16 @@
       <div class="menu">
         <h1 class="menu__logo">GUESS<span>FOOTBALL</span></h1>
         <p class="menu__tagline">Futbolcu Bilgi Düellosu</p>
+        <!-- Giris yapan hesap: ad + para (tiklayinca profil) -->
+        <button class="user-chip" id="menu-user" data-action="open-profile" hidden>
+          <span class="user-chip__name" id="menu-user-name"></span>
+          <span class="user-chip__coins" id="menu-user-coins"></span>
+        </button>
         <nav class="menu__nav">
           <button class="btn btn--primary" data-action="open-play">OYNA</button>
+          <button class="btn btn--accent" data-action="open-predict">TAHMİNDE BULUN</button>
           <button class="btn" data-action="open-servers">SUNUCULAR</button>
+          <button class="btn" data-action="open-profile" id="menu-profile-btn">GİRİŞ YAP</button>
           <button class="btn" data-action="open-settings">AYARLAR</button>
           <button class="btn btn--ghost" data-action="quit">OYUNDAN ÇIK</button>
         </nav>
@@ -279,6 +286,76 @@
       </div>
     </section>
 
+    <!-- ================= GIRIS / KAYIT ================= -->
+    <section class="screen screen--settings" id="screen-auth">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="auth-back" aria-label="Geri">‹</button>
+          <h2 id="auth-title">Giriş Yap</h2>
+        </header>
+        <div class="settings">
+          <div class="tabs" role="tablist">
+            <button class="tab is-active" data-action="auth-tab" data-tab="login" role="tab">Giriş Yap</button>
+            <button class="tab" data-action="auth-tab" data-tab="register" role="tab">Kayıt Ol</button>
+          </div>
+          <form class="auth-form" id="auth-form" autocomplete="on">
+            <label class="field">
+              <span>Kullanıcı adı</span>
+              <input type="text" id="auth-username" maxlength="12" autocomplete="username" placeholder="3-12 karakter" />
+            </label>
+            <label class="field">
+              <span>Şifre</span>
+              <input type="password" id="auth-password" maxlength="128" autocomplete="current-password" placeholder="en az 6 karakter" />
+            </label>
+            <button class="btn btn--primary" type="submit" id="auth-submit">GİRİŞ YAP</button>
+          </form>
+          <p class="settings__hint settings__hint--muted" id="auth-note">Bu cihazda açık kalırsın; bir daha şifre sormaz.</p>
+          <p class="settings__hint settings__hint--error" id="auth-hint"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PROFIL ================= -->
+    <section class="screen screen--settings" id="screen-profile">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="profile-back" aria-label="Geri">‹</button>
+          <h2 id="profile-title">Profil</h2>
+        </header>
+        <div class="settings">
+          <div class="user-search">
+            <input type="text" id="profile-search" maxlength="12" placeholder="Oyuncu ara…" autocomplete="off" />
+            <ul class="suggest" id="profile-search-list" hidden></ul>
+          </div>
+          <div id="profile-body"><p class="server-list__empty">Yükleniyor…</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MAC TAHMINI ================= -->
+    <section class="screen screen--wide" id="screen-predict">
+      <div class="panel">
+        <header class="panel__head">
+          <button class="icon-btn" data-action="back-menu" aria-label="Geri">‹</button>
+          <h2>Maç Tahmini</h2>
+          <span class="coin-badge" id="predict-coins" hidden></span>
+        </header>
+        <div class="settings">
+          <div class="day-nav">
+            <button class="icon-btn" data-action="predict-day" data-step="-1" aria-label="Önceki gün">‹</button>
+            <b id="predict-date">Bugün</b>
+            <button class="icon-btn" data-action="predict-day" data-step="1" aria-label="Sonraki gün">›</button>
+          </div>
+          <p class="predict-rules" id="predict-rules">Doğru sonuç +50 · Kesin skor +1000 para</p>
+          <div class="predict-login" id="predict-login" hidden>
+            <span>Tahmin yapmak için giriş yap.</span>
+            <button class="btn btn--primary" data-action="open-auth">GİRİŞ YAP</button>
+          </div>
+          <div id="predict-list"><p class="server-list__empty">Maçlar yükleniyor…</p></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= AYARLAR ================= -->
     <section class="screen screen--settings" id="screen-settings">
       <div class="panel">
@@ -491,5 +568,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
+    <script src="account.js"></script>
   </body>
 </html>

@@ -29,4 +29,10 @@ export const config = {
 export const COLLECTIONS = {
   players: 'players',
   teams: 'teams',
+  // hesap / profil / tahmin
+  users: 'users',
+  sessions: 'sessions',
+  matches: 'matches',
+  predictions: 'predictions',
+  gameResults: 'gameResults',
 };

@@ -90,6 +90,29 @@ Online oynanış detayı:
 Online motorun uçtan uca testleri: `npm run test:online`, `npm run test:online-turn`,
 `npm run test:online-lobby` (sunucu ayakta olmalı).
 
+### Hesap, profil ve maç tahmini
+
+- **Hesap:** Kullanıcı adı + şifre ile kayıt/giriş. Şifreler `scrypt` ile hash'lenir.
+  Giriş yapınca tarayıcıya uzun ömürlü bir oturum anahtarı verilir ("beni hatırla",
+  180 gün, kullandıkça uzar); veritabanında anahtarın yalnızca SHA-256 özeti tutulur.
+  Yeni hesap **1.000 para** ile başlar.
+- **Tahminde Bulun:** Bugünün (± 3 gün gezilebilir) büyük turnuva maçları listelenir:
+  Şampiyonlar Ligi, Avrupa Ligi, Konferans Ligi, 5 büyük lig, Süper Lig, Türkiye
+  Kupası ve A milli maçlar. Her maç için 1-X-2, isteğe bağlı kesin skor. Maç başlayınca
+  tahmin kilitlenir. Doğru sonuç **+50**, kesin skor ayrıca **+1000** para. Uzatma veya
+  penaltıya giden maç 90 dakikada beraberlik (X) sayılır.
+- **Kaynak:** Günün maç kimlikleri Transfermarkt'ın canlı sayfasından
+  (`/live/index?datum=`), saat/skor/canlı dakika `tmapi` `/games` ucundan gelir.
+  Maçlar `matches` koleksiyonunda önbelleklenir; sunucu dakikada bir canlı skorları
+  yeniler ve biten maçların tahminlerini sonuçlandırır. Render uyurken kaçan
+  sonuçlar ilk istekte işlenir. Testlerde `MATCH_SYNC=off` dış istekleri kapatır.
+- **Profil:** Para, tahmin istatistikleri ve geçmişi (gün gün doğru/yanlış), online oyun
+  istatistikleri (moda göre galibiyet/beraberlik/mağlubiyet), tek kişilik kadro
+  rekorları, son oyunlar ve para sıralaması. Başkasının profiline bakınca ikinizin
+  karşılıklı rekabeti görünür. Online kazanan **+20** para alır; aynı ekran oyunları sayılmaz.
+
+Testi: `npm run test:account` (bellek içi MongoDB, internet gerekmez).
+
 ## Online yayın (deploy)
 
 Oyun tek servis olarak çalışır (Express + Socket.IO aynı port, statik arayüz de
