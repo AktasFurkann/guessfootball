@@ -474,6 +474,13 @@ function statusText(m) {
 
 const crest = (url) => (url ? `<img src="${escapeHtml(imgUrl(url))}" alt="" loading="lazy" />` : '<span class="crest-blank"></span>');
 
+/** 1/X/2 seciminin okunur hali: "Fenerbahçe SK kazanır", "Beraberlik". */
+function pickLabel(m, pick) {
+  if (pick === '1') return `${m.home.name ?? 'Ev sahibi'} kazanır`;
+  if (pick === '2') return `${m.away.name ?? 'Deplasman'} kazanır`;
+  return 'Beraberlik';
+}
+
 function renderMatch(m) {
   const pred = m.prediction;
   const draft = predictState.drafts.get(m.id);
@@ -485,28 +492,43 @@ function renderMatch(m) {
 
   let bottom = '';
   if (m.open && account.user) {
-    const pickBtn = (p, label) =>
-      `<button class="pick ${pick === p ? 'is-selected' : ''}" data-action="predict-pick" data-pick="${p}" title="${label}">${p}</button>`;
+    const rewards = predictState.data?.rewards ?? { pick: 50, exact: 1000 };
+    const option = (p, title) =>
+      `<button class="pick ${pick === p ? 'is-selected' : ''}" data-action="predict-pick" data-pick="${p}">
+        <span class="pick__code">${p}</span><span class="pick__label">${escapeHtml(title)}</span>
+      </button>`;
     bottom = `
-      <div class="match-card__predict">
-        <div class="pick-group">${pickBtn('1', 'Ev sahibi kazanır')}${pickBtn('X', 'Beraberlik')}${pickBtn('2', 'Deplasman kazanır')}</div>
-        <div class="score-inputs" title="İsteğe bağlı: kesin skor">
-          <input type="text" inputmode="numeric" maxlength="2" data-side="home" placeholder="–" value="${escapeHtml(home)}" aria-label="Ev sahibi gol" />
-          <span>:</span>
-          <input type="text" inputmode="numeric" maxlength="2" data-side="away" placeholder="–" value="${escapeHtml(away)}" aria-label="Deplasman gol" />
+      <div class="predict-block">
+        <div class="predict-block__head"><span>Maç sonucu</span><em>+${rewards.pick}</em></div>
+        <div class="pick-group">
+          ${option('1', m.home.name ?? 'Ev sahibi')}${option('X', 'Beraberlik')}${option('2', m.away.name ?? 'Deplasman')}
         </div>
-        <button class="btn btn--primary btn--small" data-action="predict-save">${pred && !draft ? 'GÜNCELLE' : 'KAYDET'}</button>
       </div>
-      <p class="match-card__mine">${
+      <div class="predict-block">
+        <div class="predict-block__head"><span>Skor tahmini <small>(isteğe bağlı)</small></span><em>+${rewards.exact}</em></div>
+        <div class="score-inputs">
+          <label class="score-inputs__team">
+            <span>${escapeHtml(m.home.name ?? 'Ev')}</span>
+            <input type="text" inputmode="numeric" maxlength="2" data-side="home" placeholder="–" value="${escapeHtml(home)}" aria-label="${escapeHtml(m.home.name ?? 'Ev sahibi')} gol" />
+          </label>
+          <span class="score-inputs__sep">–</span>
+          <label class="score-inputs__team score-inputs__team--away">
+            <input type="text" inputmode="numeric" maxlength="2" data-side="away" placeholder="–" value="${escapeHtml(away)}" aria-label="${escapeHtml(m.away.name ?? 'Deplasman')} gol" />
+            <span>${escapeHtml(m.away.name ?? 'Dep.')}</span>
+          </label>
+        </div>
+      </div>
+      <button class="btn btn--primary predict-save" data-action="predict-save">${pred && !draft ? 'TAHMİNİ GÜNCELLE' : 'TAHMİNİ KAYDET'}</button>
+      <p class="match-card__mine ${pred && !draft ? 'is-saved' : ''}">${
         pred && !draft
-          ? `✓ Tahminin kaydedildi: <b>${escapeHtml(pred.pick)}</b>${pred.score ? ` (${pred.score.home}-${pred.score.away})` : ''}`
+          ? `✓ Kaydedildi: <b>${escapeHtml(pickLabel(m, pred.pick))}</b>${pred.score ? ` · ${pred.score.home}-${pred.score.away}` : ''}`
           : draft
-            ? 'Kaydedilmedi'
-            : 'Skor isteğe bağlı'
+            ? 'Henüz kaydedilmedi'
+            : 'Sonucu seç; istersen kesin skoru da yaz.'
       }</p>`;
   } else if (pred) {
     const badge = predictionBadge({ settled: pred.settled, result: pred.result });
-    bottom = `<p class="match-card__mine">Tahminin: <b>${escapeHtml(pred.pick)}</b>${pred.score ? ` (${pred.score.home}-${pred.score.away})` : ''} ${badge}</p>`;
+    bottom = `<p class="match-card__mine">Tahminin: <b>${escapeHtml(pickLabel(m, pred.pick))}</b>${pred.score ? ` · ${pred.score.home}-${pred.score.away}` : ''} ${badge}</p>`;
   } else if (!m.open) {
     bottom = '<p class="match-card__mine">Tahmin kapandı.</p>';
   }
@@ -594,7 +616,10 @@ function onScoreInput(input) {
   }
   predictState.drafts.set(id, draft);
   const mine = card.querySelector('.match-card__mine');
-  if (mine) mine.textContent = 'Kaydedilmedi';
+  if (mine) {
+    mine.textContent = 'Henüz kaydedilmedi';
+    mine.classList.remove('is-saved');
+  }
 }
 
 async function savePick(button) {
