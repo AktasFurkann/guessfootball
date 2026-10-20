@@ -667,7 +667,7 @@ async function savePick(button) {
 }
 
 // ================= MAC DETAYI =================
-const matchState = { id: null, returnTo: 'predict', tab: 'summary', data: null, timer: null };
+const matchState = { id: null, returnTo: 'predict', tab: 'summary', data: null, timer: null, period: 'All', shotFilter: 'all' };
 
 const MATCH_TABS = [
   ['summary', 'Özet'],
@@ -680,6 +680,8 @@ function openMatch(id, returnTo) {
   matchState.id = Number(id);
   matchState.returnTo = returnTo;
   matchState.tab = 'summary';
+  matchState.period = 'All';
+  matchState.shotFilter = 'all';
   matchState.data = null;
   $('#match-title').textContent = 'Maç Detayı';
   $('#match-body').innerHTML = '<p class="server-list__empty">Maç bilgileri yükleniyor…</p>';
@@ -769,12 +771,14 @@ function eventHtml(e) {
 }
 
 function matchSummary(d) {
+  const extras = `${momentumChart(d)}`;
+  const players = topPlayers(d);
   if (!d.events.length) {
-    return `<p class="profile-note">${
+    return `${extras}<p class="profile-note">${
       d.status === 'scheduled'
         ? 'Maç henüz başlamadı. Goller, kartlar ve değişiklikler burada görünecek.'
         : 'Bu maç için olay bilgisi yok.'
-    }</p>`;
+    }</p>${players}`;
   }
   const rows = d.events
     .map(
@@ -786,7 +790,7 @@ function matchSummary(d) {
       </li>`,
     )
     .join('');
-  return `<ul class="ev-list">${rows}</ul>`;
+  return `${extras}<section class="adv-card"><h3>Maç Olayları</h3><ul class="ev-list">${rows}</ul></section>${players}`;
 }
 
 const STAT_ROWS = [
@@ -808,6 +812,7 @@ const STAT_ROWS = [
 ];
 
 function matchStats(d) {
+  if (d.advanced?.periods?.length) return advancedStats(d);
   const h = d.home.stats;
   const a = d.away.stats;
   if (!h || !a) {
@@ -852,6 +857,10 @@ function lineupColumn(team) {
 }
 
 function matchLineups(d) {
+  const adv = d.advanced?.lineups;
+  if (adv?.home?.starters?.length && adv?.away?.starters?.length) {
+    return `<div class="lineups">${advancedLineupColumn(d.home, adv.home, 'home')}${advancedLineupColumn(d.away, adv.away, 'away')}</div>`;
+  }
   if (!d.home.lineup.players.length && !d.away.lineup.players.length) {
     return '<p class="profile-note">Kadrolar henüz açıklanmadı (genelde maçtan yaklaşık 1 saat önce gelir).</p>';
   }
@@ -881,6 +890,181 @@ function matchTicker(d) {
   return `
     <p class="profile-note">Anlatım Transfermarkt'tan İngilizce gelir; en yeni üstte.</p>
     <ul class="ticker">${rows}</ul>`;
+}
+
+// ---- FotMob ayrintilari (varsa): sut haritasi, momentum, gruplu istatistik, puanlar ----
+
+/** Takim renkleri: ev sahibi sari, deplasman mavi (istatistik cubuklariyla ayni). */
+const SIDE_COLOR = { home: '#ffd54a', away: '#5b7cff' };
+
+/**
+ * Saha cizgileri (105 x 68 m). Ev sahibinin sutlari sol kaleye, deplasmaninki
+ * sag kaleye cizilir; FotMob iki takimi da ayni yone (x=105) hucum ediyor verir.
+ */
+function pitchLines() {
+  const box = (x, w) => `<rect x="${x}" y="13.84" width="${w}" height="40.32" />`;
+  const six = (x, w) => `<rect x="${x}" y="24.84" width="${w}" height="18.32" />`;
+  return `
+    <rect x="0" y="0" width="105" height="68" />
+    <line x1="52.5" y1="0" x2="52.5" y2="68" />
+    <circle cx="52.5" cy="34" r="9.15" />
+    <circle cx="52.5" cy="34" r="0.4" class="dot" />
+    ${box(0, 16.5)}${box(88.5, 16.5)}${six(0, 5.5)}${six(99.5, 5.5)}
+    <circle cx="11" cy="34" r="0.4" class="dot" /><circle cx="94" cy="34" r="0.4" class="dot" />
+    <rect x="-1.5" y="30.34" width="1.5" height="7.32" class="goal" /><rect x="105" y="30.34" width="1.5" height="7.32" class="goal" />`;
+}
+
+const SHOT_FILTERS = [
+  ['all', 'Hepsi'],
+  ['onTarget', 'İsabetli'],
+  ['goal', 'Goller'],
+];
+
+function shotMap(d) {
+  const shots = d.advanced?.shots ?? [];
+  if (!shots.length) return '';
+  const filter = matchState.shotFilter;
+  const visible = shots.filter((s) =>
+    filter === 'goal' ? s.type === 'goal' : filter === 'onTarget' ? s.type === 'goal' || s.type === 'onTarget' : true,
+  );
+  const dots = visible
+    .map((s) => {
+      const x = s.side === 'home' ? 105 - s.x : s.x;
+      const y = s.side === 'home' ? 68 - s.y : s.y;
+      const r = 0.9 + Math.min(s.xg ?? 0.05, 0.8) * 2.6; // buyuk daire = yuksek xG
+      const color = SIDE_COLOR[s.side];
+      const tip = `${s.player ?? '?'} ${s.minute ?? ''}' · ${({ goal: 'Gol', onTarget: 'İsabetli', miss: 'İsabetsiz', blocked: 'Bloklandı', ownGoal: 'Kendi kalesine' })[s.type]}${s.xg != null ? ` · xG ${s.xg.toFixed(2)}` : ''}`;
+      const body =
+        s.type === 'goal'
+          ? `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${color}" stroke-width="0.7" />`
+          : s.type === 'onTarget'
+            ? `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" stroke="#0f1320" stroke-width="0.3" />`
+            : s.type === 'blocked'
+              ? `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${color}" stroke-width="0.5" /><circle cx="${x}" cy="${y}" r="${r * 0.35}" fill="${color}" />`
+              : `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${color}" stroke-width="0.5" />`;
+      return `<g><title>${escapeHtml(tip)}</title>${body}</g>`;
+    })
+    .join('');
+  const count = (side) => shots.filter((s) => s.side === side).length;
+  const buttons = SHOT_FILTERS.map(
+    ([key, label]) =>
+      `<button class="chip ${filter === key ? 'is-active' : ''}" data-action="shot-filter" data-filter="${key}">${label}</button>`,
+  ).join('');
+  return `
+    <section class="adv-card">
+      <h3>Şut Haritası</h3>
+      <div class="chips">${buttons}</div>
+      <svg class="pitch-map" viewBox="-2 -2 109 72" role="img" aria-label="Şut haritası">
+        <g class="pitch-lines">${pitchLines()}</g>
+        ${dots}
+      </svg>
+      <div class="pitch-legend">
+        <span><i style="background:${SIDE_COLOR.home}"></i>${escapeHtml(d.home.name ?? '')} · ${count('home')} şut</span>
+        <span>${escapeHtml(d.away.name ?? '')} · ${count('away')} şut<i style="background:${SIDE_COLOR.away}"></i></span>
+      </div>
+      <p class="pitch-key">○ isabetsiz · ● isabetli · ◉ bloklandı · beyaz: gol · büyük daire = yüksek xG</p>
+    </section>`;
+}
+
+function momentumChart(d) {
+  const data = d.advanced?.momentum ?? [];
+  if (data.length < 3) return '';
+  const maxMinute = Math.max(90, ...data.map((m) => m.minute));
+  const w = 100 / (maxMinute + 1);
+  const bars = data
+    .map((m) => {
+      const h = (Math.min(Math.abs(m.value), 100) / 100) * 20;
+      const side = m.value >= 0 ? 'home' : 'away';
+      const y = m.value >= 0 ? 20 - h : 20;
+      return `<rect x="${(m.minute * w).toFixed(2)}" y="${y.toFixed(2)}" width="${(w * 0.8).toFixed(2)}" height="${h.toFixed(2)}" fill="${SIDE_COLOR[side]}" />`;
+    })
+    .join('');
+  const half = `<line x1="${(45 * w).toFixed(2)}" y1="0" x2="${(45 * w).toFixed(2)}" y2="40" class="half" />`;
+  return `
+    <section class="adv-card">
+      <h3>Maç Momentumu</h3>
+      <svg class="momentum" viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label="Momentum">
+        <line x1="0" y1="20" x2="100" y2="20" class="axis" />${half}${bars}
+      </svg>
+      <div class="pitch-legend"><span><i style="background:${SIDE_COLOR.home}"></i>${escapeHtml(d.home.name ?? '')} baskısı</span><span>${escapeHtml(d.away.name ?? '')} baskısı<i style="background:${SIDE_COLOR.away}"></i></span></div>
+    </section>`;
+}
+
+const ratingClass = (r) => (r == null ? '' : r >= 8 ? 'is-great' : r >= 7 ? 'is-good' : r >= 6 ? 'is-ok' : 'is-low');
+const ratingBadge = (r) => (r == null ? '' : `<span class="rating ${ratingClass(r)}">${Number(r).toFixed(1)}</span>`);
+
+function topPlayers(d) {
+  const list = d.advanced?.topPlayers ?? [];
+  if (!list.length) return '';
+  return `
+    <section class="adv-card">
+      <h3>Maçın Oyuncuları</h3>
+      <ul class="top-players">${list
+        .map(
+          (p) =>
+            `<li><i class="side-dot" style="background:${SIDE_COLOR[p.side]}"></i><span>${escapeHtml(p.name)}${
+              p.goals ? ` <small>⚽${p.goals > 1 ? `×${p.goals}` : ''}</small>` : ''
+            }${p.assists ? ` <small>${p.assists} asist</small>` : ''}</span>${ratingBadge(p.rating)}</li>`,
+        )
+        .join('')}</ul>
+    </section>`;
+}
+
+function advancedStats(d) {
+  const periods = d.advanced.periods;
+  const period = periods.find((p) => p.key === matchState.period) ?? periods[0];
+  const toggle =
+    periods.length > 1
+      ? `<div class="chips chips--wide">${periods
+          .map(
+            (p) =>
+              `<button class="chip ${p.key === period.key ? 'is-active' : ''}" data-action="stat-period" data-period="${p.key}">${escapeHtml(p.title)}</button>`,
+          )
+          .join('')}</div>`
+      : '';
+  const groups = period.groups
+    .map((g) => {
+      const rows = g.stats
+        .map((s) => {
+          const hv = s.homeValue ?? 0;
+          const av = s.awayValue ?? 0;
+          const total = hv + av;
+          const hp = total ? (hv / total) * 100 : 50;
+          const fmt = (v) => (s.percent ? `%${v}` : v);
+          if (s.percent) {
+            return `
+              <li class="adv-row adv-row--possession">
+                <span>${escapeHtml(s.title)}</span>
+                <div class="possession"><b style="width:${hp.toFixed(1)}%">${escapeHtml(fmt(s.home))}</b><b style="width:${(100 - hp).toFixed(1)}%">${escapeHtml(fmt(s.away))}</b></div>
+              </li>`;
+          }
+          return `
+            <li class="adv-row ${total ? '' : 'is-empty'}">
+              <div class="adv-row__values">
+                <b class="${hv > av ? 'is-lead is-lead--home' : ''}">${escapeHtml(s.home)}</b>
+                <span>${escapeHtml(s.title)}</span>
+                <b class="${av > hv ? 'is-lead is-lead--away' : ''}">${escapeHtml(s.away)}</b>
+              </div>
+              <div class="stat-row__bar"><i class="stat-row__home" style="width:${hp.toFixed(1)}%"></i><i class="stat-row__away" style="width:${(100 - hp).toFixed(1)}%"></i></div>
+            </li>`;
+        })
+        .join('');
+      return `<section class="adv-card"><h3>${escapeHtml(g.title)}</h3><ul class="adv-list">${rows}</ul></section>`;
+    })
+    .join('');
+  return `${toggle}${shotMap(d)}${groups}<p class="profile-note">Ayrıntılı istatistikler FotMob'dan gelir.</p>`;
+}
+
+function advancedLineupColumn(team, lineup, side) {
+  const item = (p) =>
+    `<li><span class="lu-no">${p.shirt ?? ''}</span><span class="lu-name">${escapeHtml(p.name)}</span>${ratingBadge(p.rating)}</li>`;
+  return `
+    <div class="lineup">
+      <h4>${crest(team.crestUrl)}<span>${escapeHtml(team.name ?? '')}</span>${lineup.formation ? `<small>${escapeHtml(lineup.formation)}</small>` : ''}</h4>
+      ${lineup.coach ? `<p class="lineup__coach"><i class="side-dot" style="background:${SIDE_COLOR[side]}"></i>Teknik direktör: <b>${escapeHtml(lineup.coach)}</b>${lineup.rating ? ` · takım puanı ${ratingBadge(lineup.rating)}` : ''}</p>` : ''}
+      <ul>${lineup.starters.map(item).join('') || '<li class="is-empty">—</li>'}</ul>
+      ${lineup.subs.length ? `<h5>Yedekler</h5><ul class="lineup__subs">${lineup.subs.map(item).join('')}</ul>` : ''}
+    </div>`;
 }
 
 // ================= OLAYLAR =================
@@ -932,6 +1116,14 @@ document.addEventListener('click', (event) => {
       break;
     case 'match-back':
       closeMatch();
+      break;
+    case 'stat-period':
+      matchState.period = target.dataset.period;
+      if (matchState.data) renderMatchDetail();
+      break;
+    case 'shot-filter':
+      matchState.shotFilter = target.dataset.filter;
+      if (matchState.data) renderMatchDetail();
       break;
     case 'match-tab':
       matchState.tab = target.dataset.tab;

@@ -1,6 +1,7 @@
 import { matches } from '../db.js';
 import { fetchEntities } from '../transfermarkt/client.js';
 import { fetchGames, gameStatus } from './source.js';
+import { fotmobForMatch } from './fotmob.js';
 
 /**
  * Mac detayi: olaylar (gol, kart, degisiklik), takim istatistikleri, kadrolar
@@ -139,15 +140,24 @@ async function build(match) {
   };
 }
 
-/** Mac detayi (onbellekli); listede olmayan mac icin null. */
+/**
+ * Mac detayi: Transfermarkt temeli + (varsa) FotMob ayrintilari `advanced`
+ * altinda. FotMob'un kendi onbellegi var; eslesmez/ulasilamazsa advanced null.
+ */
 export async function getMatchDetail(id) {
   const matchId = Number(id);
   if (!Number.isInteger(matchId)) return null;
-  const hit = cache.get(matchId);
-  if (hit && Date.now() - hit.at < hit.ttl) return hit.data;
-
   const match = await matches().findOne({ _id: matchId });
   if (!match) return null;
+  const [base, advanced] = await Promise.all([baseDetail(match), fotmobForMatch(match)]);
+  return base ? { ...base, advanced } : null;
+}
+
+/** Transfermarkt mac detayi (onbellekli). */
+async function baseDetail(match) {
+  const matchId = match._id;
+  const hit = cache.get(matchId);
+  if (hit && Date.now() - hit.at < hit.ttl) return hit.data;
 
   if (!inflight.has(matchId)) {
     inflight.set(

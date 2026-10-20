@@ -111,6 +111,12 @@ Online motorun uçtan uca testleri: `npm run test:online`, `npm run test:online-
   rekorları, son oyunlar ve para sıralaması. Başkasının profiline bakınca ikinizin
   karşılıklı rekabeti görünür. Online kazanan **+20** para alır; aynı ekran oyunları sayılmaz.
 
+- **Maç detayı:** Tahmin kartından veya profildeki tahmin satırından açılır. Olaylar,
+  kadrolar ve anlatım Transfermarkt'tan; xG, rakip ceza sahasında topla buluşma,
+  büyük fırsat, ikili mücadele, şut haritası, momentum ve oyuncu puanları FotMob'un
+  (resmi olmayan, anahtarsız) uçlarından gelir. Maçlar tarih + takım adıyla
+  eşleştirilir; FotMob'a ulaşılamazsa ekran Transfermarkt verisiyle devam eder.
+
 Testi: `npm run test:account` (bellek içi MongoDB, internet gerekmez).
 
 ## Online yayın (deploy)
